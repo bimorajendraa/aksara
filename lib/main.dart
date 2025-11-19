@@ -12,11 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-
-      // Halaman pertama
       initialRoute: '/onboarding',
-
-      // Daftar pintu-pintu halaman
       routes: {
         '/onboarding': (context) => OnboardingScreen(),
         '/login': (context) => LoginScreen(),
