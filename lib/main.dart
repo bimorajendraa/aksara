@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
 
-import 'screens/onboarding_screen.dart';
-import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/signup_screen.dart';
-import 'screens/already_registered_screen.dart';
+// ==========================
+// Import semua halaman
+// ==========================
+
+// Onboarding
+import 'presentation/screens/onboarding_screen.dart';
+
+// Auth
+import 'presentation/screens/login_screen.dart';
+import 'presentation/screens/signup_screen.dart';
+import 'presentation/screens/already_registered_screen.dart';
+
+// Home
+import 'presentation/screens/home_screen.dart';
+
+// Levels
+import 'presentation/screens/level_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,11 +34,17 @@ class MyApp extends StatelessWidget {
       initialRoute: '/onboarding',
 
       routes: {
-        '/onboarding': (context) => OnboardingScreen(),
-        '/login': (context) => LoginScreen(),
-        '/signup': (context) => SignUpScreen(),
-        '/already-registered': (context) => AlreadyRegisteredScreen(),
+        // Onboarding & Auth flows
+        '/onboarding': (context) => const OnboardingScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/signup': (context) => const SignUpScreen(),
+        '/already-registered': (context) => const AlreadyRegisteredScreen(),
+
+        // Home
         '/home': (context) => HomeScreen(),
+
+        // Levels
+        '/levels': (context) => const LevelPage(),
       },
     );
   }
