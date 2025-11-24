@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignUpScreenState extends State<SignUpScreen> {
   bool showPassword = false;
 
   @override
@@ -22,7 +22,6 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 15),
 
-              // Back button
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
@@ -38,7 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 20),
 
-              // Logo
               Center(
                 child: Image.asset("assets/images/aksara_logo.png", width: 150),
               ),
@@ -46,22 +44,23 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 40),
 
               const Text(
-                "Hi, Welcome\nBack",
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black87,
-                ),
+                "Create Your\nAccount !",
+                style: TextStyle(fontSize: 40, fontWeight: FontWeight.w800),
               ),
 
               const SizedBox(height: 40),
 
-              // Username field
+              _roundedInput(
+                icon: Icons.email_outlined,
+                hint: "Enter your email",
+              ),
+
+              const SizedBox(height: 20),
+
               _roundedInput(icon: Icons.person_outline, hint: "Username"),
 
               const SizedBox(height: 20),
 
-              // Password field
               _roundedInput(
                 icon: Icons.lock_outline,
                 hint: "Password",
@@ -75,20 +74,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 12),
-
-              const Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  "Forgot Password?",
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                ),
-              ),
-
               const SizedBox(height: 30),
 
-              // Login button
-              _mainButton("Login"),
+              _mainButton("Sign Up"),
 
               const SizedBox(height: 25),
 
@@ -101,19 +89,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 25),
 
-              // Google button
               _googleButton(),
 
               const SizedBox(height: 25),
 
-              // Bottom text
               const Center(
                 child: Text.rich(
                   TextSpan(
-                    text: "Don’t have an account? ",
+                    text: "Already have an account? ",
                     children: [
                       TextSpan(
-                        text: "Sign Up",
+                        text: "Login",
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                     ],
@@ -151,8 +137,8 @@ class _LoginScreenState extends State<LoginScreen> {
             child: TextField(
               obscureText: obscure,
               decoration: InputDecoration(
-                border: InputBorder.none,
                 hintText: hint,
+                border: InputBorder.none,
               ),
             ),
           ),
