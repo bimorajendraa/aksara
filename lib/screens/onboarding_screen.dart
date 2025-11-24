@@ -6,36 +6,31 @@ class OnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4EEE9), // warna cream background
+      backgroundColor: const Color(0xFFF4EEE9),
       body: SafeArea(
         child: Stack(
           children: [
-            // Monster kiri
             Positioned(
               left: -40,
               top: 120,
               child: Image.asset('assets/images/monster_left.png', width: 180),
             ),
 
-            // Monster kanan
             Positioned(
               right: -30,
               top: 80,
-              child: Image.asset('assets/images/monster_right.png', width: 220),
+              child: Image.asset('assets/images/monster_right.png', width: 200),
             ),
 
-            // Content utama
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 50),
 
-                // Logo
                 Image.asset('assets/images/aksara_logo.png', width: 150),
 
-                const SizedBox(height: 200),
+                const SizedBox(height: 250),
 
-                // Judul
                 const Text(
                   "Hi Fellas,",
                   style: TextStyle(
@@ -47,7 +42,6 @@ class OnboardingScreen extends StatelessWidget {
 
                 const SizedBox(height: 12),
 
-                // Subtext
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 40),
                   child: Text(
