@@ -22,7 +22,7 @@ class AlreadyRegisteredScreen extends StatelessWidget {
 
             // Monster right
             Positioned(
-              right: -20,
+              right: -40,
               top: 140,
               child: Image.asset(
                 "assets/images/green_monster_right.png",
@@ -30,14 +30,15 @@ class AlreadyRegisteredScreen extends StatelessWidget {
               ),
             ),
 
-            // Main content
-            SingleChildScrollView(
+            // MAIN CONTENT
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 15),
 
+                  // Back button
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
@@ -53,6 +54,7 @@ class AlreadyRegisteredScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
+                  // Logo
                   Center(
                     child: Image.asset(
                       "assets/images/aksara_logo.png",
@@ -62,6 +64,7 @@ class AlreadyRegisteredScreen extends StatelessWidget {
 
                   const SizedBox(height: 50),
 
+                  // Left aligned title
                   const Text(
                     "Your Account\nAlready\nRegistered",
                     style: TextStyle(
@@ -71,33 +74,69 @@ class AlreadyRegisteredScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 80),
 
-                  const Text(
-                    "Login to\nStart\nLearning",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontStyle: FontStyle.italic,
-                      height: 1.2,
-                      color: Colors.black54,
-                    ),
+                  // Move "Login to start learning" to RIGHT
+                  Row(
+                    children: const [
+                      Spacer(),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            "Login to",
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontStyle: FontStyle.italic,
+                              height: 1.2,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Start",
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontStyle: FontStyle.italic,
+                              height: 1.2,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Learning",
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontStyle: FontStyle.italic,
+                              height: 1.2,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
 
-                  const SizedBox(height: 40),
+                  const Spacer(),
 
-                  Container(
-                    height: 58,
-                    decoration: BoxDecoration(
-                      color: Colors.black87,
-                      borderRadius: BorderRadius.circular(40),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        "Login",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: GestureDetector(
+                      onTap: () {},
+                      child: Container(
+                        height: 58,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            "Login",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ),
                     ),
