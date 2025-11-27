@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/hash.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,6 +11,50 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool showPassword = false;
+  bool isLoading = false;
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signIn() async {
+    final email = _emailController.text.trim();
+    final rawPassword = _passwordController.text.trim();
+    final passwordHashed = hashPassword(rawPassword);
+    if (email.isEmpty || rawPassword.isEmpty) {
+      _showMessage('Email dan password tidak boleh kosong!');
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final response = await Supabase.instance.client
+          .from('akun')
+          .select()
+          .eq('email', email)
+          .eq('password', passwordHashed)
+          .maybeSingle();
+
+      if (response != null) {
+        _showMessage('Selamat datang, ${response['username']}!');
+
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        _showMessage('Email atau password salah!');
+      }
+    } catch (e) {
+      _showMessage('Terjadi kesalahan: $e');
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +67,6 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 15),
-
-              // Back button
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
@@ -35,16 +79,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Icon(Icons.arrow_back, color: Colors.black),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Logo
               Center(
                 child: Image.asset("assets/images/aksara_logo.png", width: 150),
               ),
-
               const SizedBox(height: 40),
-
               const Text(
                 "Hi, Welcome\nBack",
                 style: TextStyle(
@@ -53,18 +92,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Colors.black87,
                 ),
               ),
-
               const SizedBox(height: 40),
 
-              // Username field
-              _roundedInput(icon: Icons.person_outline, hint: "Username"),
-
+              _roundedInput(
+                icon: Icons.email_outlined,
+                hint: "Email",
+                controller: _emailController,
+              ),
               const SizedBox(height: 20),
 
-              // Password field
               _roundedInput(
                 icon: Icons.lock_outline,
                 hint: "Password",
+                controller: _passwordController,
                 obscure: !showPassword,
                 suffix: GestureDetector(
                   onTap: () => setState(() => showPassword = !showPassword),
@@ -74,7 +114,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 12),
 
               const Align(
@@ -84,12 +123,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
               ),
-
               const SizedBox(height: 30),
 
-              // Login button
-              _mainButton("Login"),
-
+              _mainButton("Login", onPressed: _signIn),
               const SizedBox(height: 25),
 
               const Center(
@@ -98,15 +134,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Colors.black54),
                 ),
               ),
-
               const SizedBox(height: 25),
 
-              // Google button
               _googleButton(),
-
               const SizedBox(height: 25),
 
-              // Bottom text
               const Center(
                 child: Text.rich(
                   TextSpan(
@@ -121,7 +153,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontSize: 16),
                 ),
               ),
-
               const SizedBox(height: 40),
             ],
           ),
@@ -135,6 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required String hint,
     bool obscure = false,
     Widget? suffix,
+    TextEditingController? controller,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -149,6 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
+              controller: controller,
               obscureText: obscure,
               decoration: InputDecoration(
                 border: InputBorder.none,
@@ -162,21 +195,33 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _mainButton(String text) {
-    return Container(
-      height: 58,
-      decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(40),
-      ),
-      child: Center(
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
+  Widget _mainButton(String text, {required VoidCallback onPressed}) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        height: 58,
+        decoration: BoxDecoration(
+          color: Colors.black87,
+          borderRadius: BorderRadius.circular(40),
+        ),
+        child: Center(
+          child: isLoading
+              ? const SizedBox(
+                  height: 22,
+                  width: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
         ),
       ),
     );
@@ -201,5 +246,9 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
     );
+  }
+
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 }
