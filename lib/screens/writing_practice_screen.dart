@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class WritingPracticeScreen extends StatelessWidget {
@@ -11,9 +10,10 @@ class WritingPracticeScreen extends StatelessWidget {
   }
 }
 
-/// ================================
-/// PAGEVIEW LIST OF UNITS
-/// ================================
+///////////////////////////////////////////////////////////////////////////////
+/// PAGEVIEW OF UNITS
+///////////////////////////////////////////////////////////////////////////////
+
 class UnitListPage extends StatefulWidget {
   const UnitListPage({super.key});
 
@@ -25,50 +25,69 @@ class _UnitListPageState extends State<UnitListPage> {
   final PageController _pageController = PageController();
   int _pageIndex = 0;
 
-  // Each unit: list of letters (uppercase, lowercase, ...)
-  final List<List<String>> _units = [
-    ['A', 'a', 'B', 'b', 'C', 'c'], // Unit 1
-    ['V', 'v', 'W', 'w', 'X', 'x', 'Y', 'y', 'Z', 'z'], // Unit 2
+  final List<String> _alphabet = [
+    'A','a','B','b','C','c','D','d','E','e','F','f','G','g',
+    'H','h','I','i','J','j','K','k','L','l','M','m','N','n',
+    'O','o','P','p','Q','q','R','r','S','s','T','t','U','u',
+    'V','v','W','w','X','x','Y','y','Z','z'
   ];
+
+  List<List<String>> _makeUnits() {
+    final out = <List<String>>[];
+    for (int i = 0; i < _alphabet.length; i += 6) {
+      out.add(_alphabet.sublist(i, min(i + 6, _alphabet.length)));
+    }
+    return out;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final units = _makeUnits();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F6F8),
       body: SafeArea(
         child: Column(
           children: [
-            // top bar: hearts + progress per-unit indicator
+            /// Top heart + dots
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
                   const HeartRow(hearts: 5),
                   const Spacer(),
-                  // small three-dot style indicator for current page
-                  PageIndicatorDots(total: _units.length, current: _pageIndex),
+                  PageIndicatorDots(
+                    total: units.length,
+                    current: _pageIndex,
+                  ),
                 ],
               ),
             ),
 
-            // PageView for units
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: _units.length,
+                itemCount: units.length,
                 onPageChanged: (i) => setState(() => _pageIndex = i),
-                itemBuilder: (context, index) {
+                itemBuilder: (_, index) {
+                  final letters = units[index];
+
                   return UnitPage(
-                    letters: _units[index],
-                    onCompleteUnit: () {
-                      if (index < _units.length - 1) {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 400),
+                    key: ValueKey("unit_$index"),
+                    letters: letters,
+                    onPrevUnit: () {
+                      if (index > 0) {
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 350),
                           curve: Curves.easeInOut,
                         );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("All units complete!")),
+                      }
+                    },
+                    onNextUnit: () {
+                      if (index < units.length - 1) {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 350),
+                          curve: Curves.easeInOut,
                         );
                       }
                     },
@@ -83,20 +102,21 @@ class _UnitListPageState extends State<UnitListPage> {
   }
 }
 
-/// ================================
-/// HEARTS (lives)
-/// ================================
+///////////////////////////////////////////////////////////////////////////////
+/// SMALL UI WIDGETS
+///////////////////////////////////////////////////////////////////////////////
+
 class HeartRow extends StatelessWidget {
   final int hearts;
-  const HeartRow({super.key, this.hearts = 5});
+  const HeartRow({super.key, required this.hearts});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: List.generate(
         hearts,
-        (i) => const Padding(
-          padding: EdgeInsets.only(right: 6),
+        (_) => const Padding(
+          padding: EdgeInsets.only(right: 4),
           child: Icon(Icons.favorite, size: 18, color: Colors.redAccent),
         ),
       ),
@@ -104,12 +124,10 @@ class HeartRow extends StatelessWidget {
   }
 }
 
-/// ================================
-/// page indicator dots (small)
-/// ================================
 class PageIndicatorDots extends StatelessWidget {
   final int total;
   final int current;
+
   const PageIndicatorDots({
     super.key,
     required this.total,
@@ -120,14 +138,13 @@ class PageIndicatorDots extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: List.generate(total, (i) {
-        final color = i == current ? Colors.blueGrey[800] : Colors.grey[300];
-        final width = i == current ? 18.0 : 12.0;
+        final active = i == current;
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: width,
+          width: active ? 18 : 12,
           height: 6,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
           decoration: BoxDecoration(
-            color: color,
+            color: active ? Colors.blueGrey[900] : Colors.grey[300],
             borderRadius: BorderRadius.circular(3),
           ),
         );
@@ -136,18 +153,27 @@ class PageIndicatorDots extends StatelessWidget {
   }
 }
 
-/// ================================
-/// UNIT PAGE: contains multiple rows of (Uppercase, lowercase) pairs.
-/// Also contains a progress bar per lesson (section), pencil/eraser tool, and next button.
-/// ================================
+///////////////////////////////////////////////////////////////////////////////
+/// UNIT PAGE
+///
+/// Key architecture for persistence:
+/// - Letter canvases are created ONCE in initState
+/// - They are NEVER rebuilt or destroyed
+/// - Visibility controlled using Offstage
+/// - Strokes stored inside each canvas
+/// - Pencil/eraser mode broadcast using ValueNotifier<bool>
+///////////////////////////////////////////////////////////////////////////////
+
 class UnitPage extends StatefulWidget {
   final List<String> letters;
-  final VoidCallback onCompleteUnit;
+  final VoidCallback onPrevUnit;
+  final VoidCallback onNextUnit;
 
   const UnitPage({
     super.key,
     required this.letters,
-    required this.onCompleteUnit,
+    required this.onPrevUnit,
+    required this.onNextUnit,
   });
 
   @override
@@ -155,151 +181,114 @@ class UnitPage extends StatefulWidget {
 }
 
 class _UnitPageState extends State<UnitPage> {
-  // rows are pairs of letters: [A,a], [B,b], ...
-  late final List<List<String>> rows;
-
-  // Sectioning: per lesson / section = 3 rows (A/a,B/b,C/c)
   static const int rowsPerSection = 3;
-  int currentSection = 0;
 
-  // tool mode: true => pencil, false => eraser
-  bool pencilMode = true;
+  int currentSection = 0;
+  final ValueNotifier<bool> pencilMode = ValueNotifier(true);
+
+  late final List<List<String>> rows;
+  late final List<LetterRowWidget> rowWidgets;
 
   @override
   void initState() {
     super.initState();
+
+    /// Build rows (pairs)
     rows = [];
     for (int i = 0; i < widget.letters.length; i += 2) {
-      rows.add([
-        widget.letters[i],
-        (i + 1) < widget.letters.length ? widget.letters[i + 1] : '',
-      ]);
+      rows.add([widget.letters[i], widget.letters[i + 1]]);
     }
-    currentSection = 0;
+
+    /// Build row widgets ONCE
+    rowWidgets = rows.map((pair) {
+      return LetterRowWidget(
+        key: ValueKey("row_${pair[0]}_${pair[1]}"),
+        uppercase: pair[0],
+        lowercase: pair[1],
+        pencilModeNotifier: pencilMode,
+      );
+    }).toList();
   }
 
   int get totalSections => (rows.length / rowsPerSection).ceil();
 
-  void _goToNextSectionOrFinish() {
+  void _nextSection() {
     if (currentSection < totalSections - 1) {
-      setState(() {
-        currentSection++;
-      });
+      setState(() => currentSection++);
     } else {
-      widget.onCompleteUnit();
+      widget.onNextUnit();
     }
   }
 
-  void _toggleTool(bool toPencil) {
-    setState(() {
-      pencilMode = toPencil;
-    });
+  void _prevSection() {
+    if (currentSection > 0) {
+      setState(() => currentSection--);
+    } else {
+      widget.onPrevUnit();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // compute visible rows for current section
-    final start = currentSection * rowsPerSection;
-    final end = min(start + rowsPerSection, rows.length);
-    final visibleRows = rows.sublist(
-      0,
-      end,
-    ); // show from start of unit up to current section end (like example)
+    final visibleCount = min(rows.length, (currentSection + 1) * rowsPerSection);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F6F8),
       body: SafeArea(
         child: Stack(
           children: [
-            // Main content: header progress + rows
             Column(
               children: [
-                // Progress bar per lesson (sections)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: LessonProgressBar(
-                    sections: totalSections,
-                    currentSection: currentSection,
-                  ),
-                ),
+                const SizedBox(height: 8),
 
-                // The rows list (show rows up to current section for visual)
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      bottom: 140,
-                    ),
-                    itemCount: visibleRows.length,
-                    itemBuilder: (context, index) {
-                      final pair = visibleRows[index];
-                      return LetterRowWidget(
-                        key: ValueKey('${pair[0]}_${pair[1]}_$index'),
-                        uppercase: pair[0],
-                        lowercase: pair[1],
-                        pencilMode: pencilMode,
-                      );
-                    },
+                  child: ListView(
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 140),
+                    children: [
+                      for (int i = 0; i < rowWidgets.length; i++)
+                        Offstage(
+                          offstage: i >= visibleCount,
+                          child: rowWidgets[i],
+                        ),
+                    ],
                   ),
                 ),
               ],
             ),
 
-            // Right vertical toolbar: pencil & eraser
+            /// TOOL BUTTONS
             Positioned(
               right: 10,
-              top: 110,
+              top: 120,
               child: Column(
                 children: [
-                  // Pencil
                   ToolButton(
                     icon: Icons.edit,
-                    active: pencilMode,
-                    onTap: () => _toggleTool(true),
+                    active: true,
+                    onTap: () => pencilMode.value = true,
                   ),
                   const SizedBox(height: 10),
-                  // Eraser (partial erase)
                   ToolButton(
                     icon: Icons.backspace,
-                    active: !pencilMode,
-                    onTap: () => _toggleTool(false),
+                    active: true,
+                    onTap: () => pencilMode.value = false,
                   ),
                 ],
               ),
             ),
 
-            // Next section button center bottom
+            /// NAV BUTTONS
             Positioned(
               bottom: 26,
               left: 0,
               right: 0,
-              child: Center(
-                child: GestureDetector(
-                  onTap: _goToNextSectionOrFinish,
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2F3A4A),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.arrow_forward,
-                      color: Colors.white,
-                      size: 36,
-                    ),
-                  ),
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _navBtn(Icons.arrow_back, _prevSection),
+                  const SizedBox(width: 22),
+                  _navBtn(Icons.arrow_forward, _nextSection),
+                ],
               ),
             ),
           ],
@@ -307,13 +296,35 @@ class _UnitPageState extends State<UnitPage> {
       ),
     );
   }
+
+  Widget _navBtn(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 72,
+        height: 72,
+        decoration: BoxDecoration(
+          color: const Color(0xFF2F3A4A),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 6),
+          ],
+        ),
+        child: Icon(icon, color: Colors.white, size: 36),
+      ),
+    );
+  }
 }
 
-/// Small tool button for vertical toolbar
+///////////////////////////////////////////////////////////////////////////////
+/// TOOL BUTTON (fixed spelling)
+///////////////////////////////////////////////////////////////////////////////
+
 class ToolButton extends StatelessWidget {
   final IconData icon;
   final bool active;
   final VoidCallback onTap;
+
   const ToolButton({
     super.key,
     required this.icon,
@@ -330,116 +341,127 @@ class ToolButton extends StatelessWidget {
         height: 50,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: active ? Colors.white : Colors.white,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 6,
-                  ),
-                ]
-              : [],
+          boxShadow: [
+            if (active)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.12),
+                blurRadius: 6,
+              ),
+          ],
         ),
         child: Icon(
           icon,
           color: active ? Colors.blueGrey[900] : Colors.grey[500],
-          size: 22,
         ),
       ),
     );
   }
 }
 
-/// Lesson progress bar: shows sections horizontally.
-/// Completed sections are darker, current section is bold/raised.
-class LessonProgressBar extends StatelessWidget {
-  final int sections;
-  final int currentSection;
-  const LessonProgressBar({
-    super.key,
-    required this.sections,
-    required this.currentSection,
-  });
+///////////////////////////////////////////////////////////////////////////////
+/// LETTER ROW WIDGET
+/// Contains two canvases (upper+lower)
+///////////////////////////////////////////////////////////////////////////////
 
-  @override
-  Widget build(BuildContext context) {
-    // total slots: show more fine-grained dashes per section (3 dashes per section)
-    final List<Widget> items = [];
-    for (int s = 0; s < sections; s++) {
-      final bool isCurrent = s == currentSection;
-      final bool isDone = s < currentSection;
-      final color = isDone
-          ? Colors.blueGrey[800]
-          : (isCurrent ? Colors.blueGrey[700] : Colors.grey[300]);
-      final height = isCurrent ? 10.0 : 6.0;
-      final width = isCurrent ? 42.0 : 28.0;
-
-      items.add(
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      children: [
-        // left label (unit) - optional
-        const SizedBox(width: 4),
-        Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: items,
-          ),
-        ),
-        const SizedBox(width: 4),
-      ],
-    );
-  }
-}
-
-/// ================================
-/// LETTER ROW WIDGET (shows two boxes: uppercase & lowercase)
-/// - contains interactive tracing canvas for each letter (free drawing)
-/// - supports pencil and partial eraser (eraser mode uses global tool state managed in parent via InheritedWidget? Simpler: pass current pencilMode via constructor)
-/// ================================
-class LetterRowWidget extends StatefulWidget {
+class LetterRowWidget extends StatelessWidget {
   final String uppercase;
   final String lowercase;
-  final bool pencilMode;
+  final ValueNotifier<bool> pencilModeNotifier;
 
   const LetterRowWidget({
     super.key,
     required this.uppercase,
     required this.lowercase,
-    required this.pencilMode,
+    required this.pencilModeNotifier,
   });
 
   @override
-  State<LetterRowWidget> createState() => _LetterRowWidgetState();
+  Widget build(BuildContext context) {
+    return Container(
+      height: 120,
+      margin: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _canvasBox(uppercase)),
+              const SizedBox(width: 18),
+              Expanded(child: _canvasBox(lowercase)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(height: 2, color: Colors.black.withOpacity(0.28)),
+        ],
+      ),
+    );
+  }
+
+  Widget _canvasBox(String letter) {
+    return Container(
+      height: 72,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4),
+        ],
+      ),
+      child: ClipRect(
+        child: LetterCanvas(
+          key: ValueKey("canvas_$letter"),
+          letter: letter,
+          pencilModeNotifier: pencilModeNotifier,
+        ),
+      ),
+    );
+  }
 }
 
-class _LetterRowWidgetState extends State<LetterRowWidget> {
-  // strokes for uppercase and lowercase separately
-  List<List<Offset>> upperStrokes = [];
-  List<List<Offset>> lowerStrokes = [];
+///////////////////////////////////////////////////////////////////////////////
+/// LETTER CANVAS — persistent internal strokes
+///////////////////////////////////////////////////////////////////////////////
 
-  bool upperFilled = false;
-  bool lowerFilled = false;
+class LetterCanvas extends StatefulWidget {
+  final String letter;
+  final ValueNotifier<bool> pencilModeNotifier;
 
-  // drawing thresholds
+  const LetterCanvas({
+    super.key,
+    required this.letter,
+    required this.pencilModeNotifier,
+  });
+
+  @override
+  State<LetterCanvas> createState() => _LetterCanvasState();
+}
+
+class _LetterCanvasState extends State<LetterCanvas>
+    with AutomaticKeepAliveClientMixin {
+  final List<List<Offset>> strokes = [];
+  bool filled = false;
+
   static const double fillThreshold = 120.0;
-  // eraser radius
-  static const double eraserRadius = 22.0;
+  static const double eraseRadius = 22.0;
 
-  // helper to compute drawn length
-  double _lengthOf(List<List<Offset>> strokes) {
+  @override
+  void initState() {
+    super.initState();
+    widget.pencilModeNotifier.addListener(_toolChanged);
+  }
+
+  void _toolChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.pencilModeNotifier.removeListener(_toolChanged);
+    super.dispose();
+  }
+
+  double _strokeLen() {
     double len = 0;
     for (final s in strokes) {
       for (int i = 1; i < s.length; i++) {
@@ -449,234 +471,108 @@ class _LetterRowWidgetState extends State<LetterRowWidget> {
     return len;
   }
 
-  // when user paints on upper box
-  void _startUpper(Offset p) {
-    if (upperFilled) return;
-    upperStrokes.add([p]);
+  void _start(Offset p) {
+    strokes.add([p]);
     setState(() {});
   }
 
-  void _updateUpper(Offset p) {
-    if (upperFilled) return;
-    upperStrokes.last.add(p);
-    if (_lengthOf(upperStrokes) > fillThreshold) {
-      upperFilled = true;
+  void _update(Offset p) {
+    if (strokes.isEmpty) return;
+
+    final size = context.size;
+    final clamped = size == null
+        ? p
+        : Offset(
+            p.dx.clamp(0.0, size.width),
+            p.dy.clamp(0.0, size.height),
+          );
+
+    strokes.last.add(clamped);
+
+    if (_strokeLen() > fillThreshold) filled = true;
+    setState(() {});
+  }
+
+  void _erase(Offset p) {
+    final newList = <List<Offset>>[];
+
+    for (final s in strokes) {
+      final kept = s.where((pt) => (pt - p).distance > eraseRadius).toList();
+      if (kept.isNotEmpty) newList.add(kept);
     }
+
+    strokes
+      ..clear()
+      ..addAll(newList);
+
+    filled = _strokeLen() > fillThreshold;
     setState(() {});
   }
 
-  // when user paints on lower box
-  void _startLower(Offset p) {
-    if (lowerFilled) return;
-    lowerStrokes.add([p]);
-    setState(() {});
-  }
-
-  void _updateLower(Offset p) {
-    if (lowerFilled) return;
-    lowerStrokes.last.add(p);
-    if (_lengthOf(lowerStrokes) > fillThreshold) {
-      lowerFilled = true;
-    }
-    setState(() {});
-  }
-
-  // partial eraser: removes points near pos within radius
-  void _eraseAt(Offset pos, RenderBox box, bool isUpper) {
-    final local = box.globalToLocal(pos);
-    final target = isUpper ? upperStrokes : lowerStrokes;
-    final newStrokes = <List<Offset>>[];
-    for (final s in target) {
-      final kept = s
-          .where((pt) => (pt - local).distance > eraserRadius)
-          .toList();
-      // keep only strokes having at least 2 points
-      if (kept.length >= 1) newStrokes.add(kept);
-    }
-    if (isUpper) {
-      upperStrokes = newStrokes;
-      upperFilled = _lengthOf(upperStrokes) > fillThreshold ? true : false;
-    } else {
-      lowerStrokes = newStrokes;
-      lowerFilled = _lengthOf(lowerStrokes) > fillThreshold ? true : false;
-    }
-    setState(() {});
-  }
-
-  void _clearAllUpper() {
-    upperStrokes = [];
-    upperFilled = false;
-    setState(() {});
-  }
-
-  void _clearAllLower() {
-    lowerStrokes = [];
-    lowerFilled = false;
+  void _clear() {
+    strokes.clear();
+    filled = false;
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    // each letter box height
-    const boxHeight = 72.0;
+    super.build(context);
+    final isPencil = widget.pencilModeNotifier.value;
 
-    return Container(
-      height: 120,
-      margin: const EdgeInsets.only(bottom: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // dotted baseline (visual only)
-          const BaselinePlaceholder(),
-          const SizedBox(height: 6),
-
-          // two boxes in a row
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: boxHeight,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: LetterCanvas(
-                    letter: widget.uppercase,
-                    strokes: upperStrokes,
-                    filled: upperFilled,
-                    pencilMode: widget.pencilMode,
-                    onStart: (pos) {
-                      _startUpper(pos);
-                    },
-                    onUpdate: (pos) {
-                      _updateUpper(pos);
-                    },
-                    onErase: (globalPos, box) {
-                      _eraseAt(globalPos, box, true);
-                    },
-                    onClear: _clearAllUpper,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Container(
-                  height: boxHeight,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: LetterCanvas(
-                    letter: widget.lowercase,
-                    strokes: lowerStrokes,
-                    filled: lowerFilled,
-                    pencilMode: widget.pencilMode,
-                    onStart: (pos) {
-                      _startLower(pos);
-                    },
-                    onUpdate: (pos) {
-                      _updateLower(pos);
-                    },
-                    onErase: (globalPos, box) {
-                      _eraseAt(globalPos, box, false);
-                    },
-                    onClear: _clearAllLower,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-          // underline
-          Container(height: 2, color: Colors.black.withOpacity(0.28)),
-        ],
-      ),
-    );
-  }
-}
-
-/// LetterCanvas: draws background faded letter, strokes, and handles gestures.
-/// It is stateless regarding strokes (parent holds stroke lists) but handles gestures and calls callbacks.
-class LetterCanvas extends StatefulWidget {
-  final String letter;
-  final List<List<Offset>> strokes;
-  final bool filled;
-  final bool pencilMode; // true: draw, false: erase
-  final void Function(Offset globalPos) onStart;
-  final void Function(Offset globalPos) onUpdate;
-  final void Function(Offset globalPos, RenderBox box) onErase;
-  final VoidCallback onClear;
-
-  const LetterCanvas({
-    super.key,
-    required this.letter,
-    required this.strokes,
-    required this.filled,
-    required this.pencilMode,
-    required this.onStart,
-    required this.onUpdate,
-    required this.onErase,
-    required this.onClear,
-  });
-
-  @override
-  State<LetterCanvas> createState() => _LetterCanvasState();
-}
-
-class _LetterCanvasState extends State<LetterCanvas> {
-  @override
-  Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onPanStart: (d) {
-        if (widget.pencilMode) {
-          widget.onStart(d.globalPosition);
+        if (isPencil) {
+          _start(d.localPosition);
         } else {
-          final box = context.findRenderObject() as RenderBox;
-          widget.onErase(d.globalPosition, box);
+          _erase(d.localPosition);
         }
       },
       onPanUpdate: (d) {
-        if (widget.pencilMode) {
-          widget.onUpdate(d.globalPosition);
+        if (isPencil) {
+          _update(d.localPosition);
         } else {
-          final box = context.findRenderObject() as RenderBox;
-          widget.onErase(d.globalPosition, box);
+          _erase(d.localPosition);
         }
       },
-      onDoubleTap: widget.onClear, // double tap to clear that letter box
+      onDoubleTap: _clear,
       child: CustomPaint(
-        painter: _LetterPainter(widget.letter, widget.strokes, widget.filled),
+        painter: _LetterPainter(
+          letter: widget.letter,
+          strokes: strokes,
+          filled: filled,
+        ),
         size: Size.infinite,
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/// PAINTER
+///////////////////////////////////////////////////////////////////////////////
 
 class _LetterPainter extends CustomPainter {
   final String letter;
   final List<List<Offset>> strokes;
   final bool filled;
 
-  _LetterPainter(this.letter, this.strokes, this.filled);
+  _LetterPainter({
+    required this.letter,
+    required this.strokes,
+    required this.filled,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // draw faded letter centered
     final center = Offset(size.width / 2, size.height / 2);
-    final textPainter = TextPainter(
+
+    /// faded letter
+    final base = TextPainter(
       text: TextSpan(
         text: letter,
         style: TextStyle(
@@ -687,85 +583,52 @@ class _LetterPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      center - Offset(textPainter.width / 2, textPainter.height / 2),
-    );
+    base.layout();
+    base.paint(canvas, center - Offset(base.width / 2, base.height / 2));
 
-    // draw strokes
-    final paint = Paint()
-      ..color = filled ? const Color(0xFFE6B23C) : Colors.blueGrey[800]!
-      ..strokeWidth = filled ? 8.0 : 6.0
+    /// strokes
+    final p = Paint()
+      ..color = filled ? const Color(0xFFE6B23C) : Colors.blueGrey.shade900
+      ..strokeWidth = filled ? 8 : 6
       ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+      ..strokeCap = StrokeCap.round;
 
-    for (final stroke in strokes) {
-      if (stroke.length < 2) continue;
-      final path = Path()
-        ..moveTo(
-          stroke.first.dx - stroke.first.dx + stroke.first.dx,
-          stroke.first.dy - stroke.first.dy + stroke.first.dy,
-        );
-      // path building uses absolute coordinates (we stored global coords) -> convert to local
-      // However we stored global positions in parent; convert relative to canvas by using an offset transform
-      // To properly handle coordinate space, assume strokes are already local (we used global but converted in parent when calling).
-      // If they are global, we need to map; to keep simple and correct, we expect parent to pass global offsets and we'll convert using canvas size.
-      // But because parent already converted using globalToLocal before passing onStart/onUpdate, the strokes are local coordinates.
-      // Thus constructing path as below:
-      path.reset();
-      path.moveTo(stroke.first.dx, stroke.first.dy);
-      for (int i = 1; i < stroke.length; i++) {
-        path.lineTo(stroke[i].dx, stroke[i].dy);
+    for (final s in strokes) {
+      if (s.length < 2) continue;
+      final path = Path()..moveTo(s.first.dx, s.first.dy);
+      for (int i = 1; i < s.length; i++) {
+        path.lineTo(s[i].dx, s[i].dy);
       }
-      canvas.drawPath(path, paint);
+      canvas.drawPath(path, p);
     }
 
-    // if filled, draw gold stroke letter overlay (outline)
+    /// final golden overlay
     if (filled) {
-      final tp = TextPainter(
+      final t = TextPainter(
+        text: const TextSpan(
+          text: "",
+        ),
+        textDirection: TextDirection.ltr,
+      );
+
+      final gold = TextPainter(
         text: TextSpan(
           text: letter,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 56,
             fontWeight: FontWeight.w900,
-            color: const Color(0xFFE6B23C),
+            color: Color(0xFFE6B23C),
           ),
         ),
         textDirection: TextDirection.ltr,
       );
-      tp.layout();
-      tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
+      gold.layout();
+      gold.paint(canvas, center - Offset(gold.width / 2, gold.height / 2));
     }
   }
 
   @override
   bool shouldRepaint(covariant _LetterPainter old) {
-    return old.strokes != strokes ||
-        old.filled != filled ||
-        old.letter != letter;
-  }
-}
-
-/// ================================
-/// BASELINE DOTS (--- --- ---)
-/// ================================
-class BaselinePlaceholder extends StatelessWidget {
-  const BaselinePlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(
-        20,
-        (_) => Container(
-          width: 12,
-          height: 4,
-          margin: const EdgeInsets.only(right: 4),
-          color: Colors.grey.withOpacity(0.35),
-        ),
-      ),
-    );
+    return old.strokes != strokes || old.filled != filled;
   }
 }
