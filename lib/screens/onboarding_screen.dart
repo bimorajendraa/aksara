@@ -53,12 +53,11 @@ class OnboardingScreen extends StatelessWidget {
 
                 const SizedBox(height: 40),
 
-                // Tombol start learning
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: GestureDetector(
                     onTap: () {
-                      // TODO: pindah halaman
+                      Navigator.pushNamed(context, '/signup');
                     },
                     child: Container(
                       height: 58,
@@ -82,7 +81,6 @@ class OnboardingScreen extends StatelessWidget {
 
                 const SizedBox(height: 25),
 
-                // Already have account?
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [
