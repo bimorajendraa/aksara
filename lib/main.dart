@@ -1,3 +1,4 @@
+import 'package:aksara/env.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/onboarding_screen.dart';
@@ -11,11 +12,8 @@ import 'screens/chapter_read_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
-  await Supabase.initialize(
-    url: 'https://YOUR_PROJECT_URL.supabase.co',
-    anonKey: 'YOUR_ANON_KEY',
-  );
-
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
   runApp(const MyApp());
 }
 
@@ -38,8 +36,6 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignUpScreen(),
         '/already-registered': (context) => AlreadyRegisteredScreen(),
         '/home': (context) => HomeScreen(),
-
-        // STORY MODE
         '/story-mode': (context) => const StoryModeScreen(),
         '/story-detail': (context) => const StoryDetailScreen(),
         '/chapter': (context) => const ChapterReadScreen(),
