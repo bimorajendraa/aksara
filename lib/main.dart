@@ -4,6 +4,7 @@ import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/start_page.dart';
+import 'screens/start_page2.dart';
 import 'screens/signup_screen.dart';
 import 'screens/already_registered_screen.dart';
 
@@ -31,7 +32,8 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignUpScreen(),
         '/already-registered': (context) => AlreadyRegisteredScreen(),
         '/home': (context) => HomeScreen(),
-        '/startpage': (context) =>  StartPage()
+        '/startpage': (context) =>  StartPage(),
+        '/startpage2': (context) =>  StartPage2()
       },
     );
   }

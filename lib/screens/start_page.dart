@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'start_page2.dart';
 
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
@@ -31,6 +32,7 @@ class _StartPageState extends State<StartPage> {
   int currentPage = 0;
 
   final letters = List<String>.generate(26, (i) => String.fromCharCode(65 + i));
+  final Set<String> clickedLetters = {};
 
   @override
   Widget build(BuildContext context) {
@@ -169,9 +171,10 @@ class _StartPageState extends State<StartPage> {
                       letter.toUpperCase(),
                       style: const TextStyle(
                         fontFamily: "Poppins",
-                        fontSize: 70,
+                        fontSize: 120,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
+                        decoration: TextDecoration.none,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -179,9 +182,10 @@ class _StartPageState extends State<StartPage> {
                       letter.toLowerCase(),
                       style: const TextStyle(
                         fontFamily: "Poppins",
-                        fontSize: 70,
+                        fontSize: 120,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
+                        decoration: TextDecoration.none,
                       ),
                     ),
                   ],
@@ -325,95 +329,119 @@ class _StartPageState extends State<StartPage> {
   }
 
   // GRID LETTERS ======================================================
-  Widget _buildLettersGrid() {
-    final letters = this.letters;
-    final Set<int> skippedIndexes = {24};
-    final int gridCount = letters.length + skippedIndexes.length;
+    Widget _buildLettersGrid() {
+      final letters = this.letters;
+      final Set<int> skippedIndexes = {24};
+      final int gridCount = letters.length + skippedIndexes.length;
 
-    int skippedBefore(int gridIndex) {
-      return skippedIndexes.where((s) => s < gridIndex).length;
+      int skippedBefore(int gridIndex) {
+        return skippedIndexes.where((s) => s < gridIndex).length;
+      }
+
+      return GridView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          childAspectRatio: 1.2,
+        ),
+        itemCount: gridCount,
+        itemBuilder: (context, gridIndex) {
+          if (skippedIndexes.contains(gridIndex)) return Container();
+
+          final int letterIndex = gridIndex - skippedBefore(gridIndex);
+          final letter = letters[letterIndex];
+
+          // Cek apakah huruf sudah diklik sebelumnya
+          final bool isClicked = clickedLetters.contains(letter);
+
+          return GestureDetector(
+            onTap: () {
+              if (showTutorial) {
+                setState(() => showTutorial = false);
+              }
+
+              setState(() {
+                selectedLetter = letter;
+                progress = (letterIndex + 1) / letters.length;
+
+                // Simpan huruf yang sudah diklik
+                clickedLetters.add(letter);
+
+                // ==== PINDAHKAN ICON TANGAN KE HURUF BERIKUTNYA ====
+                int nextLetterIndex = letterIndex + 1;
+
+                if (nextLetterIndex < letters.length) {
+                  // Cari gridIndex sesuai skippedIndexes
+                  int nextGridIndex = nextLetterIndex;
+                  for (int skip in skippedIndexes) {
+                    if (skip <= nextGridIndex) {
+                      nextGridIndex++;
+                    }
+                  }
+                  pointerIndex = nextGridIndex;
+                } else {
+                  // Jika sudah huruf terakhir, sembunyikan tangan
+                  pointerIndex = -1;
+                }
+              });
+
+              showGeneralDialog(
+                context: context,
+                barrierDismissible: false,
+                barrierLabel: "Popup",
+                barrierColor: Colors.transparent,
+                pageBuilder: (_, __, ___) {
+                  return Stack(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: double.infinity,
+                        color: const Color.fromRGBO(136, 153, 171, 0.8),
+                      ),
+                      Center(child: letterPopup(letter)),
+                    ],
+                  );
+                },
+              );
+            },
+
+
+            child: Container(
+              padding: const EdgeInsets.only(top: 20),
+              child: Stack(
+                alignment: Alignment.topCenter,
+                clipBehavior: Clip.none,
+                children: [
+                  if (pointerIndex == gridIndex && !showTutorial)
+                    const Positioned(
+                      top: 45,
+                      left: 24,
+                      child: Icon(
+                        Icons.pan_tool_alt,
+                        size: 40,
+                        color: Color.fromRGBO(252, 209, 156, 1),
+                      ),
+                    ),
+
+                  Center(
+                    child: Text(
+                      letter,
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w900,
+                        color: isClicked ? Colors.blue : Colors.black,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 40),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        childAspectRatio: 1.2,
-      ),
-      itemCount: gridCount,
-      itemBuilder: (context, gridIndex) {
-        if (skippedIndexes.contains(gridIndex)) return Container();
-
-        final int letterIndex = gridIndex - skippedBefore(gridIndex);
-        final letter = letters[letterIndex];
-        final isSelected = selectedLetter == letter;
-
-        return GestureDetector(
-          onTap: () {
-            if (showTutorial) {
-              setState(() => showTutorial = false);
-            }
-
-            setState(() {
-              selectedLetter = letter;
-              pointerIndex = gridIndex;
-              progress = (letterIndex + 1) / letters.length;
-            });
-
-            showGeneralDialog(
-              context: context,
-              barrierDismissible: false,
-              barrierLabel: "Popup",
-              barrierColor: Colors.transparent,
-              pageBuilder: (_, __, ___) {
-                return Stack(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      color: const Color.fromRGBO(136, 153, 171, 0.8),
-                    ),
-                    Center(child: letterPopup(letter)),
-                  ],
-                );
-              },
-            );
-          },
-
-          child: Container(
-            padding: const EdgeInsets.only(top: 20),
-            child: Stack(
-              alignment: Alignment.topCenter,
-              clipBehavior: Clip.none,
-              children: [
-                if (pointerIndex == gridIndex && !showTutorial)
-                  const Positioned(
-                    top: 45,
-                    left: 24,
-                    child: Icon(
-                      Icons.pan_tool_alt,
-                      size: 40,
-                      color: Color.fromRGBO(252, 209, 156, 1),
-                    ),
-                  ),
-
-                Center(
-                  child: Text(
-                    letter,
-                    style: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w900,
-                      color: isSelected ? Colors.blue : Colors.black,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   // NEXT BUTTON =======================================================
   Widget _buildNextButton() {
@@ -424,11 +452,10 @@ class _StartPageState extends State<StartPage> {
       child: GestureDetector(
         onTap: isActive
             ? () {
-                setState(() {
-                  currentPage = currentPage == 0 ? 1 : 0;
-                  selectedLetter = null;
-                  pointerIndex = -1;
-                });
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const StartPage2()),
+                );
               }
             : null,
         child: CircleAvatar(
