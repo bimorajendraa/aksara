@@ -17,6 +17,7 @@ class _SettingScreenState extends State<SettingScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
+          // HEADER (Updated Profile Pic)
           const _SettingHeader(),
 
           Expanded(
@@ -57,7 +58,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   const Divider(),
 
                   _buildMenuTile(title: "Help Me", onTap: () {
-                    Navigator.pushNamed(context, '/profile/settings/helpme');
+                    Navigator.pushNamed(context, '/helpme');
                   }),
                   const Divider(),
 
@@ -95,6 +96,7 @@ class _SettingScreenState extends State<SettingScreen> {
             child: Text(
               title,
               style: const TextStyle(
+                fontFamily: 'Poppins',
                 fontSize: 16,
                 color: Color(0xFF2C3E50),
               ),
@@ -131,6 +133,7 @@ class _SettingScreenState extends State<SettingScreen> {
               child: Text(
                 title,
                 style: const TextStyle(
+                  fontFamily: 'Poppins',
                   fontSize: 16,
                   color: Color(0xFF2C3E50),
                 ),
@@ -156,6 +159,7 @@ class _SettingScreenState extends State<SettingScreen> {
               child: Text(
                 "Log Out",
                 style: TextStyle(
+                  fontFamily: 'Poppins',
                   fontSize: 16,
                   color: Colors.deepOrange,
                   fontWeight: FontWeight.w500,
@@ -170,6 +174,9 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 }
 
+// ==========================================================
+// HEADER SETTING (Profile Pic Updated)
+// ==========================================================
 class _SettingHeader extends StatelessWidget {
   const _SettingHeader();
 
@@ -190,7 +197,7 @@ class _SettingHeader extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: () {
-                   Navigator.pop(context);
+                    Navigator.pop(context);
                 },
                 icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF2C3E50), size: 22),
               ),
@@ -198,6 +205,7 @@ class _SettingHeader extends StatelessWidget {
               const Text(
                 "Setting",
                 style: TextStyle(
+                  fontFamily: 'Poppins',
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF2C3E50),
@@ -209,25 +217,23 @@ class _SettingHeader extends StatelessWidget {
           
           Row(
             children: [
+              // PROFILE PICTURE (UPDATED)
               Container(
                 width: 70,
                 height: 70,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0xFF2C3E50),
+                  color: Color(0xFF2C3E50), // Navy Background Circle
                 ),
-                child: Center(
-                  child: Container(
-                    width: 50,
-                    height: 40,
-                     decoration: const BoxDecoration(
-                      color: Color(0xFF66BB6A),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(50),
-                        topRight: Radius.circular(50),
-                      ),
+                // Menggunakan ClipOval agar gambar terpotong bulat
+                child: ClipOval(
+                  child: Padding(
+                    // Padding sedikit agar gambar tidak terlalu mepet pinggir lingkaran
+                    padding: const EdgeInsets.all(8.0), 
+                    child: Image.asset(
+                      'assets/icons/Monster Hijau Profile.png',
+                      fit: BoxFit.contain,
                     ),
-                    child: const Icon(Icons.face, color: Colors.white),
                   ),
                 ),
               ),
@@ -239,6 +245,7 @@ class _SettingHeader extends StatelessWidget {
                   Text(
                     "Maulana Sudrajat",
                     style: TextStyle(
+                      fontFamily: 'Poppins',
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2C3E50),
@@ -248,6 +255,7 @@ class _SettingHeader extends StatelessWidget {
                   Text(
                     "JFikurikuri@gmail.com",
                     style: TextStyle(
+                      fontFamily: 'Poppins',
                       fontSize: 14,
                       color: Color(0xFF546E7A),
                     ),

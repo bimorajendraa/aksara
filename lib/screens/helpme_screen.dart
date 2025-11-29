@@ -22,7 +22,7 @@ class HelpMeScreen extends StatelessWidget {
                     title: "Support Contact",
                     icon: Icons.headset_mic_outlined,
                     onTap: () {
-                      Navigator.pushNamed(context, '/profile/settings/helpme/supportcontact');
+                      Navigator.pushNamed(context, '/supportcontact');
                     },
                   ),
                   const SizedBox(height: 15),
