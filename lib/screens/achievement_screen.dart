@@ -6,10 +6,10 @@ class AchievementScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Background dasar putih
+      backgroundColor: Colors.white, 
       body: Column(
         children: [
-          // 1. CUSTOM HEADER (Biru Muda Lengkung)
+          // 1. CUSTOM HEADER
           const _CustomHeader(),
 
           // 2. KONTEN SCROLLABLE
@@ -19,10 +19,10 @@ class AchievementScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Judul Halaman Konten
                   const Text(
                     "All Achievement",
                     style: TextStyle(
+                      fontFamily: 'Poppins',
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2C3E50),
@@ -30,7 +30,7 @@ class AchievementScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
 
-                  // Container Besar untuk List Achievement
+                  // Container Besar List
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -38,11 +38,10 @@ class AchievementScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.grey.shade400, width: 1),
                     ),
-                    // Menggunakan ListView.separated agar ada garis pemisah otomatis
                     child: ListView.separated(
-                      padding: const EdgeInsets.all(0), // Padding diatur di dalam item
-                      physics: const NeverScrollableScrollPhysics(), // Agar scroll ikut parent
-                      shrinkWrap: true, // Agar tinggi menyesuaikan konten
+                      padding: const EdgeInsets.all(0), 
+                      physics: const NeverScrollableScrollPhysics(), 
+                      shrinkWrap: true, 
                       itemCount: dummyAchievements.length,
                       separatorBuilder: (context, index) => const Divider(height: 1, thickness: 1),
                       itemBuilder: (context, index) {
@@ -63,7 +62,8 @@ class AchievementScreen extends StatelessWidget {
   }
 }
 
-// components
+// --- COMPONENTS ---
+
 class _CustomHeader extends StatelessWidget {
   const _CustomHeader();
 
@@ -90,6 +90,7 @@ class _CustomHeader extends StatelessWidget {
           const Text(
             "Achievement",
             style: TextStyle(
+              fontFamily: 'Poppins',
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Color(0xFF2C3E50),
@@ -113,18 +114,24 @@ class _AchievementItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // KOTAK GAMBAR
           Container(
             width: 60,
             height: 60,
+            padding: const EdgeInsets.all(10), // Padding agar gambar tidak mepet pinggir
             decoration: BoxDecoration(
               color: data.color,
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Icon(data.icon, color: Colors.white, size: 35),
+            // Menggunakan Image.asset sesuai request
+            child: Image.asset(
+              data.assetPath,
+              fit: BoxFit.contain,
+            ),
           ),
           const SizedBox(width: 15),
 
-          // progress
+          // TEXT & PROGRESS
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,6 +142,7 @@ class _AchievementItem extends StatelessWidget {
                     Text(
                       data.title,
                       style: const TextStyle(
+                        fontFamily: 'Poppins',
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -143,6 +151,7 @@ class _AchievementItem extends StatelessWidget {
                     Text(
                       "${data.current}/${data.target}",
                       style: const TextStyle(
+                        fontFamily: 'Poppins',
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey,
@@ -168,6 +177,7 @@ class _AchievementItem extends StatelessWidget {
                 Text(
                   data.subtitle,
                   style: TextStyle(
+                    fontFamily: 'Poppins',
                     fontSize: 12,
                     color: Colors.grey[600],
                   ),
@@ -181,6 +191,7 @@ class _AchievementItem extends StatelessWidget {
   }
 }
 
+// --- DATA MODEL ---
 
 class AchievementData {
   final String title;
@@ -188,7 +199,7 @@ class AchievementData {
   final int current;
   final int target;
   final Color color;
-  final IconData icon;
+  final String assetPath; // Ubah dari IconData ke String Path Gambar
 
   AchievementData({
     required this.title,
@@ -196,9 +207,11 @@ class AchievementData {
     required this.current,
     required this.target,
     required this.color,
-    required this.icon,
+    required this.assetPath,
   });
 }
+
+// --- DUMMY DATA LIST ---
 
 final List<AchievementData> dummyAchievements = [
   AchievementData(
@@ -206,71 +219,72 @@ final List<AchievementData> dummyAchievements = [
     subtitle: "Ingin tahu 7 Kali",
     current: 7,
     target: 10,
-    color: const Color(0xFFFF6B6B),
-    icon: Icons.help_outline_rounded,
+    color: const Color(0xFFFF6C6C), // Merah Soft
+    assetPath: 'assets/icons/monster ingin tahu.png',
   ),
   AchievementData(
     title: "Kaya Pengetahuan!",
     subtitle: "Kaya akan pengetahuan 7 Kali",
     current: 5,
     target: 10,
-    color: const Color(0xFF1DD1A1),
-    icon: Icons.emoji_events_rounded,
+    color: const Color(0xFF2DBCB7), // Tosca Soft
+    assetPath: 'assets/icons/monster merah kaya pengetahuan.png',
   ),
   AchievementData(
     title: "Progresif!",
     subtitle: "Progresif 7 Kali",
     current: 7,
     target: 10,
-    color: const Color(0xFFFFD93D),
-    icon: Icons.rocket_launch_rounded,
+    color: const Color(0xFFFFC44F), // Yellow Soft
+    assetPath: 'assets/icons/monster pink progresif.png',
   ),
+  // Mengulang data untuk list panjang (sesuai contoh sebelumnya)
   AchievementData(
     title: "Ingin Tahu!",
     subtitle: "Ingin tahu 7 Kali",
     current: 9,
     target: 10,
-    color: const Color(0xFFFF6B6B),
-    icon: Icons.help_outline_rounded,
+    color: const Color(0xFFFF6C6C),
+    assetPath: 'assets/icons/monster ingin tahu.png',
   ),
   AchievementData(
-    title: "Ingin Tahu!",
-    subtitle: "Ingin tahu 7 Kali",
+    title: "Kaya Pengetahuan!",
+    subtitle: "Kaya akan pengetahuan 7 Kali",
     current: 7,
     target: 10,
-    color: const Color(0xFF1DD1A1),
-    icon: Icons.emoji_events_rounded,
+    color: const Color(0xFF2DBCB7),
+    assetPath: 'assets/icons/monster merah kaya pengetahuan.png',
   ),
   AchievementData(
-    title: "Ingin Tahu!",
-    subtitle: "Ingin tahu 7 Kali",
+    title: "Progresif!",
+    subtitle: "Progresif 7 Kali",
     current: 2,
     target: 10,
-    color: const Color(0xFFFFD93D),
-    icon: Icons.rocket_launch_rounded,
+    color: const Color(0xFFFFC44F),
+    assetPath: 'assets/icons/monster pink progresif.png',
   ),
   AchievementData(
     title: "Ingin Tahu!",
     subtitle: "Ingin tahu 7 Kali",
     current: 5,
     target: 10,
-    color: const Color(0xFFFF6B6B),
-    icon: Icons.help_outline_rounded,
+    color: const Color(0xFFFF6C6C),
+    assetPath: 'assets/icons/monster ingin tahu.png',
   ),
    AchievementData(
-    title: "Ingin Tahu!",
-    subtitle: "Ingin tahu 7 Kali",
+    title: "Kaya Pengetahuan!",
+    subtitle: "Kaya akan pengetahuan 7 Kali",
     current: 7,
     target: 10,
-    color: const Color(0xFF1DD1A1),
-    icon: Icons.emoji_events_rounded,
+    color: const Color(0xFF2DBCB7),
+    assetPath: 'assets/icons/monster merah kaya pengetahuan.png',
   ),
    AchievementData(
-    title: "Ingin Tahu!",
-    subtitle: "Ingin tahu 7 Kali",
+    title: "Progresif!",
+    subtitle: "Progresif 7 Kali",
     current: 1,
     target: 10,
-    color: const Color(0xFFFFD93D),
-    icon: Icons.rocket_launch_rounded,
+    color: const Color(0xFFFFC44F),
+    assetPath: 'assets/icons/monster pink progresif.png',
   ),
 ];

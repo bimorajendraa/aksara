@@ -34,11 +34,11 @@ class MyApp extends StatelessWidget {
         '/already-registered': (context) => AlreadyRegisteredScreen(),
         '/home': (context) => HomeScreen(),
         '/profile': (context) => ProfileScreen(),
-        '/profile/achievement': (context) => AchievementScreen(),
-        '/profile/settings' : (context) => SettingScreen(),
-        '/profile/settings/helpme' : (context) => HelpMeScreen(),
-        '/profile/settings/helpme/supportcontact' : (context) => SupportContactScreen(),
-        '/profile/editalien' : (context) => EditAlienScreen(),
+        '/achievement': (context) => AchievementScreen(),
+        '/settings' : (context) => SettingScreen(),
+        '/helpme' : (context) => HelpMeScreen(),
+        '/supportcontact' : (context) => SupportContactScreen(),
+        '/editalien' : (context) => EditAlienScreen(),
       },
     );
   }
