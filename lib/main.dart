@@ -1,3 +1,4 @@
+import 'package:aksara/env.dart';
 import 'package:aksara/screens/editalien_screen.dart';
 import 'package:aksara/screens/helpme_screen.dart';
 import 'package:aksara/screens/supportcontact_screen.dart';
@@ -11,10 +12,18 @@ import 'screens/achievement_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/already_registered_screen.dart';
+import 'screens/story_mode_screen.dart';
+import 'screens/story_detail_screen.dart';
+import 'screens/chapter_read_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
   runApp(const MyApp());
 }
+
+final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -33,6 +42,9 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignUpScreen(),
         '/already-registered': (context) => AlreadyRegisteredScreen(),
         '/home': (context) => HomeScreen(),
+        '/story-mode': (context) => const StoryModeScreen(),
+        '/story-detail': (context) => const StoryDetailScreen(),
+        '/chapter': (context) => const ChapterReadScreen(),
         '/profile': (context) => ProfileScreen(),
         '/achievement': (context) => AchievementScreen(),
         '/settings' : (context) => SettingScreen(),
