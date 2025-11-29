@@ -245,12 +245,16 @@ class _UnitPageState extends State<UnitPage> {
                   child: ListView(
                     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 140),
                     children: [
-                      for (int i = 0; i < rowWidgets.length; i++)
-                        Offstage(
-                          offstage: i >= visibleCount,
-                          child: rowWidgets[i],
-                        ),
-                    ],
+  for (int i = 0; i < rowWidgets.length; i++)
+    Offstage(
+      offstage: i >= visibleCount,
+      child: Padding(
+        padding: EdgeInsets.only(top: i == 0 ? 20 : 0),  // 👈 add padding for FIRST row
+        child: rowWidgets[i],
+      ),
+    ),
+],
+
                   ),
                 ),
               ],
@@ -380,7 +384,7 @@ class LetterRowWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 120,
+      height: 160,   // was 120
       margin: const EdgeInsets.only(bottom: 18),
       child: Column(
         children: [
@@ -400,7 +404,7 @@ class LetterRowWidget extends StatelessWidget {
 
   Widget _canvasBox(String letter) {
     return Container(
-      height: 72,
+      height: 110,    // was 72
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -418,6 +422,7 @@ class LetterRowWidget extends StatelessWidget {
     );
   }
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /// LETTER CANVAS — persistent internal strokes
