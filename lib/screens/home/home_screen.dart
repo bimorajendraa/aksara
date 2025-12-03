@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+/// Status node di map.
+/// - completed  : sudah selesai
+/// - current    : level/progress yang lagi aktif
+/// - locked     : level yang belum kebuka
 enum NodeState { completed, current, locked }
 
+/// Representasi 1 titik node di map (satu kotak buku / lock)
 class MapNode {
-  final double xFactor; // 0..1 posisi horizontal relatif terhadap lebar
-  final double yOffset; // offset vertikal dalam pixels
+  /// Posisi horizontal relatif lebar container map
+  /// 0.0 = paling kiri, 0.5 = tengah, 1.0 = paling kanan
+  final double xFactor;
+
+  /// Posisi vertikal dalam pixel dari atas container map
+  final double yOffset;
+
+  /// Status node (completed / current / locked)
   final NodeState state;
 
   MapNode({
@@ -14,24 +25,39 @@ class MapNode {
     required this.state,
   });
 
-  static const double size = 72.0; // lebih besar
+  /// Ukuran kotak node (width & height)
+  /// Kalau mau node lebih besar/kecil, ubah di sini.
+  // Explicit sizes requested by the user:
+  // - outer/background box: width x height = 85.78 x 92
+  // - inner/foreground box: square 75.84 x 75.84
+  // - icon size: 47 x 47
+  static const double outerWidth = 85.78;
+  static const double outerHeight = 92.0;
+  static const double innerSize = 75.84;
+  static const double iconSize = 47.0;
 }
 
 /// ===========================================================
-/// FIXED DOT PATTERN — SESUAI FIGMA 
-/// (dot lebih kecil, spacing lebih renggang, warna lebih soft)
+/// DOT PATTERN BACKGROUND DI AREA MAP
 /// ===========================================================
+/// Ini yang bikin titik-titik kecil di belakang path.
+/// Mirip banget sama desain Figma, bisa di-tune dari:
+///   - dotSize   : besar titik
+///   - spacingX  : jarak antar titik horizontal
+///   - spacingY  : jarak antar titik vertikal
 class DotPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF3D4F5F).withOpacity(0.45)
+      // Warna dot (disesuaikan dengan figma)
+      ..color = const Color.fromARGB(0, 47, 65, 86).withOpacity(0.85)
       ..style = PaintingStyle.fill;
 
-    const double dotSize = 3;      // DOT FIX
-    const double spacingX = 48.0;  // FIGMA ACCURATE
-    const double spacingY = 48.0;
+    const double dotSize = 4;      // diameter dot, makin besar makin kelihatan
+    const double spacingX = 55.0;  // jarak antar dot horizontal
+    const double spacingY = 55.0;  // jarak antar dot vertikal
 
+    // Loop row (y) dan column (x) untuk gambar dot di seluruh area
     for (double y = spacingY / 2; y < size.height; y += spacingY) {
       for (double x = spacingX / 2; x < size.width; x += spacingX) {
         canvas.drawCircle(Offset(x, y), dotSize, paint);
@@ -43,10 +69,30 @@ class DotPatternPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+/// ===========================================================
+/// FLOW CONNECTOR (PATH YANG MELENGKUNG ANTAR NODE)
+/// ===========================================================
+/// Ini bukan digambar manual, tapi pakai SVG siap pakai:
+///   - assets/icons/kanan-bawah.svg
+///   - assets/icons/bawah-kiri.svg
+///   - assets/icons/kiri-bawah.svg
+///   - assets/icons/bawah-kanan.svg
+///
+/// Komponen ini cuma:
+///   - nentuin warna (completed vs locked)
+///   - nentuin posisi dan ukuran rect tempat SVG itu ditempel
 class FlowConnector extends StatelessWidget {
+  /// Titik awal path (titik tengah bawah node awal)
   final Offset start;
+
+  /// Titik akhir path (titik tengah atas node tujuan)
   final Offset end;
+
+  /// True kalau path ini sudah lewat (levelnya sudah completed)
   final bool isCompleted;
+
+  /// Nama arah SVG yang dipakai
+  /// 'kanan-bawah', 'bawah-kiri', 'kiri-bawah', 'bawah-kanan'
   final String direction;
 
   const FlowConnector({
@@ -59,27 +105,40 @@ class FlowConnector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pilih file SVG sesuai direction
     final svgAsset = 'assets/icons/$direction.svg';
 
+    // Warna path:
+    // - biru terang kalau level di atasnya sudah completed
+    // - abu gelap kalau masih locked
     final color = isCompleted
         ? const Color(0xFF98DAF5)
         : const Color(0xFF5C7590);
 
     // Tambahan drop khusus yang GENAP (bawah-belok)
+    // tujuannya biar path yang "turun dulu baru belok"
+    // nggak nempel ke node, agak turun sedikit.
     double extraDrop = 0;
 
+    // Flow yang "bawah-..." (turun dulu baru belok)
     if (direction == 'bawah-kiri' || direction == 'bawah-kanan') {
-      extraDrop = 28; // PERFECT ke Figma, tweakable
+      extraDrop = 28; // kalau mau path turun lebih jauh, gedein angka ini
     }
 
+    // Untuk kiri-bawah & bawah-kiri, rect-nya dihitung dari end (biar arah benar)
+    // selain itu dihitung dari start
     final left = (direction == 'kiri-bawah' || direction == 'bawah-kiri')
         ? end.dx
         : start.dx;
 
-    final top = start.dy + MapNode.size / 2 + extraDrop;
+    // Rect di-anchorkan di bawah node awal + extraDrop
+    final top = start.dy + MapNode.outerHeight / 2 + extraDrop;
 
+    // Lebar rect = selisih horizontal antara start & end
     final width = (end.dx - start.dx).abs();
-    final height = end.dy - start.dy - MapNode.size / 2;
+
+    // Tinggi rect = jarak vertikal antara node, minus setengah node pertama
+    final height = end.dy - start.dy - MapNode.outerHeight / 2;
 
     return Positioned(
       left: left,
@@ -95,11 +154,14 @@ class FlowConnector extends StatelessWidget {
   }
 }
 
-
-
+/// ==========================
+/// =================================
+/// NODE WIDGET (KOTAK BUKU / LOCK)
 /// ===========================================================
-/// NODE WIDGET — TIDAK DIUBAH KECUALI WARNA SUDAH SESUAI
-/// ===========================================================
+/// Semua style node diatur di sini:
+///   - warna border / isi
+///   - icon yang dipakai
+/// Kalau mau ganti warna tema / bentuk node, cukup ubah class ini.
 class MapNodeWidget extends StatelessWidget {
   final NodeState state;
 
@@ -110,26 +172,35 @@ class MapNodeWidget extends StatelessWidget {
     Color outerBg;
     Color innerBg;
     Widget icon;
+    // Use explicit sizes provided in MapNode.
+    final double outerWidth = MapNode.outerWidth;
+    final double outerHeight = MapNode.outerHeight;
+    final double innerSize = MapNode.innerSize;
+    final double iconSize = MapNode.iconSize;
+    final double outerRadius = outerWidth * 0.25;
+    final double innerRadius = innerSize * 0.18;
 
     switch (state) {
       case NodeState.completed:
+        // Node yang sudah completed (biru terang)
         outerBg = const Color(0xFF5BA8C8);
         innerBg = const Color(0xFF8ED4F5);
         icon = SvgPicture.asset(
           "assets/icons/book-open.svg",
-          width: 28,
-          height: 28,
+          width: iconSize,
+          height: iconSize,
           colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
         );
         break;
 
       case NodeState.current:
+        // Node aktif (abu terang, icon buku biru gelap)
         outerBg = const Color(0xFF9DB3C7);
         innerBg = const Color(0xFFCFDDE9);
         icon = SvgPicture.asset(
           "assets/icons/book.svg",
-          width: 28,
-          height: 28,
+          width: iconSize,
+          height: iconSize,
           colorFilter: const ColorFilter.mode(
             Color(0xFF3D4F5F),
             BlendMode.srcIn,
@@ -138,38 +209,45 @@ class MapNodeWidget extends StatelessWidget {
         break;
 
       case NodeState.locked:
+        // Node terkunci (abu gelap + ikon gembok)
         outerBg = const Color(0xFF637F9F);
         innerBg = const Color(0xFF2F4156);
-        icon = const Icon(
+        icon = Icon(
           Icons.lock,
-          color: Color(0xFF7D8FA3),
-          size: 28,
+          color: const Color(0xFF7D8FA3),
+          size: iconSize,
         );
         break;
     }
 
     return Container(
-      width: MapNode.size,
-      height: MapNode.size,
+      width: outerWidth,
+      height: outerHeight,
       decoration: BoxDecoration(
         color: outerBg,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(outerRadius),
       ),
-      padding: const EdgeInsets.all(5),
-      child: Container(
-        decoration: BoxDecoration(
-          color: innerBg,
-          borderRadius: BorderRadius.circular(13),
+      child: Center(
+        child: Container(
+          width: innerSize,
+          height: innerSize,
+          decoration: BoxDecoration(
+            color: innerBg,
+            borderRadius: BorderRadius.circular(innerRadius),
+          ),
+          child: Center(child: icon),
         ),
-        child: Center(child: icon),
       ),
     );
   }
 }
 
 /// ===========================================================
-/// NEXT LEVEL CARD (TIDAK DIRUBAH, HANYA SPACING DIPERBAIKI)
+/// CARD NEXT LEVEL DI PALING BAWAH
 /// ===========================================================
+/// Ini yang "Level 2 - What is number?" bla bla.
+/// Kalau nanti text / monster per level beda, tinggal
+/// ganti param levelNumber & monsterAsset
 class NextLevelCard extends StatelessWidget {
   final int levelNumber;
   final String monsterAsset;
@@ -183,7 +261,8 @@ class NextLevelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 40, 20, 30),  // FIX spacing
+      // Margin atas 40 biar ada jarak dari node terakhir
+      margin: const EdgeInsets.fromLTRB(20, 40, 20, 30),
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: const Color(0xFF637F9F),
@@ -197,6 +276,7 @@ class NextLevelCard extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // Bagian teks kiri (Level 2 & deskripsi)
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,6 +299,7 @@ class NextLevelCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 14),
+                  // Tombol bulat panah ke kanan
                   Container(
                     width: 44,
                     height: 44,
@@ -236,6 +317,7 @@ class NextLevelCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
+            // Monster di kanan
             Image.asset(
               monsterAsset,
               width: 80,
@@ -250,8 +332,11 @@ class NextLevelCard extends StatelessWidget {
 }
 
 /// ===========================================================
-/// NAVBAR (TIDAK DIOTAK-ATIK KARENA SUDAH BAGUS)
+/// BOTTOM NAVBAR
 /// ===========================================================
+/// Ini nav bar bawah yang ada home / book / medal / user.
+/// Hanya layout static, belum ada onTap atau route logic.
+/// Kalau mau aktif tab lain, tinggal ganti warna icon di sini.
 class HomeBottomNavBar extends StatelessWidget {
   const HomeBottomNavBar({super.key});
 
@@ -266,11 +351,13 @@ class HomeBottomNavBar extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
+          // Row icon nav
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Home = active (biru)
                 SvgPicture.asset(
                   "assets/icons/home.svg",
                   width: 32,
@@ -280,6 +367,7 @@ class HomeBottomNavBar extends StatelessWidget {
                     BlendMode.srcIn,
                   ),
                 ),
+                // Book = inactive (abu)
                 SvgPicture.asset(
                   "assets/icons/book-open.svg",
                   width: 32,
@@ -290,6 +378,7 @@ class HomeBottomNavBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 70),
+                // Medal = inactive
                 SvgPicture.asset(
                   "assets/icons/leaderboard.svg",
                   width: 32,
@@ -299,6 +388,7 @@ class HomeBottomNavBar extends StatelessWidget {
                     BlendMode.srcIn,
                   ),
                 ),
+                // User = inactive
                 SvgPicture.asset(
                   "assets/icons/user.svg",
                   width: 32,
@@ -312,6 +402,7 @@ class HomeBottomNavBar extends StatelessWidget {
             ),
           ),
 
+          // Tombol scan tengah yang melayang di atas nav
           Positioned(
             top: -30,
             left: MediaQuery.of(context).size.width / 2 - 38,
@@ -352,23 +443,34 @@ class HomeBottomNavBar extends StatelessWidget {
 }
 
 /// ===========================================================
-/// HOME SCREEN — MAIN PAGE
-/// PATCH: background + flow fix + dot fix
+/// HOME SCREEN — PAGE UTAMA STORY MODE
 /// ===========================================================
+/// Bagian penting yang bisa lu utak-atik:
+///   - _buildNodes() : pola posisi node & statusnya
+///   - spacing       : jarak vertikal antar node
+///   - xFactor       : posisi kiri/kanan node
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  /// Susunan node dari atas sampai bawah.
+  /// spacing = jarak vertikal antar node (px).
+  ///
+  /// xFactor:
+  ///   - 0.22 kiri (dipindahkan 20% lebih ke kiri dari 0.28)
+  ///   - 0.50 tengah
+  ///   - 0.78 kanan (dipindahkan 20% lebih ke kanan dari 0.72)
+  /// Lu bisa ganti pattern sendiri di sini.
   List<MapNode> _buildNodes() {
     const spacing = 120.0;
     return [
       MapNode(xFactor: 0.50, yOffset: 0, state: NodeState.completed),
-      MapNode(xFactor: 0.72, yOffset: spacing, state: NodeState.completed),
+      MapNode(xFactor: 0.85, yOffset: spacing, state: NodeState.completed),
       MapNode(xFactor: 0.50, yOffset: spacing * 2, state: NodeState.current),
-      MapNode(xFactor: 0.28, yOffset: spacing * 3, state: NodeState.locked),
+      MapNode(xFactor: 0.15, yOffset: spacing * 3, state: NodeState.locked),
       MapNode(xFactor: 0.50, yOffset: spacing * 4, state: NodeState.locked),
-      MapNode(xFactor: 0.72, yOffset: spacing * 5, state: NodeState.locked),
+      MapNode(xFactor: 0.85, yOffset: spacing * 5, state: NodeState.locked),
       MapNode(xFactor: 0.50, yOffset: spacing * 6, state: NodeState.locked),
-      MapNode(xFactor: 0.28, yOffset: spacing * 7, state: NodeState.locked),
+      MapNode(xFactor: 0.15, yOffset: spacing * 7, state: NodeState.locked),
       MapNode(xFactor: 0.50, yOffset: spacing * 8, state: NodeState.locked),
     ];
   }
@@ -378,9 +480,11 @@ class HomeScreen extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final nodes = _buildNodes();
 
+    // Index node yang lagi current (kalau nggak ketemu, fallback ke 0)
     final currentIndex = nodes.indexWhere((n) => n.state == NodeState.current);
     final effectiveCurrentIndex = currentIndex == -1 ? 0 : currentIndex;
 
+    // Konversi MapNode → Offset absolute (pakai lebar screen)
     final offsets = nodes.map((n) {
       return Offset(
         n.xFactor * screenWidth,
@@ -388,21 +492,24 @@ class HomeScreen extends StatelessWidget {
       );
     }).toList();
 
+    // Tinggi map total (dipakai untuk height container scroll)
     final mapHeight = nodes.last.yOffset + 180;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF476280),  // FIX BACKGROUND
+      // warna background utama (lu minta #476280)
+      backgroundColor: const Color(0xFF476280),
       body: Stack(
         children: [
           Positioned.fill(
             child: Container(
-              color: const Color(0xFF476280), // FIX
+              color: const Color(0xFF476280),
             ),
           ),
 
           SafeArea(
             child: Column(
               children: [
+                /// ================= HEADER HEART & COIN =================
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   child: Container(
@@ -417,6 +524,7 @@ class HomeScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        // deretan heart
                         Row(
                           children: List.generate(5, (i) {
                             return Padding(
@@ -431,6 +539,7 @@ class HomeScreen extends StatelessWidget {
                             );
                           }),
                         ),
+                        // coin + jumlah
                         Row(
                           children: [
                             SvgPicture.asset(
@@ -456,6 +565,7 @@ class HomeScreen extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
+                /// ================= CARD LEVEL 1 DI BAWAH HEADER =================
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Container(
@@ -503,6 +613,7 @@ class HomeScreen extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
+                /// ================= AREA MAP SCROLLABLE =================
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -510,19 +621,27 @@ class HomeScreen extends StatelessWidget {
                       children: [
                         Center(
                           child: SizedBox(
-                            width: screenWidth * 0.8,
+                            // Map dibuat 90% dari lebar layar supaya ada margin kiri-kanan
+                            width: screenWidth * 0.9,
                             height: mapHeight,
                             child: Stack(
                               children: [
+                                // Dot pattern cuma di dalam area ini
                                 Positioned.fill(
                                   child: CustomPaint(
                                     painter: DotPatternPainter(),
                                   ),
                                 ),
 
+                                /// ========== FLOW CONNECTOR ANTAR NODE ==========
                                 ...List.generate(nodes.length - 1, (i) {
                                   final isCompleted = i < effectiveCurrentIndex;
 
+                                  // Pola arah path:
+                                  // 0: kanan-bawah (tengah -> kanan)
+                                  // 1: bawah-kiri  (kanan -> tengah)
+                                  // 2: kiri-bawah  (tengah -> kiri)
+                                  // 3: bawah-kanan (kiri -> tengah)
                                   String direction;
                                   switch (i % 4) {
                                     case 0:
@@ -538,12 +657,14 @@ class HomeScreen extends StatelessWidget {
                                       direction = 'bawah-kanan';
                                   }
 
+                                  // Hitung offset start & end,
+                                  // tapi pos X diubah ke 90% lebar (supaya match dengan width map)
                                   final startOffset = Offset(
-                                    nodes[i].xFactor * screenWidth * 0.8,
+                                    nodes[i].xFactor * screenWidth * 0.9,
                                     offsets[i].dy,
                                   );
                                   final endOffset = Offset(
-                                    nodes[i + 1].xFactor * screenWidth * 0.8,
+                                    nodes[i + 1].xFactor * screenWidth * 0.9,
                                     offsets[i + 1].dy,
                                   );
 
@@ -555,11 +676,14 @@ class HomeScreen extends StatelessWidget {
                                   );
                                 }),
 
+                                /// ========== NODE (BUKU / LOCK) ==========
                                 ...List.generate(nodes.length, (i) {
-                                  final nodeX = nodes[i].xFactor * screenWidth * 0.8;
+                                  // Posisi X = xFactor * (90% lebar layar)
+                                  final nodeX =
+                                      nodes[i].xFactor * screenWidth * 0.9;
 
                                   return Positioned(
-                                    left: nodeX - MapNode.size / 2,
+                                    left: nodeX - MapNode.outerWidth / 2,
                                     top: offsets[i].dy,
                                     child: MapNodeWidget(state: nodes[i].state),
                                   );
@@ -569,6 +693,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
 
+                        /// ========== CARD NEXT LEVEL DI BAWAH MAP ==========
                         NextLevelCard(
                           levelNumber: 2,
                           monsterAsset: "assets/images/monster2.png",
@@ -585,6 +710,7 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
 
+      // Bottom navbar selalu nempel di bawah
       bottomNavigationBar: const HomeBottomNavBar(),
     );
   }
