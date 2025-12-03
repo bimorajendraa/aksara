@@ -1,4 +1,5 @@
 import 'package:aksara/env.dart';
+import 'package:aksara/screens/practice_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/onboarding_screen.dart';
@@ -14,6 +15,7 @@ import 'screens/writing_practice_screen.dart';
 import 'screens/story_mode_screen.dart';
 import 'screens/story_detail_screen.dart';
 import 'screens/chapter_read_screen.dart';
+import 'screens/practice_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,17 +45,15 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignUpScreen(),
         '/already-registered': (context) => AlreadyRegisteredScreen(),
         '/home': (context) => HomeScreen(),
-<<<<<<< HEAD
         '/writing_practice': (context) => WritingPracticeScreen(),
         '/story-mode': (context) => const StoryModeScreen(),
-=======
         '/startpage': (context) =>  StartPage(),
         '/startpage2': (context) =>  StartPage2(),
         '/startpage3': (context) =>  StartPage3(),
         '/startpage4': (context) =>  StartPage4(),
->>>>>>> c316ac8a16d0614e6087678b64d65d39c5bf2422
         '/story-detail': (context) => const StoryDetailScreen(),
-        '/chapter': (context) => const ChapterReadScreen()
+        '/chapter': (context) => const ChapterReadScreen(),
+        '/practice': (context) => const PracticeScreen(username: "User"),
       }
     );
   }
