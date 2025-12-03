@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -55,7 +56,7 @@ class ProfileScreen extends StatelessWidget {
                             "See More...",
                             style: TextStyle(
                               fontFamily: 'Poppins',
-                              color: Colors.grey,
+                              color: Color(0xFF2F4156),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -175,7 +176,7 @@ class _ProfileHeaderCard extends StatelessWidget {
                       BoxShadow(
                         color: const Color(0xFF4F6F94),
                         blurRadius: 0, // Hard Edge
-                        offset: const Offset(4, 4), // Kanan Bawah
+                        offset: const Offset(-4, 4), // Kanan Bawah
                         spreadRadius: 0,
                       ),
                     ],
@@ -223,7 +224,7 @@ class _UserInfoSection extends StatelessWidget {
                 fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: const Color.fromARGB(255, 21, 19, 72),
+                color: const Color(0xFF2F4156),
                 decoration: TextDecoration.underline,
                 decorationColor: const Color.fromARGB(255, 21, 19, 72),
               ),
@@ -235,7 +236,7 @@ class _UserInfoSection extends StatelessWidget {
                 fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: Color(0xFF2F4156),
               ),
             ),
           ],
@@ -252,7 +253,7 @@ class _UserInfoSection extends StatelessWidget {
               'assets/icons/gerigi.png',
               width: 32,
               height: 32,
-              color: Colors.black54,
+              color: Color(0xFF2F4156),
             ),
           ),
         ),
@@ -283,34 +284,54 @@ class _AchievementList extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      // 1. HAPUS PADDING DI SINI AGAR DIVIDER BISA FULL
+      // padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), 
+      
+      // Tambahkan clip agar anak-anak container mengikuti sudut bulat (rounded)
+      clipBehavior: Clip.hardEdge, 
+      
       child: Column(
         children: [
           _buildAchievementItem(
-            assetPath: 'assets/icons/monster ingin tahu.png',
-            color: const Color(0xFFFF6C6C), // Merah Soft
+            assetPath: 'assets/icons/monster ingin tahu.svg',
+            color: const Color(0xFFFF6C6C),
             title: "Ingin Tahu!",
             subtitle: "Ingin tahu 7 Kali",
             progress: 0.7,
             progressText: "7/10",
+            isSvg: true,
+            svgScale: 1.6,
+            svgOffsetX: 2.0,
+            svgOffsetY: -2.8,
           ),
-          Divider(color: Colors.grey.shade200, thickness: 1),
+          
+          // Divider Full Width (Tanpa indent)
+          Divider(color: Colors.grey.shade200, thickness: 1, height: 1),
+          
           _buildAchievementItem(
-            assetPath: 'assets/icons/monster merah kaya pengetahuan.png',
-            color: const Color(0xFF2DBCB7), // Tosca Soft
+            assetPath: 'assets/icons/monster merah kaya pengetahuan.svg',
+            color: const Color(0xFF2DBCB7),
             title: "Kaya Pengetahuan!",
             subtitle: "Kaya akan pengetahuan 7 Kali",
             progress: 0.7,
             progressText: "7/10",
+            isSvg: true,
+            svgScale: 1.4,
+            svgOffsetY: -1.5,
           ),
-          Divider(color: Colors.grey.shade200, thickness: 1),
+          
+          Divider(color: Colors.grey.shade200, thickness: 1, height: 1),
+          
           _buildAchievementItem(
-            assetPath: 'assets/icons/roket progresif.png',
-            color: const Color(0xFFFFC44F), // Kuning Soft
+            assetPath: 'assets/icons/monster pink rocket.svg',
+            color: const Color(0xFFFFC44F),
             title: "Progresif!",
             subtitle: "Progresif 7 Kali",
             progress: 0.7,
             progressText: "7/10",
+            isSvg: true,
+            svgScale: 1.4,
+            svgOffsetY: -1,
           ),
         ],
       ),
@@ -318,15 +339,21 @@ class _AchievementList extends StatelessWidget {
   }
 
   Widget _buildAchievementItem({
-    required String assetPath, 
+    required String assetPath,
     required Color color,
     required String title,
     required String subtitle,
     required double progress,
     required String progressText,
+    bool isSvg = false,
+    double svgOffsetX = 0.0,
+    double svgOffsetY = 0.0,
+    double svgScale = 1.0,
   }) {
+    // 2. PINDAHKAN PADDING KE SINI
+    // Agar konten teks tetap rapi masuk ke dalam, tapi divider di luar tetap full
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
       child: Row(
         children: [
           // Icon Box
@@ -345,10 +372,21 @@ class _AchievementList extends StatelessWidget {
                 )
               ],
             ),
-            child: Image.asset(
-              assetPath, 
-              fit: BoxFit.contain,
-            ),
+            child: isSvg
+                ? Transform.translate(
+                    offset: Offset(svgOffsetX, svgOffsetY),
+                    child: Transform.scale(
+                      scale: svgScale,
+                      child: SvgPicture.asset(
+                        assetPath,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  )
+                : Image.asset(
+                    assetPath,
+                    fit: BoxFit.contain,
+                  ),
           ),
           const SizedBox(width: 15),
           Expanded(
@@ -385,7 +423,8 @@ class _AchievementList extends StatelessWidget {
                     value: progress,
                     minHeight: 8,
                     backgroundColor: const Color(0xFFDAE4EB),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -416,30 +455,65 @@ class _RecentlyReadList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 270,
+      // Tinggi area diperbesar sedikit agar muat kartu yang lebih lebar/tinggi
+      height: 300, 
       child: ListView(
         scrollDirection: Axis.horizontal,
-        clipBehavior: Clip.none,
+        // Clip.none agar shadow tidak terpotong saat di ujung kiri/kanan
+        clipBehavior: Clip.none, 
         children: [
-          _buildBookCard("The Tale of Melon City", "7 Pages", "Hard", "4.9"),
+          _buildBookCard(
+            title: "The Tale of Melon City",
+            pages: "7 Pages",
+            difficulty: "Hard",
+            rating: "4.9",
+            imagePath: "assets/images/book image one.png", 
+          ),
+          
           const SizedBox(width: 20),
-          _buildBookCard("The Tale of the Sin City", "7 Pages", "Hard", "4.5"),
+          
+          _buildBookCard(
+            title: "The Tale of the Sin City",
+            pages: "7 Pages",
+            difficulty: "Hard",
+            rating: "4.5",
+            imagePath: "assets/images/book image one.png",
+          ),
+          
+          const SizedBox(width: 20),
+
+          // Tambahan item agar kelihatan bisa di-scroll
+          _buildBookCard(
+            title: "Harry Potter",
+            pages: "300 Pages",
+            difficulty: "Medium",
+            rating: "4.8",
+            imagePath: "assets/images/book image one.png",
+          ),
+          
           const SizedBox(width: 20),
         ],
       ),
     );
   }
 
-  Widget _buildBookCard(String title, String pages, String difficulty, String rating) {
+  Widget _buildBookCard({
+    required String title,
+    required String pages,
+    required String difficulty,
+    required String rating,
+    required String imagePath,
+  }) {
     return Container(
-      width: 160,
+      // UBAH LEBAR DI SINI (Sebelumnya 160, sekarang 240 biar lebar)
+      width: 240, 
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFE3F2FD),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20), // Radius diperhalus
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.1),
+            color: const Color(0xFFC8D9E6),
             offset: const Offset(0, 5),
             blurRadius: 10,
             spreadRadius: 1,
@@ -449,14 +523,15 @@ class _RecentlyReadList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Bagian Cover Buku
           Expanded(
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                image: const DecorationImage(
-                  image: NetworkImage('https://via.placeholder.com/150'),
-                  fit: BoxFit.cover,
+                borderRadius: BorderRadius.circular(16),
+                image: DecorationImage(
+                  image: AssetImage(imagePath), 
+                  fit: BoxFit.cover, // Gambar memenuhi kotak
                 ),
                 border: Border.all(color: Colors.white, width: 4),
                 boxShadow: [
@@ -469,51 +544,69 @@ class _RecentlyReadList extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 15),
+          
+          // Judul Buku
           Text(
             title,
-            maxLines: 2,
+            maxLines: 1, // Batasi 1 baris agar rapi, atau 2 jika mau
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w700,
-              fontSize: 15,
-              color: Color(0xFF2C3E50),
-              height: 1.2,
+              fontSize: 16, // Font diperbesar sedikit
+              color: Color(0xFF2F4156),
             ),
           ),
-          const SizedBox(height: 2),
+          
+          const SizedBox(height: 4),
+          
+          // Pages Info
           Text(
             "($pages)",
             style: TextStyle(
               fontFamily: 'Poppins',
-              color: Colors.grey[600],
-              fontSize: 11,
+              color: Color(0xFF2F4156),
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 10),
+          
+          const SizedBox(height: 12),
+          
+          // Footer (Difficulty & Rating)
           Row(
             children: [
-              const Icon(Icons.access_time_filled_rounded, size: 14, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(
-                difficulty,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 11,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Color(0xFF4F6F94),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.access_time_filled_rounded, size: 14, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      difficulty,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        color: Color(0xFF2F4156),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const Spacer(),
-              const Icon(Icons.star_rounded, size: 16, color: Color(0xFFFFD93D)),
-              const SizedBox(width: 2),
+              const Icon(Icons.star_rounded, size: 18, color: Color(0xFFFFD93D)),
+              const SizedBox(width: 4),
               Text(
                 rating,
                 style: const TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF2C3E50),
                 ),
@@ -564,20 +657,51 @@ class CustomFloatingNavBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(icon: Icons.home_rounded, index: 0),
-              _buildNavItem(icon: Icons.menu_book_rounded, index: 1),
-              const SizedBox(width: 50),
-              // Achievement Icon using Asset
+              // ITEM 0: HOME (Contoh geser sedikit ke atas)
               _buildNavAssetItem(
-                assetPath: 'assets/icons/achievement navbar.png', 
-                index: 2
+                assetPath: 'assets/icons/home navbar.svg', // Ganti .svg jika pakai svg
+                index: 0,
+                isSvg: true, // Ubah true jika file assetnya SVG
+                scale: 1.2,
+                offsetX: 2,
+                // offsetYY: -2.0, // Contoh: Geser ke atas
               ),
-              _buildNavItem(icon: Icons.person_rounded, index: 3),
+              
+              // ITEM 1: BOOK
+              _buildNavAssetItem(
+                assetPath: 'assets/icons/book navbar.svg', 
+                index: 1,
+                isSvg: true,
+                scale: 1.5,
+                offsetY: 1, 
+              ),
+              
+              const SizedBox(width: 50), // Spacer tengah
+              
+              // ITEM 2: ACHIEVEMENT (Contoh diperbesar sedikit)
+              _buildNavAssetItem(
+                assetPath: 'assets/icons/achievement navbar.svg', 
+                index: 2,
+                isSvg: true,
+                scale: 1,
+                offsetY: -1,
+                // scale: 1.1, // Contoh: Perbesar 10%
+              ),
+              
+              // ITEM 3: PROFILE (Icon Bawaan)
+              _buildNavAssetItem(
+                assetPath: 'assets/icons/user navbar active.svg', 
+                index: 2,
+                isSvg: true,
+                scale: 1.25,
+                offsetY: -2.0,
+                offsetX: -3,
+              )
             ],
           ),
         ),
 
-        // 2. TOMBOL SCAN
+        // 2. TOMBOL SCAN (Tengah)
         Positioned(
           top: -25,
           child: GestureDetector(
@@ -585,6 +709,8 @@ class CustomFloatingNavBar extends StatelessWidget {
             child: Container(
               width: 65,
               height: 65,
+              // Tambahkan padding agar icon di dalamnya tidak mepet
+              padding: const EdgeInsets.all(16), 
               decoration: BoxDecoration(
                 color: const Color(0xFFD6E6F2),
                 shape: BoxShape.circle,
@@ -597,10 +723,11 @@ class CustomFloatingNavBar extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.qr_code_scanner_rounded,
-                color: Color(0xFF2C3E50),
-                size: 30,
+              // CONTOH: Menggunakan SVG di tombol tengah juga bisa diatur
+              child: SvgPicture.asset(
+                'assets/icons/qr navbar.svg', // Pastikan file SVG ada
+                colorFilter: const ColorFilter.mode(Color(0xFF2C3E50), BlendMode.srcIn),
+                fit: BoxFit.contain,
               ),
             ),
           ),
@@ -609,6 +736,7 @@ class CustomFloatingNavBar extends StatelessWidget {
     );
   }
 
+  // Helper untuk Icon Bawaan (IconData)
   Widget _buildNavItem({required IconData icon, required int index}) {
     final isSelected = currentIndex == index;
     return GestureDetector(
@@ -621,15 +749,39 @@ class CustomFloatingNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavAssetItem({required String assetPath, required int index}) {
+  // Helper untuk Gambar/SVG Custom (UPDATED dengan Transform)
+  Widget _buildNavAssetItem({
+    required String assetPath, 
+    required int index,
+    bool isSvg = false, // Deteksi SVG
+    double offsetX = 0.0, // Geser X
+    double offsetY = 0.0, // Geser Y
+    double scale = 1.0,   // Skala Besar/Kecil
+  }) {
     final isSelected = currentIndex == index;
+    final color = isSelected ? const Color(0xFF4CA1AF) : Colors.grey.shade400;
+
     return GestureDetector(
       onTap: () => onTap(index),
-      child: Image.asset(
-        assetPath,
-        width: 28,
-        height: 28,
-        color: isSelected ? const Color(0xFF4CA1AF) : Colors.grey.shade400,
+      // BUNGKUS DENGAN TRANSFORM
+      child: Transform.translate(
+        offset: Offset(offsetX, offsetY),
+        child: Transform.scale(
+          scale: scale,
+          child: isSvg 
+            ? SvgPicture.asset(
+                assetPath,
+                width: 26, // Ukuran dasar
+                height: 26,
+                colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+              )
+            : Image.asset(
+                assetPath,
+                width: 26,
+                height: 26,
+                color: color,
+              ),
+        ),
       ),
     );
   }
