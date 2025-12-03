@@ -8,47 +8,94 @@ class LeaderboardPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFC7D9E5), // Warna background biru muda
       
-      body: Column(
+      body: Stack(
         children: [
-          const SizedBox(height: 50), // Spasi status bar
+          // -----------------------------------------------------------
+          // 1. BACKGROUND DECORATION (3 AWAN BERBEDA)
+          // -----------------------------------------------------------
           
-          // 1. BAGIAN ATAS: PODIUM
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: PodiumSection(),
+          // Awan 1: Kanan Atas
+          Positioned(
+            top: 40,
+            right: -20, // Muncul dari kanan
+            child: Image.asset(
+              'assets/images/awan 1.png', // GANTI NAMA FILE
+              width: 180, 
+              fit: BoxFit.contain,
+            ),
           ),
-          const SizedBox(height: 20),
 
-          // 2. BAGIAN BAWAH: LIST (SCROLLABLE)
-          Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-                child: const LeaderboardList(),
+          // Awan 2: Kiri Tengah
+          Positioned(
+            top: 120, // Posisi vertikal di tengah area atas
+            left: -30, // Muncul dari kiri
+            child: Image.asset(
+              'assets/images/awan 2.png', // GANTI NAMA FILE
+              width: 210, 
+              fit: BoxFit.contain,
+            ),
+          ),
+
+          // Awan 3: Kanan Bawah (Di belakang list)
+          Positioned(
+            top: 280, 
+            right: -10,
+            child: Opacity(
+              opacity: 0.9, 
+              child: Image.asset(
+                'assets/images/awan 3.png', // GANTI NAMA FILE
+                width: 160,
+                fit: BoxFit.contain,
               ),
             ),
+          ),
+
+          // -----------------------------------------------------------
+          // 2. KONTEN UTAMA (PODIUM & LIST)
+          // -----------------------------------------------------------
+          Column(
+            children: [
+              const SizedBox(height: 50), // Spasi status bar
+              
+              // Bagian Atas: Podium
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: PodiumSection(),
+              ),
+              const SizedBox(height: 20),
+
+              // Bagian Bawah: List Scrollable
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                    child: const LeaderboardList(),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
 
-      // 3. NAVIGATION BAR
+      // Navigation Bar Fixed di Bawah
       bottomNavigationBar: const CustomBottomNavBar(),
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// WIDGET: PODIUM (JUARA 1, 2, 3)
+// WIDGET: PODIUM
 // ---------------------------------------------------------------------------
 class PodiumSection extends StatelessWidget {
   const PodiumSection({super.key});
@@ -68,8 +115,7 @@ class PodiumSection extends StatelessWidget {
             score: "4099",
             color: const Color(0xFF4A7C96),
             height: 140,
-            // Menggunakan PNG
-            assetPath: 'assets/images/monster_11.png', 
+            assetPath: 'assets/images/monster 11.png', 
           ),
           // Juara 1
           _buildPodiumItem(
@@ -79,8 +125,7 @@ class PodiumSection extends StatelessWidget {
             color: const Color(0xFFFF9F1C),
             height: 170,
             isWinner: true,
-            // Menggunakan PNG
-            assetPath: 'assets/images/monster_12.png',
+            assetPath: 'assets/images/monster 12.png', 
           ),
           // Juara 3
           _buildPodiumItem(
@@ -89,8 +134,7 @@ class PodiumSection extends StatelessWidget {
             score: "3902",
             color: const Color(0xFF5C4033),
             height: 140,
-            // Menggunakan PNG
-            assetPath: 'assets/images/monster_3.png',
+            assetPath: 'assets/images/monster 3.png', 
           ),
         ],
       ),
@@ -116,7 +160,6 @@ class PodiumSection extends StatelessWidget {
           Stack(
             alignment: Alignment.bottomCenter,
             children: [
-              // Container Lingkaran Avatar
               Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.all(4),
@@ -129,7 +172,6 @@ class PodiumSection extends StatelessWidget {
                   radius: isWinner ? 40 : 30,
                   backgroundColor: Colors.transparent, 
                   child: ClipOval(
-                    // --- PERUBAHAN DI SINI (Pakai Image.asset) ---
                     child: Image.asset(
                       assetPath,
                       fit: BoxFit.contain, 
@@ -139,7 +181,6 @@ class PodiumSection extends StatelessWidget {
                   ),
                 ),
               ),
-              // Badge Angka Peringkat
               Positioned(
                 bottom: 0,
                 child: Container(
@@ -161,7 +202,6 @@ class PodiumSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // Nama Player
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -180,7 +220,6 @@ class PodiumSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          // Skor
           Text(
             score,
             style: TextStyle(
@@ -203,16 +242,16 @@ class LeaderboardList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Data Dummy (Pastikan akhiran file adalah .png)
+    // Data Dummy 
     final List<Map<String, dynamic>> users = [
-      {'rank': 4, 'name': 'Maulana Sudrajat', 'score': 3580, 'trend': 'up', 'img': 'assets/images/monster_3.png'},
-      {'rank': 5, 'name': 'Bimo Rajendra', 'score': 3120, 'trend': 'down', 'img': 'assets/images/monster_11.png'},
-      {'rank': 6, 'name': 'Nathania Princess', 'score': 3120, 'trend': 'up', 'img': 'assets/images/monster_12.png'},
-      {'rank': 7, 'name': 'aulnatbim', 'score': 3120, 'trend': 'up', 'img': 'assets/images/monster_3.png'},
-      {'rank': 8, 'name': 'User Lain', 'score': 3120, 'trend': 'flat', 'img': 'assets/images/monster_11.png'},
-      {'rank': 9, 'name': 'natanyaShobah', 'score': 3120, 'trend': 'up', 'img': 'assets/images/monster_12.png'},
-      {'rank': 10, 'name': 'You', 'score': 3120, 'trend': 'up', 'isMe': true, 'img': 'assets/images/monster_12.png'},
-      {'rank': 11, 'name': 'Scroll Test', 'score': 2000, 'trend': 'down', 'img': 'assets/images/monster_3.png'},
+      {'rank': 4, 'name': 'Maulana Sudrajat', 'score': 3580, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster 3.png'},
+      {'rank': 5, 'name': 'Bimo Rajendra', 'score': 3120, 'trend': 'down', 'trendVal': 2, 'img': 'assets/images/monster 11.png'},
+      {'rank': 6, 'name': 'Nathania Princess', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster 12.png'},
+      {'rank': 7, 'name': 'aulnatbim', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster 3.png'},
+      {'rank': 8, 'name': 'User Lain', 'score': 3120, 'trend': 'flat', 'trendVal': 0, 'img': 'assets/images/monster 11.png'},
+      {'rank': 9, 'name': 'natanyaShobah', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster 12.png'},
+      {'rank': 10, 'name': 'You', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'isMe': true, 'img': 'assets/images/monster 12.png'},
+      {'rank': 11, 'name': 'Scroll Test', 'score': 2000, 'trend': 'down', 'trendVal': 5, 'img': 'assets/images/monster 3.png'},
     ];
 
     return ListView.builder(
@@ -227,7 +266,14 @@ class LeaderboardList extends StatelessWidget {
 
   Widget _buildListItem(Map<String, dynamic> user) {
     bool isMe = user['isMe'] ?? false;
+    String trend = user['trend'];
+    int trendVal = user['trendVal'];
     
+    // Tentukan warna trend
+    Color trendColor = Colors.grey;
+    if (trend == 'up') trendColor = Colors.green;
+    if (trend == 'down') trendColor = Colors.red;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -251,11 +297,10 @@ class LeaderboardList extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           
-          // Avatar Monster di List
+          // Avatar Monster
           CircleAvatar(
             radius: 20,
             backgroundColor: Colors.transparent, 
-            // --- PERUBAHAN DI SINI (Pakai Image.asset) ---
             child: Image.asset(
               user['img'], 
               width: 35,
@@ -265,7 +310,7 @@ class LeaderboardList extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           
-          // Nama dan Skor
+          // Nama & Skor
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,11 +328,25 @@ class LeaderboardList extends StatelessWidget {
             ),
           ),
           
-          // Indikator Trend
-          Icon(
-            user['trend'] == 'down' ? Icons.arrow_drop_down : Icons.arrow_drop_up,
-            color: user['trend'] == 'down' ? Colors.red : Colors.green,
-          ),
+          // --- INDIKATOR TREND (+/- Angka di KIRI Segitiga) ---
+          if (trend != 'flat') ...[
+             Text(
+              trend == 'up' ? "+$trendVal" : "-$trendVal",
+              style: TextStyle(
+                fontWeight: FontWeight.bold, 
+                fontSize: 12,
+                color: trendColor, 
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              trend == 'down' ? Icons.arrow_drop_down : Icons.arrow_drop_up,
+              color: trendColor, 
+            ),
+          ] else ...[
+             const Text("-", style: TextStyle(color: Colors.grey)),
+          ]
+          // ----------------------------------------------------
         ],
       ),
     );
@@ -324,7 +383,7 @@ class CustomBottomNavBar extends StatelessWidget {
             IconButton(onPressed: () {}, icon: const Icon(Icons.home, size: 28, color: Colors.grey)),
             IconButton(onPressed: () {}, icon: const Icon(Icons.menu_book, size: 28, color: Colors.grey)),
             
-            // Tombol Tengah (Scan)
+            // Tombol Tengah
             Transform.translate(
               offset: const Offset(0, -15),
               child: Container(
