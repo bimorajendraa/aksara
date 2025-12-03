@@ -39,11 +39,9 @@ class _StoryModeScreenState extends State<StoryModeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -87,20 +85,20 @@ class _StoryModeScreenState extends State<StoryModeScreen> {
 
                       return GestureDetector(
                         onTap: () {
-                          print("Open detail for book = $book");
                           Navigator.pushNamed(
                             context,
                             '/story-detail',
-                            arguments: book,
+                            arguments: {
+                              'id_book': book['id_book'],
+                              'book': book,
+                            },
                           );
                         },
-
                         child: Container(
                           decoration: BoxDecoration(
                             color: const Color(0xFF2F4156),
                             borderRadius: BorderRadius.circular(16),
                           ),
-
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -121,7 +119,6 @@ class _StoryModeScreenState extends State<StoryModeScreen> {
                                   ),
                                 ),
                               ),
-
                               Padding(
                                 padding: const EdgeInsets.all(10),
                                 child: Column(
@@ -135,7 +132,6 @@ class _StoryModeScreenState extends State<StoryModeScreen> {
                                         color: Colors.white,
                                       ),
                                     ),
-
                                     const SizedBox(height: 4),
                                     Text(
                                       "(${book['pages']} Pages)",
@@ -143,9 +139,7 @@ class _StoryModeScreenState extends State<StoryModeScreen> {
                                         color: Colors.white70,
                                       ),
                                     ),
-
                                     const SizedBox(height: 10),
-
                                     Row(
                                       children: [
                                         Container(
