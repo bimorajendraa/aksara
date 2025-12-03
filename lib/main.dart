@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/start_page.dart';
+import 'screens/start_page2.dart';
+import 'screens/start_page3.dart';
+import 'screens/start_page4.dart';
 import 'screens/signup_screen.dart';
 import 'screens/already_registered_screen.dart';
 import 'screens/writing_practice_screen.dart';
@@ -26,6 +30,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        fontFamily: 'Poppins',
+      ),
       title: "Aksara App",
 
       initialRoute: '/onboarding',
@@ -36,11 +43,18 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignUpScreen(),
         '/already-registered': (context) => AlreadyRegisteredScreen(),
         '/home': (context) => HomeScreen(),
+<<<<<<< HEAD
         '/writing_practice': (context) => WritingPracticeScreen(),
         '/story-mode': (context) => const StoryModeScreen(),
+=======
+        '/startpage': (context) =>  StartPage(),
+        '/startpage2': (context) =>  StartPage2(),
+        '/startpage3': (context) =>  StartPage3(),
+        '/startpage4': (context) =>  StartPage4(),
+>>>>>>> c316ac8a16d0614e6087678b64d65d39c5bf2422
         '/story-detail': (context) => const StoryDetailScreen(),
-        '/chapter': (context) => const ChapterReadScreen(),
-      },
+        '/chapter': (context) => const ChapterReadScreen()
+      }
     );
   }
 }
