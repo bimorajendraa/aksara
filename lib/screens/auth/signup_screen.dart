@@ -1,49 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:aksara/auth/auth_service.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignUpScreenState extends State<SignUpScreen> {
   bool showPassword = false;
   bool isLoading = false;
 
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _signIn() async {
+  Future<void> _signUp() async {
     final email = _emailController.text.trim();
+    final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      _showMessage("Email & password wajib diisi!");
+    if (email.isEmpty || username.isEmpty || password.isEmpty) {
+      _showMessage("Semua field wajib diisi!");
       return;
     }
 
     setState(() => isLoading = true);
 
     final auth = AuthService();
-    final error = await auth.login(email: email, password: password);
+
+    final error = await auth.register(
+      email: email,
+      username: username,
+      password: password,
+    );
 
     if (error != null) {
       _showMessage(error);
     } else {
-      _showMessage("Login berhasil!");
-      Navigator.pushReplacementNamed(context, '/home');
+      _showMessage("Akun berhasil dibuat! Silakan login.");
+      // ignore: use_build_context_synchronously
+      Navigator.pushReplacementNamed(context, '/login');
     }
 
     setState(() => isLoading = false);
+  }
+
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -57,6 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 15),
+
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
@@ -69,33 +75,43 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Icon(Icons.arrow_back, color: Colors.black),
                 ),
               ),
+
               const SizedBox(height: 20),
+
               Center(
                 child: Image.asset("assets/images/aksara_logo.png", width: 150),
               ),
+
               const SizedBox(height: 40),
+
               const Text(
-                "Hi, Welcome\nBack",
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black87,
-                ),
+                "Create Your\nAccount !",
+                style: TextStyle(fontSize: 40, fontWeight: FontWeight.w800),
               ),
+
               const SizedBox(height: 40),
 
               _roundedInput(
                 icon: Icons.email_outlined,
-                hint: "Email",
+                hint: "Enter your email",
                 controller: _emailController,
               ),
+
+              const SizedBox(height: 20),
+
+              _roundedInput(
+                icon: Icons.person_outline,
+                hint: "Username",
+                controller: _usernameController,
+              ),
+
               const SizedBox(height: 20),
 
               _roundedInput(
                 icon: Icons.lock_outline,
                 hint: "Password",
-                controller: _passwordController,
                 obscure: !showPassword,
+                controller: _passwordController,
                 suffix: GestureDetector(
                   onTap: () => setState(() => showPassword = !showPassword),
                   child: Icon(
@@ -104,18 +120,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
 
-              const Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  "Forgot Password?",
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                ),
-              ),
               const SizedBox(height: 30),
 
-              _mainButton("Login", onPressed: _signIn),
+              _mainButton("Sign Up", onPressed: _signUp),
+
               const SizedBox(height: 25),
 
               const Center(
@@ -124,18 +133,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Colors.black54),
                 ),
               ),
+
               const SizedBox(height: 25),
 
               _googleButton(),
+
               const SizedBox(height: 25),
 
               const Center(
                 child: Text.rich(
                   TextSpan(
-                    text: "Don’t have an account? ",
+                    text: "Already have an account? ",
                     children: [
                       TextSpan(
-                        text: "Sign Up",
+                        text: "Login",
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                     ],
@@ -143,6 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontSize: 16),
                 ),
               ),
+
               const SizedBox(height: 40),
             ],
           ),
@@ -174,8 +186,8 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: controller,
               obscureText: obscure,
               decoration: InputDecoration(
-                border: InputBorder.none,
                 hintText: hint,
+                border: InputBorder.none,
               ),
             ),
           ),
@@ -196,14 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Center(
           child: isLoading
-              ? const SizedBox(
-                  height: 22,
-                  width: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: Colors.white,
-                  ),
-                )
+              ? const CircularProgressIndicator(color: Colors.white)
               : Text(
                   text,
                   style: const TextStyle(
@@ -236,9 +241,5 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
     );
-  }
-
-  void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 }
