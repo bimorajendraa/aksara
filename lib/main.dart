@@ -1,55 +1,27 @@
-import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:aksara/env.dart';
+import 'package:flutter/material.dart';
 
-<<<<<<< Updated upstream
-// ==========================
-// Import semua halaman
-// ==========================
-
-// Onboarding
-import 'presentation/screens/onboarding_screen.dart';
-
-// Auth
-import 'presentation/screens/login_screen.dart';
-import 'presentation/screens/signup_screen.dart';
-import 'presentation/screens/already_registered_screen.dart';
-
-// Home
-import 'presentation/screens/home_screen.dart';
-
-// Levels
-import 'presentation/screens/level_screen.dart';
-
-void main() {
-=======
-import 'env.dart';
-
-// Screens
-import 'screens/onboarding_screen.dart';
-import 'screens/login_screen.dart';
-import 'screens/signup_screen.dart';
-import 'screens/already_registered_screen.dart';
-
-// HOME (MAP PAGE)
-import 'screens/home/home_page.dart';
-
-// Story
-import 'screens/story_mode_screen.dart';
-import 'screens/story_detail_screen.dart';
-import 'screens/chapter_read_screen.dart';
+import 'screens/auth/onboarding_screen.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/home/home_screen.dart';
+import 'screens/games/start/start_page.dart';
+import 'screens/games/start/start_page2.dart';
+import 'screens/games/start/start_page3.dart';
+import 'screens/games/start/start_page4.dart';
+import 'screens/auth/signup_screen.dart';
+import 'screens/auth/already_registered_screen.dart';
+import 'screens/book/story_mode_screen.dart';
+import 'screens/book/story_detail_screen.dart';
+import 'screens/book/chapter_read_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Inisialisasi Supabase sebelum aplikasi dijalankan.
-  await Supabase.initialize(
-    url: Env.supabaseUrl,
-    anonKey: Env.supabaseAnonKey,
-  );
-
->>>>>>> Stashed changes
+  await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
   runApp(const MyApp());
 }
+
+final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -58,37 +30,26 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        fontFamily: 'Poppins',
+      ),
       title: "Aksara App",
 
       initialRoute: '/onboarding',
 
       routes: {
-<<<<<<< Updated upstream
-        // Onboarding & Auth flows
-=======
-        //Verification page
->>>>>>> Stashed changes
-        '/onboarding': (context) => const OnboardingScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/signup': (context) => const SignUpScreen(),
-        '/already-registered': (context) => const AlreadyRegisteredScreen(),
-
-<<<<<<< Updated upstream
-        // Home
+        '/onboarding': (context) => OnboardingScreen(),
+        '/login': (context) => LoginScreen(),
+        '/signup': (context) => SignUpScreen(),
+        '/already-registered': (context) => AlreadyRegisteredScreen(),
         '/home': (context) => HomeScreen(),
-
-        // Levels
-        '/levels': (context) => const LevelPage(),
-=======
-        // HOME PAGE
-        '/home': (context) => const HomeScreen(),
-
-        // Story mode pages
-        '/story-mode': (context) => const StoryModeScreen(),
+        '/startpage': (context) =>  StartPage(),
+        '/startpage2': (context) =>  StartPage2(),
+        '/startpage3': (context) =>  StartPage3(),
+        '/startpage4': (context) =>  StartPage4(),
         '/story-detail': (context) => const StoryDetailScreen(),
-        '/chapter': (context) => const ChapterReadScreen(),
->>>>>>> Stashed changes
-      },
+        '/chapter': (context) => const ChapterReadScreen()
+      }
     );
   }
 }

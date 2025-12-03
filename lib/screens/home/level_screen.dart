@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/level_model.dart';
-import '../widgets/level_card.dart';
+import 'level_card.dart';
 
 /// Halaman daftar level.
 /// Menampilkan 10 level sesuai desain dan bersifat responsif.
