@@ -14,6 +14,7 @@ import 'screens/story_mode_screen.dart';
 import 'screens/story_detail_screen.dart';
 import 'screens/chapter_read_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'screens/leaderboard.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,7 +49,8 @@ class MyApp extends StatelessWidget {
         '/startpage3': (context) =>  StartPage3(),
         '/startpage4': (context) =>  StartPage4(),
         '/story-detail': (context) => const StoryDetailScreen(),
-        '/chapter': (context) => const ChapterReadScreen()
+        '/chapter': (context) => const ChapterReadScreen(),
+        '/leaderboard': (context) => const LeaderboardPage()
       }
     );
   }
