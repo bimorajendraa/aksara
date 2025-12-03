@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../utils/hash.dart';
+import 'package:aksara/auth/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,35 +24,27 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _signIn() async {
     final email = _emailController.text.trim();
-    final rawPassword = _passwordController.text.trim();
-    final passwordHashed = hashPassword(rawPassword);
-    if (email.isEmpty || rawPassword.isEmpty) {
-      _showMessage('Email dan password tidak boleh kosong!');
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage("Email & password wajib diisi!");
       return;
     }
 
     setState(() => isLoading = true);
 
-    try {
-      final response = await Supabase.instance.client
-          .from('akun')
-          .select()
-          .eq('email', email)
-          .eq('password', passwordHashed)
-          .maybeSingle();
+    final auth = AuthService();
+    final error = await auth.login(email: email, password: password);
 
-      if (response != null) {
-        _showMessage('Selamat datang, ${response['username']}!');
-
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        _showMessage('Email atau password salah!');
-      }
-    } catch (e) {
-      _showMessage('Terjadi kesalahan: $e');
-    } finally {
-      if (mounted) setState(() => isLoading = false);
+    if (error != null) {
+      _showMessage(error);
+    } else {
+      _showMessage("Login berhasil!");
+      // ignore: use_build_context_synchronously
+      Navigator.pushReplacementNamed(context, '/home');
     }
+
+    setState(() => isLoading = false);
   }
 
   @override
