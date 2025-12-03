@@ -19,7 +19,7 @@ class LeaderboardPage extends StatelessWidget {
             top: 40,
             right: -20, // Muncul dari kanan
             child: Image.asset(
-              'assets/images/awan 1.png', // GANTI NAMA FILE
+              'assets/images/awan1.png', // GANTI NAMA FILE
               width: 180, 
               fit: BoxFit.contain,
             ),
@@ -30,7 +30,7 @@ class LeaderboardPage extends StatelessWidget {
             top: 120, // Posisi vertikal di tengah area atas
             left: -30, // Muncul dari kiri
             child: Image.asset(
-              'assets/images/awan 2.png', // GANTI NAMA FILE
+              'assets/images/awan2.png', // GANTI NAMA FILE
               width: 210, 
               fit: BoxFit.contain,
             ),
@@ -43,7 +43,7 @@ class LeaderboardPage extends StatelessWidget {
             child: Opacity(
               opacity: 0.9, 
               child: Image.asset(
-                'assets/images/awan 3.png', // GANTI NAMA FILE
+                'assets/images/awan3.png', // GANTI NAMA FILE
                 width: 160,
                 fit: BoxFit.contain,
               ),
@@ -115,7 +115,7 @@ class PodiumSection extends StatelessWidget {
             score: "4099",
             color: const Color(0xFF4A7C96),
             height: 140,
-            assetPath: 'assets/images/monster 11.png', 
+            assetPath: 'assets/images/monster11bg.png', 
           ),
           // Juara 1
           _buildPodiumItem(
@@ -125,7 +125,7 @@ class PodiumSection extends StatelessWidget {
             color: const Color(0xFFFF9F1C),
             height: 170,
             isWinner: true,
-            assetPath: 'assets/images/monster 12.png', 
+            assetPath: 'assets/images/monster12bg.png', 
           ),
           // Juara 3
           _buildPodiumItem(
@@ -134,7 +134,7 @@ class PodiumSection extends StatelessWidget {
             score: "3902",
             color: const Color(0xFF5C4033),
             height: 140,
-            assetPath: 'assets/images/monster 3.png', 
+            assetPath: 'assets/images/monster3bg.png', 
           ),
         ],
       ),
@@ -244,14 +244,14 @@ class LeaderboardList extends StatelessWidget {
   Widget build(BuildContext context) {
     // Data Dummy 
     final List<Map<String, dynamic>> users = [
-      {'rank': 4, 'name': 'Maulana Sudrajat', 'score': 3580, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster 3.png'},
-      {'rank': 5, 'name': 'Bimo Rajendra', 'score': 3120, 'trend': 'down', 'trendVal': 2, 'img': 'assets/images/monster 11.png'},
-      {'rank': 6, 'name': 'Nathania Princess', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster 12.png'},
-      {'rank': 7, 'name': 'aulnatbim', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster 3.png'},
-      {'rank': 8, 'name': 'User Lain', 'score': 3120, 'trend': 'flat', 'trendVal': 0, 'img': 'assets/images/monster 11.png'},
-      {'rank': 9, 'name': 'natanyaShobah', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster 12.png'},
-      {'rank': 10, 'name': 'You', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'isMe': true, 'img': 'assets/images/monster 12.png'},
-      {'rank': 11, 'name': 'Scroll Test', 'score': 2000, 'trend': 'down', 'trendVal': 5, 'img': 'assets/images/monster 3.png'},
+      {'rank': 4, 'name': 'Maulana Sudrajat', 'score': 3580, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster3bg.png'},
+      {'rank': 5, 'name': 'Bimo Rajendra', 'score': 3120, 'trend': 'down', 'trendVal': 2, 'img': 'assets/images/monster11bg.png'},
+      {'rank': 6, 'name': 'Nathania Princess', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster12bg.png'},
+      {'rank': 7, 'name': 'aulnatbim', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster3bg.png'},
+      {'rank': 8, 'name': 'User Lain', 'score': 3120, 'trend': 'flat', 'trendVal': 0, 'img': 'assets/images/monster11bg.png'},
+      {'rank': 9, 'name': 'natanyaShobah', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'img': 'assets/images/monster12bg.png'},
+      {'rank': 10, 'name': 'You', 'score': 3120, 'trend': 'up', 'trendVal': 3, 'isMe': true, 'img': 'assets/images/monster12bg.png'},
+      {'rank': 11, 'name': 'Scroll Test', 'score': 2000, 'trend': 'down', 'trendVal': 5, 'img': 'assets/images/monster3bg.png'},
     ];
 
     return ListView.builder(
