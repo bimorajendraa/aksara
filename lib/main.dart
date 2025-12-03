@@ -8,6 +8,7 @@ import 'screens/home/home_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/already_registered_screen.dart';
 import 'screens/leaderboard.dart';
+import 'screens/hearthesound.dart';
 import 'screens/games/start/start_page.dart';
 import 'screens/games/start/start_page2.dart';
 import 'screens/games/start/start_page3.dart';
@@ -49,7 +50,8 @@ class MyApp extends StatelessWidget {
         '/startpage4': (context) =>  StartPage4(),
         '/story-detail': (context) => const StoryDetailScreen(),
         '/chapter': (context) => const ChapterReadScreen(),
-        '/leaderboard': (context) => const LeaderboardPage()
+        '/leaderboard': (context) => const LeaderboardPage(),
+        '/hear-the-sound': (context) => const HearTheSoundPage()
       }
     );
   }
