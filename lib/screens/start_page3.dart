@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'start_page2.dart';
+import 'start_page4.dart';
 
-class StartPage extends StatefulWidget {
-  const StartPage({super.key});
+class StartPage3 extends StatefulWidget {
+  const StartPage3({super.key});
 
   @override
-  State<StartPage> createState() => _StartPageState();
+  State<StartPage3> createState() => _StartPageState();
 }
 
 class _TopRightTriangleClipper extends CustomClipper<Path> {
@@ -23,7 +23,7 @@ class _TopRightTriangleClipper extends CustomClipper<Path> {
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
-class _StartPageState extends State<StartPage> {
+class _StartPageState extends State<StartPage3> {
   bool showTutorial = true;
   int hearts = 5;
   double progress = 0.15;
@@ -66,9 +66,9 @@ class _StartPageState extends State<StartPage> {
           _buildPagination(),
           const SizedBox(height: 20),
           _buildTitle(),
-          const SizedBox(height: 20),
-          Expanded(child: _buildLettersGrid()),
-          const SizedBox(height: 10),
+          const SizedBox(height: 60),
+          _buildLettersGrid(),
+          const SizedBox(height: 120),
           _buildNextButton(),
           const SizedBox(height: 20),
         ],
@@ -87,8 +87,8 @@ class _StartPageState extends State<StartPage> {
           ),
 
           Positioned(
-            top: 300,
-            left: 113,
+            top: 460,
+            left: 160,
             right: 20,
             child: Stack(
               clipBehavior: Clip.none,
@@ -105,7 +105,7 @@ class _StartPageState extends State<StartPage> {
                   child: const Text(
                     "Click the letter",
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 20,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
@@ -202,28 +202,62 @@ class _StartPageState extends State<StartPage> {
 
   // TITLE =============================================================
   Widget _buildTitle() {
-    return Stack(
+    return Column(
       children: [
-        Text(
-          "LETTERS",
-          style: TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-            foreground: Paint()
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 3
-              ..color = Colors.black,
-          ),
+        // ---- VOCAL ----
+        Stack(
+          children: [
+            Text(
+              "VOCAL",
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+                foreground: Paint()
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 3
+                  ..color = Colors.black,
+              ),
+            ),
+            const Text(
+              "VOCAL",
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
-        const Text(
-          "LETTERS",
-          style: TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-            color: Colors.white,
-          ),
+
+        const SizedBox(height: 5), // Jarak antar kata
+
+        // ---- LETTERS ----
+        Stack(
+          children: [
+            Text(
+              "LETTERS",
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+                foreground: Paint()
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 3
+                  ..color = Colors.black,
+              ),
+            ),
+            const Text(
+              "LETTERS",
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -303,7 +337,7 @@ class _StartPageState extends State<StartPage> {
               decoration: BoxDecoration(
                 color: currentPage == 0
                     ? const Color.fromRGBO(4, 4, 63, 1)
-                    : Colors.grey.shade400,
+                    : const Color.fromRGBO(4, 4, 63, 1),
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
@@ -317,7 +351,7 @@ class _StartPageState extends State<StartPage> {
               decoration: BoxDecoration(
                 color: currentPage == 1
                     ? const Color.fromRGBO(4, 4, 63, 1)
-                    : Colors.grey.shade400,
+                    : const Color.fromRGBO(4, 4, 63, 1),
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
@@ -329,123 +363,117 @@ class _StartPageState extends State<StartPage> {
   }
 
   // GRID LETTERS ======================================================
-    Widget _buildLettersGrid() {
-      final letters = this.letters;
-      final Set<int> skippedIndexes = {24};
-      final int gridCount = letters.length + skippedIndexes.length;
-
-      int skippedBefore(int gridIndex) {
-        return skippedIndexes.where((s) => s < gridIndex).length;
-      }
-
-      return GridView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          childAspectRatio: 1.2,
+  Widget _buildLettersGrid() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // ===== BARIS 1: A I U =====
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildLetterItem("A", 0),
+            const SizedBox(width: 40),
+            _buildLetterItem("I", 1),
+            const SizedBox(width: 40),
+            _buildLetterItem("U", 2),
+          ],
         ),
-        itemCount: gridCount,
-        itemBuilder: (context, gridIndex) {
-          if (skippedIndexes.contains(gridIndex)) return Container();
 
-          final int letterIndex = gridIndex - skippedBefore(gridIndex);
-          final letter = letters[letterIndex];
+        // ===== BARIS 2: E O =====
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(width: 60),        // spacer kiri
+            _buildLetterItem("E", 3),
+            const SizedBox(width: 20),
+            _buildLetterItem("O", 4),
+            const SizedBox(width: 40),        // spacer kanan
+          ],
+        ),
+      ],
+    );
+  }
 
-          // Cek apakah huruf sudah diklik sebelumnya
-          final bool isClicked = clickedLetters.contains(letter);
+  final Map<String, Offset> pointerOffsets = {
+    "A": const Offset(25, -5),
+    "I": const Offset(5, -5),   
+    "U": const Offset(25, -5),
+    "E": const Offset(20, -5),   
+    "O": const Offset(25, -5),
+  };
 
-          return GestureDetector(
-            onTap: () {
-              if (showTutorial) {
-                setState(() => showTutorial = false);
-              }
+  // ====== WIDGET HURUF + POINTER ======
+  Widget _buildLetterItem(String letter, int index) {
+    final bool isClicked = clickedLetters.contains(letter);
 
-              setState(() {
-                selectedLetter = letter;
-                progress = (letterIndex + 1) / letters.length;
+    return GestureDetector(
+      onTap: () {
+        if (showTutorial) {
+          setState(() => showTutorial = false);
+        }
 
-                // Simpan huruf yang sudah diklik
-                clickedLetters.add(letter);
+        setState(() {
+          selectedLetter = letter;
+          clickedLetters.add(letter);
+          pointerIndex = index + 1 < 5 ? index + 1 : -1;
+        });
 
-                // ==== PINDAHKAN ICON TANGAN KE HURUF BERIKUTNYA ====
-                int nextLetterIndex = letterIndex + 1;
+        showGeneralDialog(
+          context: context,
+          barrierDismissible: false,
+          barrierColor: Colors.transparent,
+          pageBuilder: (_, __, ___) {
+            return Stack(
+              children: [
+                Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  color: const Color.fromRGBO(136, 153, 171, 0.8),
+                ),
+                Center(child: letterPopup(letter)),
+              ],
+            );
+          },
+        );
+      },
 
-                if (nextLetterIndex < letters.length) {
-                  // Cari gridIndex sesuai skippedIndexes
-                  int nextGridIndex = nextLetterIndex;
-                  for (int skip in skippedIndexes) {
-                    if (skip <= nextGridIndex) {
-                      nextGridIndex++;
-                    }
-                  }
-                  pointerIndex = nextGridIndex;
-                } else {
-                  // Jika sudah huruf terakhir, sembunyikan tangan
-                  pointerIndex = -1;
-                }
-              });
-
-              showGeneralDialog(
-                context: context,
-                barrierDismissible: false,
-                barrierLabel: "Popup",
-                barrierColor: Colors.transparent,
-                pageBuilder: (_, __, ___) {
-                  return Stack(
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        color: const Color.fromRGBO(136, 153, 171, 0.8),
-                      ),
-                      Center(child: letterPopup(letter)),
-                    ],
-                  );
-                },
-              );
-            },
-
-
-            child: Container(
-              padding: const EdgeInsets.only(top: 20),
-              child: Stack(
-                alignment: Alignment.topCenter,
-                clipBehavior: Clip.none,
-                children: [
-                  if (pointerIndex == gridIndex && !showTutorial)
-                    const Positioned(
-                      top: 45,
-                      left: 24,
-                      child: Icon(
-                        Icons.pan_tool_alt,
-                        size: 40,
-                        color: Color.fromRGBO(252, 209, 156, 1),
-                      ),
-                    ),
-
-                  Center(
-                    child: Text(
-                      letter,
-                      style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        color: isClicked ? Colors.blue : Colors.black,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
-                  ),
-                ],
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // POINTER
+          if (pointerIndex == index && !showTutorial)
+            Positioned(
+              bottom: pointerOffsets[letter]!.dy,
+              left: pointerOffsets[letter]!.dx,
+              child: const Icon(
+                Icons.pan_tool_alt,
+                size: 40,
+                color: Color.fromRGBO(252, 209, 156, 1),
               ),
             ),
-          );
-        },
-      );
-    }
 
+          // HURUF
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              letter,
+              style: TextStyle(
+                fontSize: 100,
+                fontWeight: FontWeight.w700,
+                color: isClicked
+                    ? Colors.blue 
+                    : Colors.black,            
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   // NEXT BUTTON =======================================================
   Widget _buildNextButton() {
-    bool isActive = clickedLetters.length == letters.length; ;
+    bool isActive = selectedLetter != null;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 40),
@@ -454,15 +482,14 @@ class _StartPageState extends State<StartPage> {
             ? () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const StartPage2()),
+                  MaterialPageRoute(builder: (context) => const StartPage4()),
                 );
               }
             : null,
         child: CircleAvatar(
           radius: 40,
-          backgroundColor:
-              isActive ? const Color.fromRGBO(4, 4, 63, 1) : Colors.grey,
-          child: Icon(
+          backgroundColor: const Color.fromRGBO(4, 4, 63, 1),
+          child: const Icon(
             Icons.arrow_forward,
             color: Colors.white,
             size: 68,

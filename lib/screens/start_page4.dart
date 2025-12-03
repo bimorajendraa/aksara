@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'start_page.dart';
 import 'start_page3.dart';
 
-class StartPage2 extends StatefulWidget {
-  const StartPage2({super.key});
+class StartPage4 extends StatefulWidget {
+  const StartPage4({super.key});
 
   @override
-  State<StartPage2> createState() => _StartPageState2();
+  State<StartPage4> createState() => _StartPageState2();
 }
 
-class _StartPageState2 extends State<StartPage2> {
+class _StartPageState2 extends State<StartPage4> {
   int hearts = 5; // sama seperti start_page pertama
 
   @override
@@ -21,12 +20,10 @@ class _StartPageState2 extends State<StartPage2> {
           children: [
             const SizedBox(height: 10),
 
-            // ---------------- HEALTH BAR (versi yang benar) ----------------
             _buildHealthBar2(),
 
             const SizedBox(height: 15),
 
-            // ---------------- Back Button ----------------
             Align(
               alignment: Alignment.centerLeft,
               child: Padding(
@@ -35,7 +32,7 @@ class _StartPageState2 extends State<StartPage2> {
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const StartPage()),
+                      MaterialPageRoute(builder: (context) => const StartPage3()),
                     );
                   },
                   child: CircleAvatar(
@@ -46,100 +43,33 @@ class _StartPageState2 extends State<StartPage2> {
               ),
             ),
 
-            const SizedBox(height: 70),
+
+            const SizedBox(height: 120),
 
             // ---------------- TITLE ----------------
             const Text(
-              "Those are the 26\nletters",
+              "Now unlock unit 1 and let’s practice what you have learned",
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 32,
+                fontSize: 40,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            const SizedBox(height: 70),
-
             // ---------------- MONSTER / CHARACTER ----------------
-            SizedBox(
-              height: 180,
-              child: Image.asset(
-                "assets/images/monster_oren.png",
-                fit: BoxFit.contain,
-              ),
-            ),
-
-            const SizedBox(height: 40),
-
-            // ---------------- QUESTION BUBBLE ----------------
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Stack(
-                clipBehavior: Clip.none, // <-- penting: biar widget boleh keluar area stack
-                alignment: Alignment.center,
-                children: [
-                  // Bubble teks
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.35),
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: const Text(
-                      "now, what is a vocal letters?",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-
-                  Positioned(
-                    left: -3,
-                    top: -20,
-                    child: Column(
-                      children: [
-                        Transform.rotate(
-                          angle: -0.4, // semakin besar nilai → semakin miring
-                          child: const Icon(Icons.question_mark, color: Colors.white, size: 40),
-                        ),
-                        const SizedBox(height: 30)
-                      ],
-                    ),
-                  ),
-
-                  Positioned(
-                    right: -3,
-                    top: 18,
-                    child: Column(
-                      children: [
-                        Transform.rotate(
-                          angle: 0.2,
-                          child: const Icon(Icons.question_mark, color: Colors.white, size: 40),
-                        ),
-                        const SizedBox(height: 2)
-                      ],
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.only(left: 235), // geser ke kanan
+              child: SizedBox(
+                height: 300,
+                child: Image.asset(
+                  "assets/images/monster_oren_kanan.png",
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
-
-
-            const SizedBox(height: 100),
-
-
             // ---------------- NEXT BUTTON ----------------
             GestureDetector(
-              onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const StartPage3()),
-                    );
-                  },
               child: Container(
                 margin: const EdgeInsets.only(bottom: 30),
                 width: 95,

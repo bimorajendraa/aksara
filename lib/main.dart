@@ -5,6 +5,8 @@ import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/start_page.dart';
 import 'screens/start_page2.dart';
+import 'screens/start_page3.dart';
+import 'screens/start_page4.dart';
 import 'screens/signup_screen.dart';
 import 'screens/already_registered_screen.dart';
 
@@ -33,7 +35,9 @@ class MyApp extends StatelessWidget {
         '/already-registered': (context) => AlreadyRegisteredScreen(),
         '/home': (context) => HomeScreen(),
         '/startpage': (context) =>  StartPage(),
-        '/startpage2': (context) =>  StartPage2()
+        '/startpage2': (context) =>  StartPage2(),
+        '/startpage3': (context) =>  StartPage3(),
+        '/startpage4': (context) =>  StartPage4()
       },
     );
   }
