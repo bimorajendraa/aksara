@@ -5,6 +5,11 @@ import 'package:aksara/env.dart';
 
 import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/start_page.dart';
+import 'screens/start_page2.dart';
+import 'screens/start_page3.dart';
+import 'screens/start_page4.dart';
 import 'screens/signup_screen.dart';
 import 'screens/already_registered_screen.dart';
 import 'screens/home_screen.dart';
@@ -30,6 +35,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Aksara App',
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(fontFamily: 'Poppins'),
+
       initialRoute: '/onboarding',
 
       routes: {
@@ -38,12 +45,16 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignUpScreen(),
         '/already-registered': (context) => AlreadyRegisteredScreen(),
         '/home': (context) => HomeScreen(),
+        '/startpage': (context) => StartPage(),
+        '/startpage2': (context) => StartPage2(),
+        '/startpage3': (context) => StartPage3(),
+        '/startpage4': (context) => StartPage4(),
         '/story-mode': (context) => const StoryModeScreen(),
-        '/story-detail': (context) => StoryDetailScreen(),
+        '/story-detail': (context) => const StoryDetailScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/chapter') {
-          final args = settings.arguments as int; 
+          final args = settings.arguments as int;
 
           return MaterialPageRoute(
             builder: (_) => ChapterReadScreen(idBookDetails: args),
