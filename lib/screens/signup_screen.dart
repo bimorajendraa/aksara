@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/hash.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -9,6 +11,44 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   bool showPassword = false;
+  bool isLoading = false;
+
+  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  Future<void> _signUp() async {
+    final email = _emailController.text.trim();
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+    final passwordHash = hashPassword(password);
+
+    if (email.isEmpty || username.isEmpty || password.isEmpty) {
+      _showMessage('Semua field wajib diisi!');
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      await Supabase.instance.client.from('akun').insert({
+        'email': email,
+        'username': username,
+        'password': passwordHash,
+      });
+
+      _showMessage('Akun berhasil dibuat! Silakan login.');
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (e) {
+      _showMessage('Gagal register: $e');
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,11 +93,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
               _roundedInput(
                 icon: Icons.email_outlined,
                 hint: "Enter your email",
+                controller: _emailController,
               ),
 
               const SizedBox(height: 20),
 
-              _roundedInput(icon: Icons.person_outline, hint: "Username"),
+              _roundedInput(
+                icon: Icons.person_outline,
+                hint: "Username",
+                controller: _usernameController,
+              ),
 
               const SizedBox(height: 20),
 
@@ -65,6 +110,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 icon: Icons.lock_outline,
                 hint: "Password",
                 obscure: !showPassword,
+                controller: _passwordController,
                 suffix: GestureDetector(
                   onTap: () => setState(() => showPassword = !showPassword),
                   child: Icon(
@@ -76,7 +122,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
               const SizedBox(height: 30),
 
-              _mainButton("Sign Up"),
+              _mainButton("Sign Up", onPressed: _signUp),
 
               const SizedBox(height: 25),
 
@@ -121,6 +167,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     required String hint,
     bool obscure = false,
     Widget? suffix,
+    TextEditingController? controller,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -135,6 +182,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
+              controller: controller,
               obscureText: obscure,
               decoration: InputDecoration(
                 hintText: hint,
@@ -148,21 +196,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _mainButton(String text) {
-    return Container(
-      height: 58,
-      decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(40),
-      ),
-      child: Center(
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
+  Widget _mainButton(String text, {required VoidCallback onPressed}) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        height: 58,
+        decoration: BoxDecoration(
+          color: Colors.black87,
+          borderRadius: BorderRadius.circular(40),
+        ),
+        child: Center(
+          child: isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
         ),
       ),
     );
