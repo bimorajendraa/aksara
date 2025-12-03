@@ -115,7 +115,7 @@ class PodiumSection extends StatelessWidget {
             score: "4099",
             color: const Color(0xFF4A7C96),
             height: 140,
-            assetPath: 'assets/images/monster11bg.png', 
+            assetPath: 'assets/images/monster3bg.png', 
           ),
           // Juara 1
           _buildPodiumItem(
@@ -125,7 +125,7 @@ class PodiumSection extends StatelessWidget {
             color: const Color(0xFFFF9F1C),
             height: 170,
             isWinner: true,
-            assetPath: 'assets/images/monster12bg.png', 
+            assetPath: 'assets/images/monster11bg.png', 
           ),
           // Juara 3
           _buildPodiumItem(
@@ -134,7 +134,7 @@ class PodiumSection extends StatelessWidget {
             score: "3902",
             color: const Color(0xFF5C4033),
             height: 140,
-            assetPath: 'assets/images/monster3bg.png', 
+            assetPath: 'assets/images/monster12bg.png', 
           ),
         ],
       ),
