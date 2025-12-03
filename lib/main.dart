@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:aksara/env.dart';
-import 'package:flutter/material.dart';
+import 'screens/entry_screen.dart';
+import 'auth/session_gate.dart';
 
 import 'screens/auth/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -21,7 +23,6 @@ void main() async {
   runApp(const MyApp());
 }
 
-
 final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
@@ -31,26 +32,37 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        fontFamily: 'Poppins',
-      ),
-      title: "Aksara App",
 
-      initialRoute: '/onboarding',
+      home: SessionGate(
+        authenticated: HomeScreen(),
+        unauthenticated: OnboardingScreen(),
+      ),
 
       routes: {
+        '/entry': (context) => const EntryScreen(),
         '/onboarding': (context) => OnboardingScreen(),
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignUpScreen(),
         '/already-registered': (context) => AlreadyRegisteredScreen(),
         '/home': (context) => HomeScreen(),
-        '/startpage': (context) =>  StartPage(),
-        '/startpage2': (context) =>  StartPage2(),
-        '/startpage3': (context) =>  StartPage3(),
-        '/startpage4': (context) =>  StartPage4(),
+        '/startpage': (context) => StartPage(),
+        '/startpage2': (context) => StartPage2(),
+        '/startpage3': (context) => StartPage3(),
+        '/startpage4': (context) => StartPage4(),
+        '/story-mode': (context) => const StoryModeScreen(),
         '/story-detail': (context) => const StoryDetailScreen(),
-        '/chapter': (context) => const ChapterReadScreen()
-      }
+      },
+
+      onGenerateRoute: (settings) {
+        if (settings.name == '/chapter') {
+          final idBookDetails = settings.arguments as int;
+          return MaterialPageRoute(
+            builder: (context) =>
+                ChapterReadScreen(idBookDetails: idBookDetails),
+          );
+        }
+        return null;
+      },
     );
   }
 }
