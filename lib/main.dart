@@ -18,13 +18,9 @@ import 'screens/book/chapter_read_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
   runApp(const MyApp());
 }
 
-final supabase = Supabase.instance.client;
 
 final supabase = Supabase.instance.client;
 
