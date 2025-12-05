@@ -33,12 +33,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
-      home: SessionGate(
-        authenticated: HomeScreen(),
-        unauthenticated: OnboardingScreen(),
-      ),
+      initialRoute: '/',
 
       routes: {
+        '/': (context) => SessionGate(
+          authenticated: HomeScreen(),
+          unauthenticated: OnboardingScreen(),
+        ),
+
         '/entry': (context) => const EntryScreen(),
         '/onboarding': (context) => OnboardingScreen(),
         '/login': (context) => LoginScreen(),
