@@ -10,9 +10,6 @@ class AlreadyRegisteredScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // =======================
-            // BAGIAN ATAS (Stack + konten)
-            // =======================
             Expanded(
               child: Stack(
                 children: [
@@ -31,7 +28,7 @@ class AlreadyRegisteredScreen extends StatelessWidget {
                   // Monster right
                   Positioned(
                     right: -40,
-                    top: -40,
+                    top: -60,
                     child: IgnorePointer(
                       child: Image.asset(
                         "assets/images/green_monster_right.png",
@@ -67,7 +64,6 @@ class AlreadyRegisteredScreen extends StatelessWidget {
 
                         const SizedBox(height: 20),
 
-                        // Logo
                         Center(
                           child: Image.asset(
                             "assets/images/aksara_logo.png",
@@ -99,7 +95,6 @@ class AlreadyRegisteredScreen extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 28,
                                     fontStyle: FontStyle.italic,
-                                    height: 1.2,
                                     color: Colors.black54,
                                   ),
                                 ),
@@ -108,7 +103,6 @@ class AlreadyRegisteredScreen extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 28,
                                     fontStyle: FontStyle.italic,
-                                    height: 1.2,
                                     color: Colors.black54,
                                   ),
                                 ),
@@ -117,7 +111,6 @@ class AlreadyRegisteredScreen extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 28,
                                     fontStyle: FontStyle.italic,
-                                    height: 1.2,
                                     color: Colors.black54,
                                   ),
                                 ),
@@ -126,7 +119,7 @@ class AlreadyRegisteredScreen extends StatelessWidget {
                           ],
                         ),
 
-                        const Spacer(),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -134,9 +127,6 @@ class AlreadyRegisteredScreen extends StatelessWidget {
               ),
             ),
 
-            // =======================
-            // BAGIAN BAWAH = tombol login (SELALU di atas)
-            // =======================
             Padding(
               padding: const EdgeInsets.only(bottom: 20, left: 28, right: 28),
               child: GestureDetector(

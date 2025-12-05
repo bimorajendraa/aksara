@@ -24,8 +24,6 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
   int lastChapter = 0;
 
   int? idAkunInt;
-
-  // -----------------------------------------------------------
   int parseChapter(dynamic chapterField) {
     if (chapterField is int) return chapterField;
     if (chapterField is String) {
@@ -42,7 +40,6 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     return parseChapter(chapters.first['chapter']);
   }
 
-  // -----------------------------------------------------------
   Future<int?> fetchAkunId() async {
     final email = Supabase.instance.client.auth.currentUser?.email;
     if (email == null) return null;
@@ -81,9 +78,6 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     await fetchDataFast();
   }
 
-  // -----------------------------------------------------------
-  // FETCH CHAPTER + PROGRESS
-  // -----------------------------------------------------------
   Future<void> fetchDataFast() async {
     final client = Supabase.instance.client;
 
@@ -132,7 +126,6 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     }
   }
 
-  // -----------------------------------------------------------
   double chapterProgress(int chapterNumber) {
     if (lastChapter == 0) return 0.0;
     return chapterNumber <= lastChapter ? 1.0 : 0.0;
@@ -213,7 +206,6 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
 
               const SizedBox(height: 8),
 
-              // OPTIONAL: tampilkan total progress buku
               Text(
                 "$progress %",
                 style: const TextStyle(
@@ -224,7 +216,6 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
 
               const SizedBox(height: 20),
 
-              // CONTINUE READING
               GestureDetector(
                 onTap: () {
                   final first = getFirstChapterNumber();
