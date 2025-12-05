@@ -1,4 +1,4 @@
-# Aksara 📚✨
+# Aksara
 <img width="468" height="191" alt="aksara_logo" src="https://github.com/user-attachments/assets/92d92bf2-a33f-4e25-9e85-b6de5e309f27" />
 
 
