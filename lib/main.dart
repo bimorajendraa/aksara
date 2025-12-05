@@ -11,6 +11,7 @@ import 'screens/games/start/start_page.dart';
 import 'screens/games/start/start_page2.dart';
 import 'screens/games/start/start_page3.dart';
 import 'screens/games/start/start_page4.dart';
+import 'screens/games/drag-drop/drag_drop_page.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/already_registered_screen.dart';
 import 'screens/book/story_mode_screen.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignUpScreen(),
         '/already-registered': (context) => AlreadyRegisteredScreen(),
+        '/aksara-random-drag': (context) => DragDropPage(),
         '/home': (context) => HomeScreen(),
         '/startpage': (context) => StartPage(),
         '/startpage2': (context) => StartPage2(),
