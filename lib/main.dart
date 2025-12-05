@@ -4,12 +4,15 @@ import 'package:aksara/screens/helpme_screen.dart';
 import 'package:aksara/screens/supportcontact_screen.dart';
 import 'package:flutter/material.dart';
 
+import 'screens/spellbee.dart';
 import 'screens/profile_screen.dart';
 import 'screens/achievement_screen.dart';
 import 'screens/settings_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/entry_screen.dart';
 import 'auth/session_gate.dart';
+import 'screens/book/chapter_read_screen.dart';
+
 
 import 'screens/auth/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -46,7 +49,6 @@ class MyApp extends StatelessWidget {
           authenticated: HomeScreen(),
           unauthenticated: OnboardingScreen(),
         ),
-
         '/entry': (context) => const EntryScreen(),
         '/onboarding': (context) => OnboardingScreen(),
         '/login': (context) => LoginScreen(),
@@ -59,6 +61,7 @@ class MyApp extends StatelessWidget {
         '/startpage4': (context) => StartPage4(),
         '/story-mode': (context) => const StoryModeScreen(),
         '/story-detail': (context) => const StoryDetailScreen(),
+        '/spellbee': (context) => SpellBeePage(),
         '/profile': (context) => ProfileScreen(),
         '/achievement': (context) => AchievementScreen(),
         '/settings' : (context) => SettingScreen(),
@@ -66,8 +69,16 @@ class MyApp extends StatelessWidget {
         '/supportcontact' : (context) => SupportContactScreen(),
         '/editalien' : (context) => EditAlienScreen(),
       },
-
-      
+      onGenerateRoute: (settings) {
+        if (settings.name == '/chapter') {
+          final idBookDetails = settings.arguments as int;
+          return MaterialPageRoute(
+            builder: (context) =>
+                ChapterReadScreen(idBookDetails: idBookDetails),
+          );
+        }
+        return null;
+      },
     );
   }
 }
