@@ -130,18 +130,42 @@ class _LoginScreenState extends State<LoginScreen> {
               _googleButton(),
               const SizedBox(height: 25),
 
-              const Center(
-                child: Text.rich(
-                  TextSpan(
-                    text: "Don’t have an account? ",
-                    children: [
-                      TextSpan(
-                        text: "Sign Up",
-                        style: TextStyle(fontWeight: FontWeight.w700),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Don't have an account? ",
+                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                    ),
+
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/signup');
+                        },
+
+                        // tanpa hover & highlight
+                        highlightColor: Colors.transparent,
+                        splashColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                            "Sign Up",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
-                  style: TextStyle(fontSize: 16),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 40),
