@@ -83,17 +83,38 @@ class OnboardingScreen extends StatelessWidget {
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
+                  children: [
+                    const Text(
                       "Already have an account? ",
-                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                      style: TextStyle(color: Colors.black54, fontSize: 14),
                     ),
-                    Text(
-                      "Login",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/login');
+                        },
+
+                        // MATIKAN hover + highlight + splash
+                        highlightColor: Colors.transparent,
+                        splashColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 6,
+                          ),
+                          child: Text(
+                            "Login",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],

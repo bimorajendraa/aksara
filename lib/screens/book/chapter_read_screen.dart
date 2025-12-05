@@ -74,9 +74,6 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
     return res?['id_akun'];
   }
 
-  // -----------------------------------------------------------
-  // FETCH CHAPTER + METADATA + ROW PROGRESS (jika ada)
-  // -----------------------------------------------------------
   Future<void> fetchChapterData() async {
     try {
       final response = await supabase
@@ -142,9 +139,6 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
     }
   }
 
-  // -----------------------------------------------------------
-  // SCROLL → UPDATE PERSEN CHAPTER & PROGRESS BUKU
-  // -----------------------------------------------------------
   void _onScroll() {
     if (!_scrollController.hasClients) return;
 
@@ -185,7 +179,6 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
     _lastSavedProgress = finalProgress;
 
     try {
-      // 1) Coba UPDATE dulu
       final updated = await supabase
           .from('userbookprogress')
           .update({
@@ -201,7 +194,6 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
         return;
       }
 
-      // 2) Kalau belum ada row sama sekali, baru INSERT SEKALI
       final inserted = await supabase.from('userbookprogress').insert({
         'id_akun': akunIdLocal,
         'id_book': bookIdLocal,
@@ -217,9 +209,6 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
     }
   }
 
-  // -----------------------------------------------------------
-  // AUDIO
-  // -----------------------------------------------------------
   Future<void> playAudio() async {
     if (soundUrl != null && soundUrl!.trim().isNotEmpty) {
       await audioPlayer.stop();
@@ -227,9 +216,6 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
     }
   }
 
-  // -----------------------------------------------------------
-  // UI
-  // -----------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
