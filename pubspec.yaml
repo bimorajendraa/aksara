@@ -38,6 +38,7 @@ dependencies:
   audioplayers: ^6.5.1
   flutter_svg: ^2.2.3
   intl: ^0.20.2
+  audioplayers: ^5.2.0
 
 dev_dependencies:
   flutter_test:
