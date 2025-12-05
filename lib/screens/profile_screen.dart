@@ -99,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Navigator.pushReplacementNamed(context, '/home'); // Pindah ke Home
         break;
       case 1:
-        Navigator.pushReplacementNamed(context, '/book'); // Pindah ke Book
+        Navigator.pushReplacementNamed(context, '/story-mode'); // Pindah ke Book
         break;
       case 2:
         Navigator.pushReplacementNamed(context, '/achievement'); // Pindah ke Achievement
