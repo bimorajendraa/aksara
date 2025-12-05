@@ -1,6 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:aksara/env.dart';
+import 'package:aksara/screens/editalien_screen.dart';
+import 'package:aksara/screens/helpme_screen.dart';
+import 'package:aksara/screens/supportcontact_screen.dart';
+import 'package:flutter/material.dart';
+
+import 'screens/profile_screen.dart';
+import 'screens/achievement_screen.dart';
+import 'screens/settings_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/entry_screen.dart';
 import 'auth/session_gate.dart';
 
@@ -15,7 +22,6 @@ import 'screens/auth/signup_screen.dart';
 import 'screens/auth/already_registered_screen.dart';
 import 'screens/book/story_mode_screen.dart';
 import 'screens/book/story_detail_screen.dart';
-import 'screens/book/chapter_read_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,18 +59,15 @@ class MyApp extends StatelessWidget {
         '/startpage4': (context) => StartPage4(),
         '/story-mode': (context) => const StoryModeScreen(),
         '/story-detail': (context) => const StoryDetailScreen(),
+        '/profile': (context) => ProfileScreen(),
+        '/achievement': (context) => AchievementScreen(),
+        '/settings' : (context) => SettingScreen(),
+        '/helpme' : (context) => HelpMeScreen(),
+        '/supportcontact' : (context) => SupportContactScreen(),
+        '/editalien' : (context) => EditAlienScreen(),
       },
 
-      onGenerateRoute: (settings) {
-        if (settings.name == '/chapter') {
-          final idBookDetails = settings.arguments as int;
-          return MaterialPageRoute(
-            builder: (context) =>
-                ChapterReadScreen(idBookDetails: idBookDetails),
-          );
-        }
-        return null;
-      },
+      
     );
   }
 }
