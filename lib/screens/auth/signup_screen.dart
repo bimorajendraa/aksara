@@ -140,18 +140,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
               const SizedBox(height: 25),
 
-              const Center(
-                child: Text.rich(
-                  TextSpan(
-                    text: "Already have an account? ",
-                    children: [
-                      TextSpan(
-                        text: "Login",
-                        style: TextStyle(fontWeight: FontWeight.w700),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Already have an account? ",
+                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                    ),
+
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/login');
+                        },
+
+                        highlightColor: Colors.transparent,
+                        splashColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                            "Login",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                              decoration: TextDecoration.none, // no underline
+                            ),
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
-                  style: TextStyle(fontSize: 16),
+                    ),
+                  ],
                 ),
               ),
 

@@ -29,6 +29,7 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
   int? nextChapterId;
 
   int? idAkunInt;
+  // ignore: unused_field
   bool _hasProgressRow = false;
   int _lastSavedProgress = 0;
   double _scrollPercent = 0.0;
@@ -74,9 +75,6 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
     return res?['id_akun'];
   }
 
-  // -----------------------------------------------------------
-  // FETCH CHAPTER + METADATA + ROW PROGRESS (jika ada)
-  // -----------------------------------------------------------
   Future<void> fetchChapterData() async {
     try {
       final response = await supabase
@@ -123,6 +121,7 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
             .limit(1);
 
         if (progressList.isNotEmpty) {
+          // ignore: unnecessary_cast
           final row = progressList.first as Map<String, dynamic>;
           _hasProgressRow = true;
           _lastSavedProgress = row['progress_percentage'] ?? 0;
@@ -134,7 +133,6 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
         hasError = false;
       });
     } catch (e) {
-      print("Error fetchChapterData: $e");
       setState(() {
         hasError = true;
         isLoading = false;
@@ -142,9 +140,6 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
     }
   }
 
-  // -----------------------------------------------------------
-  // SCROLL → UPDATE PERSEN CHAPTER & PROGRESS BUKU
-  // -----------------------------------------------------------
   void _onScroll() {
     if (!_scrollController.hasClients) return;
 
@@ -185,7 +180,6 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
     _lastSavedProgress = finalProgress;
 
     try {
-      // 1) Coba UPDATE dulu
       final updated = await supabase
           .from('userbookprogress')
           .update({
@@ -196,12 +190,11 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
           .eq('id_book', bookIdLocal)
           .select();
 
-      if (updated is List && updated.isNotEmpty) {
+      if (updated.isNotEmpty) {
         _hasProgressRow = true;
         return;
       }
 
-      // 2) Kalau belum ada row sama sekali, baru INSERT SEKALI
       final inserted = await supabase.from('userbookprogress').insert({
         'id_akun': akunIdLocal,
         'id_book': bookIdLocal,
@@ -209,17 +202,14 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
         'last_read_chapter': currentChapterNumber,
       }).select();
 
-      if (inserted is List && inserted.isNotEmpty) {
+      if (inserted.isNotEmpty) {
         _hasProgressRow = true;
       }
     } catch (e) {
-      print("Error update/insert progress: $e");
+      // ignore errors
     }
   }
 
-  // -----------------------------------------------------------
-  // AUDIO
-  // -----------------------------------------------------------
   Future<void> playAudio() async {
     if (soundUrl != null && soundUrl!.trim().isNotEmpty) {
       await audioPlayer.stop();
@@ -227,9 +217,6 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
     }
   }
 
-  // -----------------------------------------------------------
-  // UI
-  // -----------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
