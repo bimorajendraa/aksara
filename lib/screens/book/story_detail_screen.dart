@@ -89,7 +89,6 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
           .eq('id_book', idBook)
           .order('chapter', ascending: true);
 
-      // Progress
       Future<List<dynamic>>? progressFuture;
       final akunId = idAkunInt;
       if (akunId != null) {
@@ -157,7 +156,6 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     });
   }
 
-  // -----------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     if (invalidArgs) {
@@ -205,15 +203,10 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
               ),
 
               const SizedBox(height: 8),
-
               Text(
-                "$progress %",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                "level ${book["difficulty"]}",
+                style: const TextStyle(fontSize: 18, color: Colors.black54),
               ),
-
               const SizedBox(height: 20),
 
               GestureDetector(
