@@ -22,7 +22,6 @@ import 'screens/auth/signup_screen.dart';
 import 'screens/auth/already_registered_screen.dart';
 import 'screens/book/story_mode_screen.dart';
 import 'screens/book/story_detail_screen.dart';
-import 'screens/book/chapter_read_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,16 +65,7 @@ class MyApp extends StatelessWidget {
         '/editalien' : (context) => EditAlienScreen(),
       },
 
-      onGenerateRoute: (settings) {
-        if (settings.name == '/chapter') {
-          final idBookDetails = settings.arguments as int;
-          return MaterialPageRoute(
-            builder: (context) =>
-                ChapterReadScreen(idBookDetails: idBookDetails),
-          );
-        }
-        return null;
-      },
+      
     );
   }
 }
