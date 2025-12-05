@@ -13,6 +13,7 @@ import 'screens/already_registered_screen.dart';
 import 'screens/story_mode_screen.dart';
 import 'screens/story_detail_screen.dart';
 import 'screens/chapter_read_screen.dart';
+import 'screens/spellbee.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -48,7 +49,8 @@ class MyApp extends StatelessWidget {
         '/startpage3': (context) =>  StartPage3(),
         '/startpage4': (context) =>  StartPage4(),
         '/story-detail': (context) => const StoryDetailScreen(),
-        '/chapter': (context) => const ChapterReadScreen()
+        '/chapter': (context) => const ChapterReadScreen(),
+        '/spellbee': (context) => SpellBeePage()
       }
     );
   }
