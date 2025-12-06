@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../utils/navbar_utils.dart';
 import '../../widgets/custom_floating_navbar.dart';
+import '../games/start/start_page.dart';
 
 /// Status node di map.
 /// - completed  : sudah selesai
@@ -540,7 +541,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               return Positioned(
                                 left: nodeX - MapNode.outerWidth / 2,
                                 top: offsets[i].dy,
+                                child: GestureDetector(
+                                onTap: () {
+                                  if (i == 0) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const StartPage()),
+                                    );
+                                  }
+                                },
                                 child: MapNodeWidget(state: nodes[i].state),
+                                ),
                               );
                             }),
                           ],
