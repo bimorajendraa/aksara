@@ -1,13 +1,13 @@
 import 'package:aksara/env.dart';
-import 'package:aksara/screens/editalien_screen.dart';
-import 'package:aksara/screens/helpme_screen.dart';
-import 'package:aksara/screens/supportcontact_screen.dart';
+import 'package:aksara/screens/profiles/editalien_screen.dart';
+import 'package:aksara/screens/profiles/helpme_screen.dart';
+import 'package:aksara/screens/profiles/supportcontact_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/games/spellbee/spellbee.dart';
-import 'screens/profile_screen.dart';
-import 'screens/achievement_screen.dart';
-import 'screens/settings_screen.dart';
+import 'screens/profiles/profile_screen.dart';
+import 'screens/profiles/achievement_screen.dart';
+import 'screens/profiles/settings_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/entry_screen.dart';
 import 'auth/session_gate.dart';
@@ -21,6 +21,7 @@ import 'screens/games/start/start_page.dart';
 import 'screens/games/start/start_page2.dart';
 import 'screens/games/start/start_page3.dart';
 import 'screens/games/start/start_page4.dart';
+import 'screens/games/drag-drop/drag_drop_page.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/already_registered_screen.dart';
 import 'screens/book/story_mode_screen.dart';
@@ -54,6 +55,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignUpScreen(),
         '/already-registered': (context) => AlreadyRegisteredScreen(),
+        '/aksara-random-drag': (context) => DragDropPage(),
         '/home': (context) => HomeScreen(),
         '/startpage': (context) => StartPage(),
         '/startpage2': (context) => StartPage2(),
