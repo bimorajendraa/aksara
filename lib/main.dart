@@ -4,7 +4,7 @@ import 'package:aksara/screens/helpme_screen.dart';
 import 'package:aksara/screens/supportcontact_screen.dart';
 import 'package:flutter/material.dart';
 
-import 'screens/spellbee.dart';
+import 'screens/games/spellbee/spellbee.dart';
 import 'screens/profile_screen.dart';
 import 'screens/achievement_screen.dart';
 import 'screens/settings_screen.dart';

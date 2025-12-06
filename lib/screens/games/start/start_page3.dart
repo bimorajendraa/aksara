@@ -321,7 +321,9 @@ class _StartPageState extends State<StartPage3> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              Navigator.pop(context);
+            },
             child: CircleAvatar(
               radius: 20,
               backgroundColor: Colors.grey.shade600,
