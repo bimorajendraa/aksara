@@ -4,10 +4,10 @@ import 'package:aksara/screens/profiles/helpme_screen.dart';
 import 'package:aksara/screens/profiles/supportcontact_screen.dart';
 import 'package:flutter/material.dart';
 
+import 'screens/games/spellbee/spellbee.dart';
 import 'screens/profiles/profile_screen.dart';
 import 'screens/profiles/achievement_screen.dart';
 import 'screens/profiles/settings_screen.dart';
-import 'screens/spellbee.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/entry_screen.dart';
 import 'auth/session_gate.dart';

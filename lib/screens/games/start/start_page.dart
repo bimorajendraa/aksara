@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../home/home_screen.dart';
 import 'start_page2.dart';
 
 class StartPage extends StatefulWidget {
@@ -287,7 +288,12 @@ class _StartPageState extends State<StartPage> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+              );
+            },
             child: CircleAvatar(
               radius: 20,
               backgroundColor: Colors.grey.shade600,
