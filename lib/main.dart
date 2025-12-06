@@ -1,13 +1,13 @@
 import 'package:aksara/env.dart';
-import 'package:aksara/screens/editalien_screen.dart';
-import 'package:aksara/screens/helpme_screen.dart';
-import 'package:aksara/screens/supportcontact_screen.dart';
+import 'package:aksara/screens/profiles/editalien_screen.dart';
+import 'package:aksara/screens/profiles/helpme_screen.dart';
+import 'package:aksara/screens/profiles/supportcontact_screen.dart';
 import 'package:flutter/material.dart';
 
+import 'screens/profiles/profile_screen.dart';
+import 'screens/profiles/achievement_screen.dart';
+import 'screens/profiles/settings_screen.dart';
 import 'screens/spellbee.dart';
-import 'screens/profile_screen.dart';
-import 'screens/achievement_screen.dart';
-import 'screens/settings_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/entry_screen.dart';
 import 'auth/session_gate.dart';

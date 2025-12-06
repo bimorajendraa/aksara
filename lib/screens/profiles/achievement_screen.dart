@@ -1,12 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AchievementScreen extends StatelessWidget {
+class AchievementScreen extends StatefulWidget {
   const AchievementScreen({super.key});
 
   @override
+  State<AchievementScreen> createState() => _AchievementScreenState();
+}
+
+class _AchievementScreenState extends State<AchievementScreen> {
+  final _supabase = Supabase.instance.client;
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _achievementList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAchievements();
+  }
+
+  Future<void> _fetchAchievements() async {
+    try {
+      // --- PERUBAHAN UTAMA DI SINI ---
+      // Kita ambil data dari tabel 'achievement'
+      // DAN minta tolong ambilkan 'icon_path' dari tabel 'achievementicons'
+      final data = await _supabase
+          .from('achievement')
+          .select('*, achievementicons(icon_path)') 
+          .order('id_achievement', ascending: true);
+
+      // Hasil datanya nanti seperti ini:
+      // {
+      //    "name": "Ingin Tahu",
+      //    "achievementicons": { "icon_path": "icons/monster.svg" }  <-- Nested
+      // }
+
+      setState(() {
+        _achievementList = List<Map<String, dynamic>>.from(data);
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Error fetching achievements: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF2C3E50))),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: Colors.white, 
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           // 1. CUSTOM HEADER
@@ -38,19 +88,23 @@ class AchievementScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.grey.shade400, width: 1),
                     ),
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(0), 
-                      physics: const NeverScrollableScrollPhysics(), 
-                      shrinkWrap: true, 
-                      itemCount: dummyAchievements.length,
-                      separatorBuilder: (context, index) => const Divider(height: 1, thickness: 1),
-                      itemBuilder: (context, index) {
-                        final item = dummyAchievements[index];
-                        return _AchievementItem(data: item);
-                      },
-                    ),
+                    child: _achievementList.isEmpty
+                        ? const Padding(
+                            padding: EdgeInsets.all(20),
+                            child: Center(child: Text("No achievements yet.")),
+                          )
+                        : ListView.separated(
+                            padding: EdgeInsets.zero,
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            itemCount: _achievementList.length,
+                            separatorBuilder: (context, index) =>
+                                const Divider(height: 1, thickness: 1),
+                            itemBuilder: (context, index) {
+                              return _AchievementItem(data: _achievementList[index]);
+                            },
+                          ),
                   ),
-                  
                   const SizedBox(height: 30),
                 ],
               ),
@@ -84,7 +138,8 @@ class _CustomHeader extends StatelessWidget {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF2C3E50)),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: Color(0xFF2C3E50)),
           ),
           const SizedBox(width: 5),
           const Text(
@@ -103,12 +158,44 @@ class _CustomHeader extends StatelessWidget {
 }
 
 class _AchievementItem extends StatelessWidget {
-  final AchievementData data;
+  final Map<String, dynamic> data;
 
   const _AchievementItem({required this.data});
 
   @override
   Widget build(BuildContext context) {
+    // 1. Ambil Nama
+    String title = data['name'] ?? 'Unknown Title';
+    
+    // 2. Ambil Subtitle (Jika ada di DB)
+    String subtitle = data['subtitle'] ?? 'Keep going!'; 
+
+    // --- 3. AMBIL ICON PATH (LOGIC BARU) ---
+    String assetPath = 'assets/icons/red_monster_achievement.svg'; // Default fallback
+    
+    // Cek apakah data relasi 'achievementicons' ada isinya
+    if (data['achievementicons'] != null) {
+      String rawPath = data['achievementicons']['icon_path'] ?? '';
+      
+      // Bersihkan Path (tambah 'assets/' jika belum ada)
+      if (rawPath.isNotEmpty) {
+        if (!rawPath.startsWith('assets/')) {
+           assetPath = 'assets/$rawPath';
+        } else {
+           assetPath = rawPath;
+        }
+      }
+    }
+    // ---------------------------------------
+
+    // Warna Sementara (Hardcoded dulu biar tidak error)
+    Color itemColor = const Color(0xFFD6E6F2); // Biru Muda Default
+
+    // Hitung Progress
+    int current = data['current_progress'] ?? 0;
+    int target = data['max_progress'] ?? 10;
+    double progressValue = (target == 0) ? 0 : (current / target);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
@@ -118,16 +205,22 @@ class _AchievementItem extends StatelessWidget {
           Container(
             width: 60,
             height: 60,
-            padding: const EdgeInsets.all(10), // Padding agar gambar tidak mepet pinggir
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: data.color,
+              color: itemColor,
               borderRadius: BorderRadius.circular(15),
             ),
-            // Menggunakan Image.asset sesuai request
-            child: Image.asset(
-              data.assetPath,
-              fit: BoxFit.contain,
-            ),
+            // Logic Icon SVG vs PNG
+            child: assetPath.toLowerCase().endsWith('.svg')
+                ? SvgPicture.asset(
+                    assetPath, 
+                    fit: BoxFit.contain,
+                    placeholderBuilder: (context) => const Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : Image.asset(assetPath, fit: BoxFit.contain),
           ),
           const SizedBox(width: 15),
 
@@ -140,7 +233,7 @@ class _AchievementItem extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      data.title,
+                      title,
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 16,
@@ -149,7 +242,7 @@ class _AchievementItem extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      "${data.current}/${data.target}",
+                      "$current/$target",
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 14,
@@ -165,17 +258,18 @@ class _AchievementItem extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
-                    value: data.current / data.target,
+                    value: progressValue,
                     minHeight: 8,
                     backgroundColor: const Color(0xFFDAE4EB),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
                   ),
                 ),
-                
+
                 const SizedBox(height: 6),
 
                 Text(
-                  data.subtitle,
+                  subtitle,
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 12,
@@ -190,101 +284,3 @@ class _AchievementItem extends StatelessWidget {
     );
   }
 }
-
-// --- DATA MODEL ---
-
-class AchievementData {
-  final String title;
-  final String subtitle;
-  final int current;
-  final int target;
-  final Color color;
-  final String assetPath; // Ubah dari IconData ke String Path Gambar
-
-  AchievementData({
-    required this.title,
-    required this.subtitle,
-    required this.current,
-    required this.target,
-    required this.color,
-    required this.assetPath,
-  });
-}
-
-// --- DUMMY DATA LIST ---
-
-final List<AchievementData> dummyAchievements = [
-  AchievementData(
-    title: "Ingin Tahu!",
-    subtitle: "Ingin tahu 7 Kali",
-    current: 7,
-    target: 10,
-    color: const Color(0xFFFF6C6C), // Merah Soft
-    assetPath: 'assets/icons/monster ingin tahu.png',
-  ),
-  AchievementData(
-    title: "Kaya Pengetahuan!",
-    subtitle: "Kaya akan pengetahuan 7 Kali",
-    current: 5,
-    target: 10,
-    color: const Color(0xFF2DBCB7), // Tosca Soft
-    assetPath: 'assets/icons/monster merah kaya pengetahuan.png',
-  ),
-  AchievementData(
-    title: "Progresif!",
-    subtitle: "Progresif 7 Kali",
-    current: 7,
-    target: 10,
-    color: const Color(0xFFFFC44F), // Yellow Soft
-    assetPath: 'assets/icons/monster pink progresif.png',
-  ),
-  // Mengulang data untuk list panjang (sesuai contoh sebelumnya)
-  AchievementData(
-    title: "Ingin Tahu!",
-    subtitle: "Ingin tahu 7 Kali",
-    current: 9,
-    target: 10,
-    color: const Color(0xFFFF6C6C),
-    assetPath: 'assets/icons/monster ingin tahu.png',
-  ),
-  AchievementData(
-    title: "Kaya Pengetahuan!",
-    subtitle: "Kaya akan pengetahuan 7 Kali",
-    current: 7,
-    target: 10,
-    color: const Color(0xFF2DBCB7),
-    assetPath: 'assets/icons/monster merah kaya pengetahuan.png',
-  ),
-  AchievementData(
-    title: "Progresif!",
-    subtitle: "Progresif 7 Kali",
-    current: 2,
-    target: 10,
-    color: const Color(0xFFFFC44F),
-    assetPath: 'assets/icons/monster pink progresif.png',
-  ),
-  AchievementData(
-    title: "Ingin Tahu!",
-    subtitle: "Ingin tahu 7 Kali",
-    current: 5,
-    target: 10,
-    color: const Color(0xFFFF6C6C),
-    assetPath: 'assets/icons/monster ingin tahu.png',
-  ),
-   AchievementData(
-    title: "Kaya Pengetahuan!",
-    subtitle: "Kaya akan pengetahuan 7 Kali",
-    current: 7,
-    target: 10,
-    color: const Color(0xFF2DBCB7),
-    assetPath: 'assets/icons/monster merah kaya pengetahuan.png',
-  ),
-   AchievementData(
-    title: "Progresif!",
-    subtitle: "Progresif 7 Kali",
-    current: 1,
-    target: 10,
-    color: const Color(0xFFFFC44F),
-    assetPath: 'assets/icons/monster pink progresif.png',
-  ),
-];
