@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../home/home_screen.dart';
 import 'start_page3.dart';
 
 class StartPage4 extends StatefulWidget {
@@ -9,7 +10,7 @@ class StartPage4 extends StatefulWidget {
 }
 
 class _StartPageState2 extends State<StartPage4> {
-  int hearts = 5; // sama seperti start_page pertama
+  int hearts = 5; 
 
   @override
   Widget build(BuildContext context) {
@@ -30,10 +31,7 @@ class _StartPageState2 extends State<StartPage4> {
                 padding: const EdgeInsets.only(left: 35),
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const StartPage3()),
-                    );
+                    Navigator.pop(context);
                   },
                   child: CircleAvatar(
                     backgroundColor: Colors.white.withOpacity(0.5),
@@ -70,6 +68,12 @@ class _StartPageState2 extends State<StartPage4> {
             ),
             // ---------------- NEXT BUTTON ----------------
             GestureDetector(
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  );
+                },
               child: Container(
                 margin: const EdgeInsets.only(bottom: 30),
                 width: 95,
