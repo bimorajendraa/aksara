@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../utils/hash.dart';
+import 'package:aksara/auth/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -21,29 +20,47 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final email = _emailController.text.trim();
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
-    final passwordHash = hashPassword(password);
 
     if (email.isEmpty || username.isEmpty || password.isEmpty) {
-      _showMessage('Semua field wajib diisi!');
+      _showMessage("Semua field wajib diisi!");
       return;
     }
 
     setState(() => isLoading = true);
 
-    try {
-      await Supabase.instance.client.from('akun').insert({
-        'email': email,
-        'username': username,
-        'password': passwordHash,
-      });
+    final auth = AuthService();
+    final error = await auth.register(
+      email: email,
+      username: username,
+      password: password,
+    );
 
-      _showMessage('Akun berhasil dibuat! Silakan login.');
+    if (error != null) {
+      _showMessage(error);
+    } else {
+      _showMessage("Akun berhasil dibuat! Silakan login.");
+      // ignore: use_build_context_synchronously
       Navigator.pushReplacementNamed(context, '/login');
-    } catch (e) {
-      _showMessage('Gagal register: $e');
-    } finally {
-      setState(() => isLoading = false);
     }
+
+    setState(() => isLoading = false);
+  }
+
+  // GOOGLE SIGN UP
+  Future<void> _signUpWithGoogle() async {
+    setState(() => isLoading = true);
+
+    final auth = AuthService();
+    final error = await auth.signInWithGoogle();
+
+    if (error != null) {
+      _showMessage(error);
+    } else {
+      _showMessage("Akun berhasil dibuat melalui Google!");
+      Navigator.pushReplacementNamed(context, '/login');
+    }
+
+    setState(() => isLoading = false);
   }
 
   void _showMessage(String msg) {
@@ -135,22 +152,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
               const SizedBox(height: 25),
 
-              _googleButton(),
+              _googleButton(), // sudah benar
 
               const SizedBox(height: 25),
 
-              const Center(
-                child: Text.rich(
-                  TextSpan(
-                    text: "Already have an account? ",
-                    children: [
-                      TextSpan(
-                        text: "Login",
-                        style: TextStyle(fontWeight: FontWeight.w700),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Already have an account? ",
+                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, '/login'),
+                      child: const Text(
+                        "Login",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
                       ),
-                    ],
-                  ),
-                  style: TextStyle(fontSize: 16),
+                    ),
+                  ],
                 ),
               ),
 
@@ -222,22 +247,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Widget _googleButton() {
-    return Container(
-      height: 58,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(40),
-        border: Border.all(color: Colors.black26),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset("assets/icons/google.png", width: 22),
-          const SizedBox(width: 10),
-          const Text(
-            "Google",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-        ],
+    return GestureDetector(
+      onTap: _signUpWithGoogle,
+      child: Container(
+        height: 58,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(40),
+          border: Border.all(color: Colors.black26),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset("assets/icons/google.png", width: 22),
+            const SizedBox(width: 10),
+            const Text(
+              "Google",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
       ),
     );
   }

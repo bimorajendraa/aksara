@@ -10,7 +10,7 @@ class StartPage2 extends StatefulWidget {
 }
 
 class _StartPageState2 extends State<StartPage2> {
-  int hearts = 5; // sama seperti start_page pertama
+  int hearts = 5;
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +33,7 @@ class _StartPageState2 extends State<StartPage2> {
                 padding: const EdgeInsets.only(left: 35),
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const StartPage()),
-                    );
+                    Navigator.pop(context);
                   },
                   child: CircleAvatar(
                     backgroundColor: Colors.white.withOpacity(0.5),
