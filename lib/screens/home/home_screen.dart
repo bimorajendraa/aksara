@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../utils/navbar_utils.dart';
+import '../../widgets/custom_floating_navbar.dart';
 
 /// Status node di map.
 /// - completed  : sudah selesai
@@ -337,110 +339,7 @@ class NextLevelCard extends StatelessWidget {
 /// Ini nav bar bawah yang ada home / book / medal / user.
 /// Hanya layout static, belum ada onTap atau route logic.
 /// Kalau mau aktif tab lain, tinggal ganti warna icon di sini.
-class HomeBottomNavBar extends StatelessWidget {
-  const HomeBottomNavBar({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Row icon nav
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Home = active (biru)
-                SvgPicture.asset(
-                  "assets/icons/home.svg",
-                  width: 32,
-                  height: 32,
-                  colorFilter: const ColorFilter.mode(
-                    Color(0xFF5C7590),
-                    BlendMode.srcIn,
-                  ),
-                ),
-                // Book = inactive (abu)
-                SvgPicture.asset(
-                  "assets/icons/book-open.svg",
-                  width: 32,
-                  height: 32,
-                  colorFilter: const ColorFilter.mode(
-                    Color(0xFFB0BCC9),
-                    BlendMode.srcIn,
-                  ),
-                ),
-                const SizedBox(width: 70),
-                // Medal = inactive
-                SvgPicture.asset(
-                  "assets/icons/leaderboard.svg",
-                  width: 32,
-                  height: 32,
-                  colorFilter: const ColorFilter.mode(
-                    Color(0xFFB0BCC9),
-                    BlendMode.srcIn,
-                  ),
-                ),
-                // User = inactive
-                SvgPicture.asset(
-                  "assets/icons/user.svg",
-                  width: 32,
-                  height: 32,
-                  colorFilter: const ColorFilter.mode(
-                    Color(0xFFB0BCC9),
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Tombol scan tengah yang melayang di atas nav
-          Positioned(
-            top: -30,
-            left: MediaQuery.of(context).size.width / 2 - 38,
-            child: Container(
-              width: 76,
-              height: 76,
-              decoration: BoxDecoration(
-                color: const Color(0xFFD5E3F0),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Container(
-                  width: 66,
-                  height: 66,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF8ED4F5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: SvgPicture.asset(
-                      "assets/icons/tdesign_scan.svg",
-                      width: 32,
-                      height: 32,
-                      colorFilter: const ColorFilter.mode(
-                        Color(0xFF0E0F1A),
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 /// ===========================================================
 /// HOME SCREEN — PAGE UTAMA STORY MODE
@@ -449,17 +348,15 @@ class HomeBottomNavBar extends StatelessWidget {
 ///   - _buildNodes() : pola posisi node & statusnya
 ///   - spacing       : jarak vertikal antar node
 ///   - xFactor       : posisi kiri/kanan node
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  /// Susunan node dari atas sampai bawah.
-  /// spacing = jarak vertikal antar node (px).
-  ///
-  /// xFactor:
-  ///   - 0.22 kiri (dipindahkan 20% lebih ke kiri dari 0.28)
-  ///   - 0.50 tengah
-  ///   - 0.78 kanan (dipindahkan 20% lebih ke kanan dari 0.72)
-  /// Lu bisa ganti pattern sendiri di sini.
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
   List<MapNode> _buildNodes() {
     const spacing = 120.0;
     return [
@@ -480,11 +377,9 @@ class HomeScreen extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final nodes = _buildNodes();
 
-    // Index node yang lagi current (kalau nggak ketemu, fallback ke 0)
     final currentIndex = nodes.indexWhere((n) => n.state == NodeState.current);
     final effectiveCurrentIndex = currentIndex == -1 ? 0 : currentIndex;
 
-    // Konversi MapNode → Offset absolute (pakai lebar screen)
     final offsets = nodes.map((n) {
       return Offset(
         n.xFactor * screenWidth,
@@ -492,226 +387,193 @@ class HomeScreen extends StatelessWidget {
       );
     }).toList();
 
-    // Tinggi map total (dipakai untuk height container scroll)
     final mapHeight = nodes.last.yOffset + 180;
 
     return Scaffold(
-      // warna background utama (lu minta #476280)
       backgroundColor: const Color(0xFF476280),
       body: Stack(
+        alignment: Alignment.bottomCenter, // Pastikan Navbar di bawah
         children: [
+          // 1. Background
           Positioned.fill(
             child: Container(
               color: const Color(0xFF476280),
             ),
           ),
 
-          SafeArea(
-            child: Column(
-              children: [
-                /// ================= HEADER HEART & COIN =================
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFC8D9E6),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // deretan heart
-                        Row(
-                          children: List.generate(5, (i) {
-                            return Padding(
-                              padding: EdgeInsets.only(
-                                right: i < 4 ? 6 : 0,
-                              ),
-                              child: SvgPicture.asset(
-                                "assets/images/heart.svg",
-                                width: 22,
-                                height: 22,
-                              ),
-                            );
-                          }),
+          // 2. Konten Utama (Scrollable)
+          Positioned.fill(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 120), // Padding bawah agar tidak tertutup navbar
+              physics: const BouncingScrollPhysics(),
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    // --- Header (Heart & Coin) ---
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC8D9E6),
+                          borderRadius: BorderRadius.circular(24),
                         ),
-                        // coin + jumlah
-                        Row(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            SvgPicture.asset(
-                              "assets/images/coin.svg",
-                              width: 24,
-                              height: 24,
+                            Row(
+                              children: List.generate(5, (i) {
+                                return Padding(
+                                  padding: EdgeInsets.only(right: i < 4 ? 6 : 0),
+                                  child: SvgPicture.asset(
+                                    "assets/images/heart.svg",
+                                    width: 22, height: 22,
+                                  ),
+                                );
+                              }),
                             ),
-                            const SizedBox(width: 6),
-                            const Text(
-                              "13",
-                              style: TextStyle(
-                                color: Color(0xFF0E0F1A),
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
+                            Row(
+                              children: [
+                                SvgPicture.asset(
+                                  "assets/images/coin.svg",
+                                  width: 24, height: 24,
+                                ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  "13",
+                                  style: TextStyle(
+                                    color: Color(0xFF0E0F1A),
+                                    fontSize: 18, fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // --- Card Level 1 ---
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC8D9E6),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            Image.asset(
+                              "assets/images/monster1.png",
+                              width: 64, height: 64, fit: BoxFit.contain,
+                            ),
+                            const SizedBox(width: 14),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Level 1",
+                                    style: TextStyle(
+                                      fontSize: 24, fontWeight: FontWeight.w700,
+                                      color: Color(0xFF0E0F1A),
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    "Get to know letters",
+                                    style: TextStyle(
+                                      fontSize: 13, color: Color(0xFF5C7590),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
 
-                const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
-                /// ================= CARD LEVEL 1 DI BAWAH HEADER =================
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFC8D9E6),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        Image.asset(
-                          "assets/images/monster1.png",
-                          width: 64,
-                          height: 64,
-                          fit: BoxFit.contain,
-                        ),
-                        const SizedBox(width: 14),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Level 1",
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0E0F1A),
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                "Get to know letters",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF5C7590),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                /// ================= AREA MAP SCROLLABLE =================
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      children: [
-                        Center(
-                          child: SizedBox(
-                            // Map dibuat 90% dari lebar layar supaya ada margin kiri-kanan
-                            width: screenWidth * 0.9,
-                            height: mapHeight,
-                            child: Stack(
-                              children: [
-                                // Dot pattern cuma di dalam area ini
-                                Positioned.fill(
-                                  child: CustomPaint(
-                                    painter: DotPatternPainter(),
-                                  ),
-                                ),
-
-                                /// ========== FLOW CONNECTOR ANTAR NODE ==========
-                                ...List.generate(nodes.length - 1, (i) {
-                                  final isCompleted = i < effectiveCurrentIndex;
-
-                                  // Pola arah path:
-                                  // 0: kanan-bawah (tengah -> kanan)
-                                  // 1: bawah-kiri  (kanan -> tengah)
-                                  // 2: kiri-bawah  (tengah -> kiri)
-                                  // 3: bawah-kanan (kiri -> tengah)
-                                  String direction;
-                                  switch (i % 4) {
-                                    case 0:
-                                      direction = 'kanan-bawah';
-                                      break;
-                                    case 1:
-                                      direction = 'bawah-kiri';
-                                      break;
-                                    case 2:
-                                      direction = 'kiri-bawah';
-                                      break;
-                                    default:
-                                      direction = 'bawah-kanan';
-                                  }
-
-                                  // Hitung offset start & end,
-                                  // tapi pos X diubah ke 90% lebar (supaya match dengan width map)
-                                  final startOffset = Offset(
-                                    nodes[i].xFactor * screenWidth * 0.9,
-                                    offsets[i].dy,
-                                  );
-                                  final endOffset = Offset(
-                                    nodes[i + 1].xFactor * screenWidth * 0.9,
-                                    offsets[i + 1].dy,
-                                  );
-
-                                  return FlowConnector(
-                                    start: startOffset,
-                                    end: endOffset,
-                                    isCompleted: isCompleted,
-                                    direction: direction,
-                                  );
-                                }),
-
-                                /// ========== NODE (BUKU / LOCK) ==========
-                                ...List.generate(nodes.length, (i) {
-                                  // Posisi X = xFactor * (90% lebar layar)
-                                  final nodeX =
-                                      nodes[i].xFactor * screenWidth * 0.9;
-
-                                  return Positioned(
-                                    left: nodeX - MapNode.outerWidth / 2,
-                                    top: offsets[i].dy,
-                                    child: MapNodeWidget(state: nodes[i].state),
-                                  );
-                                }),
-                              ],
+                    // --- Area Map (Canvas & Nodes) ---
+                    Center(
+                      child: SizedBox(
+                        width: screenWidth * 0.9,
+                        height: mapHeight,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: CustomPaint(painter: DotPatternPainter()),
                             ),
-                          ),
+                            // Flow Connector
+                            ...List.generate(nodes.length - 1, (i) {
+                              final isCompleted = i < effectiveCurrentIndex;
+                              String direction;
+                              switch (i % 4) {
+                                case 0: direction = 'kanan-bawah'; break;
+                                case 1: direction = 'bawah-kiri'; break;
+                                case 2: direction = 'kiri-bawah'; break;
+                                default: direction = 'bawah-kanan';
+                              }
+                              final startOffset = Offset(
+                                nodes[i].xFactor * screenWidth * 0.9,
+                                offsets[i].dy,
+                              );
+                              final endOffset = Offset(
+                                nodes[i + 1].xFactor * screenWidth * 0.9,
+                                offsets[i + 1].dy,
+                              );
+                              return FlowConnector(
+                                start: startOffset,
+                                end: endOffset,
+                                isCompleted: isCompleted,
+                                direction: direction,
+                              );
+                            }),
+                            // Nodes
+                            ...List.generate(nodes.length, (i) {
+                              final nodeX = nodes[i].xFactor * screenWidth * 0.9;
+                              return Positioned(
+                                left: nodeX - MapNode.outerWidth / 2,
+                                top: offsets[i].dy,
+                                child: MapNodeWidget(state: nodes[i].state),
+                              );
+                            }),
+                          ],
                         ),
-
-                        /// ========== CARD NEXT LEVEL DI BAWAH MAP ==========
-                        NextLevelCard(
-                          levelNumber: 2,
-                          monsterAsset: "assets/images/monster2.png",
-                        ),
-
-                        const SizedBox(height: 100),
-                      ],
+                      ),
                     ),
-                  ),
+
+                    // --- Next Level Card ---
+                    const NextLevelCard(
+                      levelNumber: 2,
+                      monsterAsset: "assets/images/monster2.png",
+                    ),
+                  ],
                 ),
-              ],
+              ),
+            ),
+          ),
+
+          // 3. Navbar Melayang (Paling Atas)
+          Positioned(
+            bottom: 30,
+            left: 0,
+            right: 0,
+            child: CustomFloatingNavBar(
+              currentIndex: 0, // Set 0 karena ini Home
+              onTap: (index) {
+                NavigationUtils.handleNavigation(context, index, 0);
+              }, // Sambungkan Fungsi Navigasi
+              onScanTap: () => print("Scan Clicked"),
             ),
           ),
         ],
       ),
-
-      // Bottom navbar selalu nempel di bawah
-      bottomNavigationBar: const HomeBottomNavBar(),
     );
   }
 }
