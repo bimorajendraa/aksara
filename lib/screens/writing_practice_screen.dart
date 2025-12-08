@@ -10,10 +10,6 @@ class WritingPracticeScreen extends StatelessWidget {
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/// PAGEVIEW OF UNITS
-///////////////////////////////////////////////////////////////////////////////
-
 class UnitListPage extends StatefulWidget {
   const UnitListPage({super.key});
 
@@ -26,10 +22,58 @@ class _UnitListPageState extends State<UnitListPage> {
   int _pageIndex = 0;
 
   final List<String> _alphabet = [
-    'A','a','B','b','C','c','D','d','E','e','F','f','G','g',
-    'H','h','I','i','J','j','K','k','L','l','M','m','N','n',
-    'O','o','P','p','Q','q','R','r','S','s','T','t','U','u',
-    'V','v','W','w','X','x','Y','y','Z','z'
+    'A',
+    'a',
+    'B',
+    'b',
+    'C',
+    'c',
+    'D',
+    'd',
+    'E',
+    'e',
+    'F',
+    'f',
+    'G',
+    'g',
+    'H',
+    'h',
+    'I',
+    'i',
+    'J',
+    'j',
+    'K',
+    'k',
+    'L',
+    'l',
+    'M',
+    'm',
+    'N',
+    'n',
+    'O',
+    'o',
+    'P',
+    'p',
+    'Q',
+    'q',
+    'R',
+    'r',
+    'S',
+    's',
+    'T',
+    't',
+    'U',
+    'u',
+    'V',
+    'v',
+    'W',
+    'w',
+    'X',
+    'x',
+    'Y',
+    'y',
+    'Z',
+    'z',
   ];
 
   List<List<String>> _makeUnits() {
@@ -218,7 +262,10 @@ class _UnitPageState extends State<UnitPage> {
 
   @override
   Widget build(BuildContext context) {
-    final visibleCount = min(rows.length, (currentSection + 1) * rowsPerSection);
+    final visibleCount = min(
+      rows.length,
+      (currentSection + 1) * rowsPerSection,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F6F8),
@@ -231,7 +278,11 @@ class _UnitPageState extends State<UnitPage> {
 
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 140),
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      bottom: 140,
+                    ),
                     children: [
                       for (int i = 0; i < rowWidgets.length; i++)
                         Offstage(
@@ -334,10 +385,7 @@ class ToolButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             if (active)
-              BoxShadow(
-                color: Colors.black.withOpacity(0.12),
-                blurRadius: 6,
-              ),
+              BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 6),
           ],
         ),
         child: Icon(
@@ -470,10 +518,7 @@ class _LetterCanvasState extends State<LetterCanvas>
     final size = context.size;
     final clamped = size == null
         ? p
-        : Offset(
-            p.dx.clamp(0.0, size.width),
-            p.dy.clamp(0.0, size.height),
-          );
+        : Offset(p.dx.clamp(0.0, size.width), p.dy.clamp(0.0, size.height));
 
     strokes.last.add(clamped);
 

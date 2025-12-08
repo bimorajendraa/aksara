@@ -39,6 +39,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _showMessage(error);
     } else {
       _showMessage("Akun berhasil dibuat! Silakan login.");
+      // ignore: use_build_context_synchronously
       Navigator.pushReplacementNamed(context, '/login');
     }
 
