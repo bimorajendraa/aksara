@@ -49,17 +49,13 @@ class _UnitListPageState extends State<UnitListPage> {
       body: SafeArea(
         child: Column(
           children: [
-            /// Top heart + dots
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
                   const HeartRow(hearts: 5),
                   const Spacer(),
-                  PageIndicatorDots(
-                    total: units.length,
-                    current: _pageIndex,
-                  ),
+                  PageIndicatorDots(total: units.length, current: _pageIndex),
                 ],
               ),
             ),
@@ -108,6 +104,7 @@ class _UnitListPageState extends State<UnitListPage> {
 
 class HeartRow extends StatelessWidget {
   final int hearts;
+
   const HeartRow({super.key, required this.hearts});
 
   @override
@@ -155,13 +152,6 @@ class PageIndicatorDots extends StatelessWidget {
 
 ///////////////////////////////////////////////////////////////////////////////
 /// UNIT PAGE
-///
-/// Key architecture for persistence:
-/// - Letter canvases are created ONCE in initState
-/// - They are NEVER rebuilt or destroyed
-/// - Visibility controlled using Offstage
-/// - Strokes stored inside each canvas
-/// - Pencil/eraser mode broadcast using ValueNotifier<bool>
 ///////////////////////////////////////////////////////////////////////////////
 
 class UnitPage extends StatefulWidget {
@@ -193,13 +183,11 @@ class _UnitPageState extends State<UnitPage> {
   void initState() {
     super.initState();
 
-    /// Build rows (pairs)
     rows = [];
     for (int i = 0; i < widget.letters.length; i += 2) {
       rows.add([widget.letters[i], widget.letters[i + 1]]);
     }
 
-    /// Build row widgets ONCE
     rowWidgets = rows.map((pair) {
       return LetterRowWidget(
         key: ValueKey("row_${pair[0]}_${pair[1]}"),
@@ -245,22 +233,20 @@ class _UnitPageState extends State<UnitPage> {
                   child: ListView(
                     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 140),
                     children: [
-  for (int i = 0; i < rowWidgets.length; i++)
-    Offstage(
-      offstage: i >= visibleCount,
-      child: Padding(
-        padding: EdgeInsets.only(top: i == 0 ? 20 : 0),  // 👈 add padding for FIRST row
-        child: rowWidgets[i],
-      ),
-    ),
-],
-
+                      for (int i = 0; i < rowWidgets.length; i++)
+                        Offstage(
+                          offstage: i >= visibleCount,
+                          child: Padding(
+                            padding: EdgeInsets.only(top: i == 0 ? 20 : 0),
+                            child: rowWidgets[i],
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ],
             ),
 
-            /// TOOL BUTTONS
             Positioned(
               right: 10,
               top: 120,
@@ -281,7 +267,6 @@ class _UnitPageState extends State<UnitPage> {
               ),
             ),
 
-            /// NAV BUTTONS
             Positioned(
               bottom: 26,
               left: 0,
@@ -321,7 +306,7 @@ class _UnitPageState extends State<UnitPage> {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// TOOL BUTTON (fixed spelling)
+/// TOOL BUTTON
 ///////////////////////////////////////////////////////////////////////////////
 
 class ToolButton extends StatelessWidget {
@@ -365,8 +350,7 @@ class ToolButton extends StatelessWidget {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// LETTER ROW WIDGET
-/// Contains two canvases (upper+lower)
+/// LETTER ROW (SMALLER BACKGROUND, BIG FONT)
 ///////////////////////////////////////////////////////////////////////////////
 
 class LetterRowWidget extends StatelessWidget {
@@ -384,8 +368,8 @@ class LetterRowWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 160,   // was 120
-      margin: const EdgeInsets.only(bottom: 18),
+      height: 150,     // slightly smaller row
+      margin: const EdgeInsets.only(bottom:0),
       child: Column(
         children: [
           Row(
@@ -404,7 +388,7 @@ class LetterRowWidget extends StatelessWidget {
 
   Widget _canvasBox(String letter) {
     return Container(
-      height: 110,    // was 72
+      height: 130,     // smaller white card but big font remains
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -423,9 +407,8 @@ class LetterRowWidget extends StatelessWidget {
   }
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
-/// LETTER CANVAS — persistent internal strokes
+/// LETTER CANVAS (same logic, fits smaller card)
 ///////////////////////////////////////////////////////////////////////////////
 
 class LetterCanvas extends StatefulWidget {
@@ -447,7 +430,7 @@ class _LetterCanvasState extends State<LetterCanvas>
   final List<List<Offset>> strokes = [];
   bool filled = false;
 
-  static const double fillThreshold = 120.0;
+  static const double fillThreshold = 150.0;
   static const double eraseRadius = 22.0;
 
   @override
@@ -502,7 +485,8 @@ class _LetterCanvasState extends State<LetterCanvas>
     final newList = <List<Offset>>[];
 
     for (final s in strokes) {
-      final kept = s.where((pt) => (pt - p).distance > eraseRadius).toList();
+      final kept =
+          s.where((pt) => (pt - p).distance > eraseRadius).toList();
       if (kept.isNotEmpty) newList.add(kept);
     }
 
@@ -558,7 +542,7 @@ class _LetterCanvasState extends State<LetterCanvas>
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// PAINTER
+/// PAINTER (BIG LETTER, SMALLER CARD)
 ///////////////////////////////////////////////////////////////////////////////
 
 class _LetterPainter extends CustomPainter {
@@ -576,12 +560,12 @@ class _LetterPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
 
-    /// faded letter
+    /// faded letter (BIG FONT)
     final base = TextPainter(
       text: TextSpan(
         text: letter,
         style: TextStyle(
-          fontSize: 56,
+          fontSize: 100,     // stays big
           fontWeight: FontWeight.w700,
           color: Colors.grey.withOpacity(0.28),
         ),
@@ -594,12 +578,13 @@ class _LetterPainter extends CustomPainter {
     /// strokes
     final p = Paint()
       ..color = filled ? const Color(0xFFE6B23C) : Colors.blueGrey.shade900
-      ..strokeWidth = filled ? 8 : 6
+      ..strokeWidth = filled ? 10 : 8
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     for (final s in strokes) {
       if (s.length < 2) continue;
+
       final path = Path()..moveTo(s.first.dx, s.first.dy);
       for (int i = 1; i < s.length; i++) {
         path.lineTo(s[i].dx, s[i].dy);
@@ -607,20 +592,12 @@ class _LetterPainter extends CustomPainter {
       canvas.drawPath(path, p);
     }
 
-    /// final golden overlay
     if (filled) {
-      final t = TextPainter(
-        text: const TextSpan(
-          text: "",
-        ),
-        textDirection: TextDirection.ltr,
-      );
-
       final gold = TextPainter(
         text: TextSpan(
           text: letter,
           style: const TextStyle(
-            fontSize: 56,
+            fontSize: 100,
             fontWeight: FontWeight.w900,
             color: Color(0xFFE6B23C),
           ),
