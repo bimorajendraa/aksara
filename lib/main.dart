@@ -28,6 +28,10 @@ import 'screens/auth/already_registered_screen.dart';
 import 'screens/book/story_mode_screen.dart';
 import 'screens/book/story_detail_screen.dart';
 
+import 'screens/entry_screen.dart';
+import 'screens/practice_screen.dart';
+import 'screens/writing_practice_screen.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
@@ -72,6 +76,8 @@ class MyApp extends StatelessWidget {
         '/helpme' : (context) => HelpMeScreen(),
         '/supportcontact' : (context) => SupportContactScreen(),
         '/editalien' : (context) => EditAlienScreen(),
+        '/writingpractice' : (context) => WritingPracticeScreen(),
+        '/practice' : (context) => PracticeScreen(username: 'User'),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/chapter') {
