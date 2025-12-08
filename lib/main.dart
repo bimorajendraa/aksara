@@ -28,6 +28,8 @@ import 'screens/book/story_mode_screen.dart';
 import 'screens/book/story_detail_screen.dart';
 import 'screens/practice_screen.dart';
 import 'screens/writing_practice_screen.dart';
+import 'screens/leaderboard.dart';
+import 'screens/hearthesound.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -76,6 +78,8 @@ class MyApp extends StatelessWidget {
         '/writingpractice': (context) => WritingPracticeScreen(),
         '/practice': (context) => PracticeScreen(username: 'User'),
         '/live-ocr': (context) => const CameraCaptureOCRPage(),
+        '/leaderboard': (context) => const LeaderboardPage(),
+        '/hear-the-sound': (context) => HearTheSoundPage()
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/chapter') {
