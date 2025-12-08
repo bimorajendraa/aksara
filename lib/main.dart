@@ -13,8 +13,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/entry_screen.dart';
 import 'auth/session_gate.dart';
 import 'screens/book/chapter_read_screen.dart';
-
-
+import 'screens/camera/camera_capture_ocr_page.dart';
 import 'screens/auth/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
@@ -27,8 +26,6 @@ import 'screens/auth/signup_screen.dart';
 import 'screens/auth/already_registered_screen.dart';
 import 'screens/book/story_mode_screen.dart';
 import 'screens/book/story_detail_screen.dart';
-
-import 'screens/entry_screen.dart';
 import 'screens/practice_screen.dart';
 import 'screens/writing_practice_screen.dart';
 
@@ -72,12 +69,13 @@ class MyApp extends StatelessWidget {
         '/spellbee2': (context) => SpellBeePage2(),
         '/profile': (context) => ProfileScreen(),
         '/achievement': (context) => AchievementScreen(),
-        '/settings' : (context) => SettingScreen(),
-        '/helpme' : (context) => HelpMeScreen(),
-        '/supportcontact' : (context) => SupportContactScreen(),
-        '/editalien' : (context) => EditAlienScreen(),
-        '/writingpractice' : (context) => WritingPracticeScreen(),
-        '/practice' : (context) => PracticeScreen(username: 'User'),
+        '/settings': (context) => SettingScreen(),
+        '/helpme': (context) => HelpMeScreen(),
+        '/supportcontact': (context) => SupportContactScreen(),
+        '/editalien': (context) => EditAlienScreen(),
+        '/writingpractice': (context) => WritingPracticeScreen(),
+        '/practice': (context) => PracticeScreen(username: 'User'),
+        '/live-ocr': (context) => const CameraCaptureOCRPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/chapter') {
