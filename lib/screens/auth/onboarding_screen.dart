@@ -95,7 +95,6 @@ class OnboardingScreen extends StatelessWidget {
                           Navigator.pushNamed(context, '/login');
                         },
 
-                        // MATIKAN hover + highlight + splash
                         highlightColor: Colors.transparent,
                         splashColor: Colors.transparent,
                         hoverColor: Colors.transparent,
