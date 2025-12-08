@@ -22,83 +22,90 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
   ];
 
   final List<Color> _backgroundColors = [
-    const Color(0xFF2C3E50), // Navy 
-    const Color(0xFFD6E6F2), // Light Blue
-    const Color(0xFFFFEAA7), // Cream
-    const Color(0xFFFF7675), // Soft Red
-    const Color(0xFFA29BFE), // Soft Purple
-    const Color(0xFF55EFC4), // Mint Green
+    const Color(0xFF2C3E50), 
+
+    const Color(0xFFD6E6F2), 
+
+    const Color(0xFFFFEAA7), 
+
+    const Color(0xFFFF7675), 
+
+    const Color(0xFFA29BFE), 
+
+    const Color(0xFF55EFC4), 
+
   ];
 
   @override
   Widget build(BuildContext context) {
-    // Tinggi area header warna (di belakang monster)
+
     final double headerHeight = 350; 
-    
+
     final double whiteSheetTopStart = 320; 
 
     return Scaffold(
-      backgroundColor: Colors.white, // Pastikan scaffold putih
+      backgroundColor: Colors.white, 
+
       body: Stack(
         alignment: Alignment.topCenter,
         children: [
-          // ============================================
-          // LAYER 1: BACKGROUND HEADER COLOR
-          // ============================================
+
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            height: headerHeight, // Tinggi area warna
+            height: headerHeight, 
+
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               color: _backgroundColors[_selectedBgIndex],
             ),
           ),
 
-          // ============================================
-          // LAYER 2: MONSTER (FULL BODY TAPI TERTUTUP BAWAHNYA)
-          // ============================================
           Positioned(
-            // Posisikan monster agar kepalanya pas di tengah area warna
+
             top: 100, 
             left: 0,
             right: 0,
             child: Center(
               child: Image.asset(
                 _characterAssets[_selectedCharIndex],
-                height: 280, // Ukuran monster cukup besar
-                fit: BoxFit.contain, // Pastikan proporsi tetap (tidak gepeng)
-                cacheWidth: 800, // Resolusi tinggi agar tajam
+                height: 280, 
+
+                fit: BoxFit.contain, 
+
+                cacheWidth: 800, 
+
               ),
             ),
           ),
 
-          // ============================================
-          // LAYER 3: KONTEN PUTIH (MENUTUPI KAKI MONSTER)
-          // ============================================
           Positioned.fill(
-            top: whiteSheetTopStart, // Mulai dari sini ke bawah adalah area putih
+            top: whiteSheetTopStart, 
+
             child: Container(
-              color: Colors.white, // Background putih solid menutupi kaki monster
+              color: Colors.white, 
+
               child: Column(
                 children: [
-                  // --- TAB BAR ---
+
                   Container(
-                    color: const Color(0xFFD6E6F2), // Background Tab Bar
+                    color: const Color(0xFFD6E6F2), 
+
                     height: 70,
                     width: double.infinity,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center, // Center Alignment
+                      mainAxisAlignment: MainAxisAlignment.center, 
+
                       children: [
                         _buildTabItem(index: 0, icon: Icons.checkroom_rounded),
-                        const SizedBox(width: 50), // Jarak antar tab
+                        const SizedBox(width: 50), 
+
                         _buildTabItem(index: 1, icon: Icons.grid_3x3_rounded),
                       ],
                     ),
                   ),
-                  
-                  // --- ISI KONTEN (GRID) ---
+
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(25, 25, 25, 120),
@@ -117,7 +124,7 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
                           const SizedBox(height: 20),
 
                           if (_selectedTabIndex == 0)
-                            // GRID CHARACTER
+
                             GridView.builder(
                               padding: EdgeInsets.zero,
                               physics: const NeverScrollableScrollPhysics(),
@@ -132,7 +139,7 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
                               itemBuilder: (context, index) => _buildCharacterOption(index),
                             )
                           else
-                            // GRID BACKGROUND
+
                             GridView.builder(
                               padding: EdgeInsets.zero,
                               physics: const NeverScrollableScrollPhysics(),
@@ -155,9 +162,6 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
             ),
           ),
 
-          // ============================================
-          // LAYER 4: HEADER NAVIGASI (BACK BUTTON)
-          // ============================================
           Positioned(
             top: 0,
             left: 0,
@@ -187,9 +191,6 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
             ),
           ),
 
-          // ============================================
-          // LAYER 5: NAVBAR MELAYANG
-          // ============================================
           Positioned(
             bottom: 30,
             left: 0,
@@ -208,14 +209,12 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
     );
   }
 
-  // --- WIDGET BUILDERS ---
-
   Widget _buildTabItem({required int index, required IconData icon}) {
     bool isSelected = _selectedTabIndex == index;
     return GestureDetector(
       onTap: () => setState(() => _selectedTabIndex = index),
       child: Container(
-        // Agar area tap lebih luas
+
         color: Colors.transparent, 
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -226,12 +225,12 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
               color: const Color(0xFF2C3E50), 
             ),
             const SizedBox(height: 6),
-            
-            // Garis Bawah Kecil (Indikator)
+
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               height: 4,
-              width: isSelected ? 40 : 0, // Jika tidak dipilih lebar 0 (hilang)
+              width: isSelected ? 40 : 0, 
+
               decoration: BoxDecoration(
                 color: const Color(0xFF2C3E50),
                 borderRadius: BorderRadius.circular(2),
@@ -259,7 +258,7 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
           ],
         ),
         padding: const EdgeInsets.all(15), 
-        // DI SINI TAMPIL FULL BODY
+
         child: Image.asset(
           _characterAssets[index],
           fit: BoxFit.contain, 
@@ -300,7 +299,6 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
   }
 }
 
-// --- CUSTOM NAVBAR ---
 class CustomFloatingNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
