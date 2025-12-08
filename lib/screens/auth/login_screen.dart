@@ -22,6 +22,9 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // ================================================================
+  // EMAIL/PASSWORD LOGIN
+  // ================================================================
   Future<void> _signIn() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -40,13 +43,34 @@ class _LoginScreenState extends State<LoginScreen> {
       _showMessage(error);
     } else {
       _showMessage("Login berhasil!");
-      // ignore: use_build_context_synchronously
       Navigator.pushReplacementNamed(context, '/home');
     }
 
     setState(() => isLoading = false);
   }
 
+  // ================================================================
+  // GOOGLE LOGIN (SUPABASE OAUTH)
+  // ================================================================
+  Future<void> _loginWithGoogle() async {
+    setState(() => isLoading = true);
+
+    final auth = AuthService();
+    final error = await auth.signInWithGoogle();
+
+    if (error != null) {
+      _showMessage(error);
+    } else {
+      _showMessage("Login Google berhasil!");
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+
+    setState(() => isLoading = false);
+  }
+
+  // ================================================================
+  // BUILD UI
+  // ================================================================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,6 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 15),
+
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
@@ -70,7 +95,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Icon(Icons.arrow_back, color: Colors.black),
                 ),
               ),
+
               const SizedBox(height: 20),
+
               Center(
                 child: Image.asset("assets/images/aksara_logo.png", width: 150),
               ),
@@ -105,6 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 12),
 
               const Align(
@@ -114,9 +142,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
               ),
+
               const SizedBox(height: 30),
 
               _mainButton("Login", onPressed: _signIn),
+
               const SizedBox(height: 25),
 
               const Center(
@@ -125,9 +155,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Colors.black54),
                 ),
               ),
+
               const SizedBox(height: 25),
 
               _googleButton(),
+
               const SizedBox(height: 25),
 
               Center(
@@ -145,12 +177,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         onTap: () {
                           Navigator.pushNamed(context, '/signup');
                         },
-
-                        // tanpa hover & highlight
                         highlightColor: Colors.transparent,
                         splashColor: Colors.transparent,
                         hoverColor: Colors.transparent,
-
                         child: const Padding(
                           padding: EdgeInsets.symmetric(vertical: 4),
                           child: Text(
@@ -168,6 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
+
               const SizedBox(height: 40),
             ],
           ),
@@ -176,6 +206,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // ================================================================
+  // UI COMPONENTS
+  // ================================================================
   Widget _roundedInput({
     required IconData icon,
     required String hint,
@@ -243,22 +276,25 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _googleButton() {
-    return Container(
-      height: 58,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(40),
-        border: Border.all(color: Colors.black26),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset("assets/icons/google.png", width: 22),
-          const SizedBox(width: 10),
-          const Text(
-            "Google",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-        ],
+    return GestureDetector(
+      onTap: _loginWithGoogle,
+      child: Container(
+        height: 58,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(40),
+          border: Border.all(color: Colors.black26),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset("assets/icons/google.png", width: 22),
+            const SizedBox(width: 10),
+            const Text(
+              "Google",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
       ),
     );
   }
