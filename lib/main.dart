@@ -5,6 +5,7 @@ import 'package:aksara/screens/profiles/supportcontact_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/games/spellbee/spellbee.dart';
+import 'screens/games/spellbee/spellbee2.dart';
 import 'screens/profiles/profile_screen.dart';
 import 'screens/profiles/achievement_screen.dart';
 import 'screens/profiles/settings_screen.dart';
@@ -68,6 +69,7 @@ class MyApp extends StatelessWidget {
         '/story-mode': (context) => const StoryModeScreen(),
         '/story-detail': (context) => const StoryDetailScreen(),
         '/spellbee': (context) => SpellBeePage(),
+        '/spellbee2': (context) => SpellBeePage2(),
         '/profile': (context) => ProfileScreen(),
         '/achievement': (context) => AchievementScreen(),
         '/settings' : (context) => SettingScreen(),
