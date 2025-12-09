@@ -6,119 +6,156 @@ class StartPage4 extends StatefulWidget {
   const StartPage4({super.key});
 
   @override
-  State<StartPage4> createState() => _StartPageState2();
+  State<StartPage4> createState() => _StartPage4State();
 }
 
-class _StartPageState2 extends State<StartPage4> {
-  int hearts = 5; 
+class _StartPage4State extends State<StartPage4> {
+  int hearts = 5;
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // sama seperti StartPage2
+    final double effectiveWidth = screenWidth.clamp(320.0, 500.0);
+    final double effectiveHeight = screenHeight.clamp(600.0, 900.0);
+
+    // ukuran back button adaptif dan di-clamp
+    final double backSize = (screenWidth * 0.06).clamp(30.0, 38.0);
+    final double backIconSize = (backSize * 0.6).clamp(20.0, 24.0);
+
+    // margin horizontal mengikuti healthbar
+    final double horizontalMargin = screenWidth * 0.08;
+
     return Scaffold(
       backgroundColor: const Color(0xff567c8d),
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(height: effectiveHeight * 0.02),
 
-            _buildHealthBar2(),
+              /// HEALTH BAR — mengikuti StartPage2
+              _buildHealthBar2(screenWidth, screenHeight),
 
-            const SizedBox(height: 15),
+              SizedBox(height: effectiveHeight * 0.02),
 
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 35),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white.withOpacity(0.5),
-                    child: const Icon(Icons.arrow_back, color: Colors.black),
+              /// BACK BUTTON — posisi & ukuran 100% mengikuti StartPage2
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: EdgeInsets.only(left: horizontalMargin),
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: backSize,
+                      height: backSize,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFB3BDC4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.arrow_back,
+                        size: backIconSize,
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
 
+              SizedBox(height: effectiveHeight * 0.10),
 
-            const SizedBox(height: 120),
-
-            // ---------------- TITLE ----------------
-            const Text(
-              "Now unlock unit 1 and let’s practice what you have learned",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            // ---------------- MONSTER / CHARACTER ----------------
-            Padding(
-              padding: const EdgeInsets.only(left: 235), // geser ke kanan
-              child: SizedBox(
-                height: 300,
-                child: Image.asset(
-                  "assets/images/monster_oren_kanan.png",
-                  fit: BoxFit.contain,
+              /// TITLE — dibuat adaptif
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: effectiveWidth * 0.06),
+                child: Text(
+                  "Now unlock unit 1 and let’s practice what you have learned",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: effectiveWidth * 0.075,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-            // ---------------- NEXT BUTTON ----------------
-            GestureDetector(
+
+              SizedBox(height: effectiveHeight * 0.06),
+
+              /// MONSTER — tidak lagi pakai padding angka fix
+              SizedBox(
+                height: effectiveHeight * 0.25,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Image.asset(
+                    "assets/images/monster_oren_kanan.png",
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+
+              SizedBox(height: effectiveHeight * 0.07),
+
+              /// NEXT BUTTON — adaptif seperti StartPage2
+              GestureDetector(
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const HomeScreen(),
+                    ),
                   );
                 },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 30),
-                width: 95,
-                height: 95,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-                child: const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.arrow_forward,
-                    color: Color(0xFF607D8B),
-                    size: 68,
+                child: Container(
+                  margin: EdgeInsets.only(bottom: effectiveHeight * 0.03),
+                  width: effectiveWidth * 0.23,
+                  height: effectiveWidth * 0.23,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.arrow_forward,
+                      size: effectiveWidth * 0.15,
+                      color: const Color(0xFF607D8B),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHealthBar2() {
+  /// HEALTH BAR adaptif mengikuti StartPage2
+  Widget _buildHealthBar2(double w, double h) {
     return Container(
-      margin: const EdgeInsets.only(top: 40, left: 30, right: 30),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      margin: EdgeInsets.only(
+        top: h * 0.05,
+        left: w * 0.08,
+        right: w * 0.08,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 10,
+      ),
       decoration: BoxDecoration(
-        color: const Color(0xffc8d9e6),
+        color: const Color.fromARGB(255, 186, 216, 255),
         borderRadius: BorderRadius.circular(25),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // HEARTS
           Row(
             children: List.generate(5, (index) {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
+                padding: EdgeInsets.symmetric(horizontal: w * 0.01),
                 child: Icon(
-                  index < hearts
-                      ? Icons.favorite
-                      : Icons.favorite_border_rounded,
+                  index < hearts ? Icons.favorite : Icons.favorite_border_rounded,
                   color: const Color.fromRGBO(212, 0, 0, 1),
                   size: 26,
                 ),
@@ -126,7 +163,6 @@ class _StartPageState2 extends State<StartPage4> {
             }),
           ),
 
-          // COIN
           Row(
             children: [
               Image.asset(
@@ -145,7 +181,7 @@ class _StartPageState2 extends State<StartPage4> {
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );
