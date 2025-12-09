@@ -1,3 +1,5 @@
+import 'package:aksara/screens/camera/camera_capture_ocr_page.dart';
+import 'package:aksara/utils/navbar_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -67,7 +69,7 @@ class CustomFloatingNavBar extends StatelessWidget {
                 scale: 1.25,
                 offsetY: -2.0,
                 offsetX: -3,
-              )
+              ),
             ],
           ),
         ),
@@ -77,11 +79,7 @@ class CustomFloatingNavBar extends StatelessWidget {
           top: -25,
           child: GestureDetector(
             onTap: () {
-              if (onScanTap != null) {
-                onScanTap!();
-              } else {
-                print("Scan Clicked");
-              }
+              NavigationUtils.handleNavigation(context, 4, currentIndex);
             },
             child: Container(
               width: 65,
@@ -101,8 +99,10 @@ class CustomFloatingNavBar extends StatelessWidget {
               ),
               child: SvgPicture.asset(
                 'assets/icons/qr navbar.svg',
-                colorFilter:
-                    const ColorFilter.mode(Color(0xFF2C3E50), BlendMode.srcIn),
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFF2C3E50),
+                  BlendMode.srcIn,
+                ),
                 fit: BoxFit.contain,
               ),
             ),
@@ -137,12 +137,7 @@ class CustomFloatingNavBar extends StatelessWidget {
                   height: 26,
                   colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
                 )
-              : Image.asset(
-                  assetPath,
-                  width: 26,
-                  height: 26,
-                  color: color,
-                ),
+              : Image.asset(assetPath, width: 26, height: 26, color: color),
         ),
       ),
     );

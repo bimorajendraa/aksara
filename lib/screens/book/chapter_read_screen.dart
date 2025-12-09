@@ -23,24 +23,47 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
   String content = "";
   String? soundUrl;
 
+  List<String> sentences = [];
+  int highlightedIndex = -1;
+
+  Duration audioDuration = Duration.zero;
+  Duration audioPosition = Duration.zero;
+
   int? idBook;
   int currentChapterNumber = 1;
   int totalChapters = 1;
   int? nextChapterId;
 
   int? idAkunInt;
-  // ignore: unused_field
   bool _hasProgressRow = false;
   int _lastSavedProgress = 0;
   double _scrollPercent = 0.0;
 
   bool get isAtBottom => _scrollPercent >= 0.99;
 
+  /// FIX: jika konten terlalu pendek maka tombol next tetap muncul
+  bool get isBottomBecauseShortContent {
+    if (!_scrollController.hasClients) return false;
+    return _scrollController.position.maxScrollExtent == 0;
+  }
+
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+
+    // Dengarkan perubahan durasi audio
+    audioPlayer.onDurationChanged.listen((d) {
+      setState(() => audioDuration = d);
+    });
+
+    // Dengarkan posisi audio → update highlight
+    audioPlayer.onPositionChanged.listen((p) {
+      setState(() => audioPosition = p);
+      _updateHighlight();
+    });
+
     fetchChapterData();
   }
 
@@ -87,6 +110,9 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
       chapter = response['chapter'] ?? "Unknown Chapter";
       content = response['content'] ?? "";
       soundUrl = response['sound'];
+
+      sentences = _splitIntoSentences(content);
+
       currentChapterNumber = parseChapter(response['chapter']);
 
       final list = await supabase
@@ -103,30 +129,10 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
           if (i + 1 < list.length) {
             nextChapterId = list[i + 1]['id_bookdetails'];
           }
-          break;
         }
       }
 
       idAkunInt ??= await fetchAkunId();
-      final akunIdLocal = idAkunInt;
-      final bookIdLocal = idBook;
-
-      if (akunIdLocal != null && bookIdLocal != null) {
-        final progressList = await supabase
-            .from('userbookprogress')
-            .select()
-            .eq('id_akun', akunIdLocal)
-            .eq('id_book', bookIdLocal)
-            .order('last_read_chapter', ascending: false)
-            .limit(1);
-
-        if (progressList.isNotEmpty) {
-          // ignore: unnecessary_cast
-          final row = progressList.first as Map<String, dynamic>;
-          _hasProgressRow = true;
-          _lastSavedProgress = row['progress_percentage'] ?? 0;
-        }
-      }
 
       setState(() {
         isLoading = false;
@@ -134,80 +140,78 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
       });
     } catch (e) {
       setState(() {
-        hasError = true;
         isLoading = false;
+        hasError = true;
       });
     }
   }
 
+  List<String> _splitIntoSentences(String text) {
+    return text
+        .split(RegExp(r'(?<=[.!?])\s+'))
+        .where((s) => s.trim().isNotEmpty)
+        .toList();
+  }
+
+  /// ---------------------------------------------------------
+  /// HIGHLIGHT CALCULATION (Mode B: Based on ratio audio duration)
+  /// ---------------------------------------------------------
+  void _updateHighlight() {
+    if (audioDuration.inMilliseconds == 0) return;
+
+    final totalChars = sentences.fold<int>(0, (sum, s) => sum + s.length);
+    final durationPerChar = audioDuration.inMilliseconds / totalChars;
+
+    int targetMs = audioPosition.inMilliseconds;
+    int accumulated = 0;
+
+    for (int i = 0; i < sentences.length; i++) {
+      int sentenceMs = (sentences[i].length * durationPerChar).toInt();
+
+      if (targetMs < accumulated + sentenceMs) {
+        if (highlightedIndex != i) {
+          setState(() => highlightedIndex = i);
+          _autoScrollTo(i);
+        }
+        return;
+      }
+      accumulated += sentenceMs;
+    }
+
+    setState(() => highlightedIndex = sentences.length - 1);
+  }
+
+  void _autoScrollTo(int index) {
+    if (!_scrollController.hasClients) return;
+
+    const lineHeight = 80.0;
+
+    final targetOffset = index * lineHeight;
+
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    final centeredOffset = targetOffset - (screenHeight / 3);
+
+    _scrollController.animateTo(
+      centeredOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  /// ---------------------------------------------------------
+  /// SCROLL PROGRESS
+  /// ---------------------------------------------------------
   void _onScroll() {
     if (!_scrollController.hasClients) return;
 
     final max = _scrollController.position.maxScrollExtent;
     final offset = _scrollController.offset;
 
-    double percent;
-    if (max <= 0) {
-      percent = 1.0;
-    } else {
-      percent = (offset / max).clamp(0.0, 1.0);
-    }
-
+    double percent = max <= 0 ? 1.0 : (offset / max).clamp(0.0, 1.0);
     if (percent > 0.99) percent = 1.0;
 
-    _updateProgressByScroll(percent);
-  }
-
-  Future<void> _updateProgressByScroll(double percent) async {
-    setState(() {
-      _scrollPercent = percent;
-    });
-
-    final akunIdLocal = idAkunInt;
-    final bookIdLocal = idBook;
-
-    if (akunIdLocal == null || bookIdLocal == null || totalChapters <= 0) {
-      return;
-    }
-
-    final chapterIdx = currentChapterNumber - 1;
-    final bookProgressDouble = ((chapterIdx + percent) / totalChapters) * 100.0;
-    final finalProgress = bookProgressDouble
-        .clamp(0.0, 100.0)
-        .round(); // 0..100
-
-    if (finalProgress <= _lastSavedProgress) return;
-    _lastSavedProgress = finalProgress;
-
-    try {
-      final updated = await supabase
-          .from('userbookprogress')
-          .update({
-            'progress_percentage': finalProgress,
-            'last_read_chapter': currentChapterNumber,
-          })
-          .eq('id_akun', akunIdLocal)
-          .eq('id_book', bookIdLocal)
-          .select();
-
-      if (updated.isNotEmpty) {
-        _hasProgressRow = true;
-        return;
-      }
-
-      final inserted = await supabase.from('userbookprogress').insert({
-        'id_akun': akunIdLocal,
-        'id_book': bookIdLocal,
-        'progress_percentage': finalProgress,
-        'last_read_chapter': currentChapterNumber,
-      }).select();
-
-      if (inserted.isNotEmpty) {
-        _hasProgressRow = true;
-      }
-    } catch (e) {
-      // ignore errors
-    }
+    setState(() => _scrollPercent = percent);
   }
 
   Future<void> playAudio() async {
@@ -220,16 +224,16 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF4EEE9),
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        backgroundColor: Color(0xFFF4EEE9),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (hasError) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF4EEE9),
-        body: const Center(child: Text("Failed to load chapter data.")),
+      return const Scaffold(
+        backgroundColor: Color(0xFFF4EEE9),
+        body: Center(child: Text("Failed to load chapter data.")),
       );
     }
 
@@ -263,13 +267,27 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
               const SizedBox(height: 20),
 
               Expanded(
-                child: SingleChildScrollView(
+                child: ListView.builder(
                   controller: _scrollController,
-                  child: Text(
-                    content,
-                    style: const TextStyle(fontSize: 20, height: 1.5),
-                    textAlign: TextAlign.justify,
-                  ),
+                  itemCount: sentences.length,
+                  itemBuilder: (context, i) {
+                    final isActive = i == highlightedIndex;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 280),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        sentences[i],
+                        style: TextStyle(
+                          fontSize: 20,
+                          height: 1.5,
+                          backgroundColor: isActive
+                              ? Colors.yellow.withOpacity(0.35)
+                              : null,
+                        ),
+                        textAlign: TextAlign.justify,
+                      ),
+                    );
+                  },
                 ),
               ),
 
@@ -306,7 +324,7 @@ class _ChapterReadScreenState extends State<ChapterReadScreen> {
 
               const SizedBox(height: 16),
 
-              if (isAtBottom)
+              if (isAtBottom || isBottomBecauseShortContent)
                 GestureDetector(
                   onTap: () {
                     final next = nextChapterId;
