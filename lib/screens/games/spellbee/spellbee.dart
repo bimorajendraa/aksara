@@ -97,119 +97,122 @@ class _SpellBeePageState extends State<SpellBeePage> {
     });
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
+    final h = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F2ED),
       body: SafeArea(
         child: Stack(
           children: [
-            // ==========================
-            // MAIN PAGE CONTENT
-            // ==========================
-            Column(
-              children: [
-                const SizedBox(height: 5),
-
-                // ===== BACK BUTTON + PROGRESS =====
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: h + 1),
+                child: Column(
                   children: [
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 5),
 
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20),
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: CircleAvatar(
-                          radius: 20,
-                          backgroundColor: Colors.grey,
-                          child: const Icon(Icons.arrow_back, color: Colors.white),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: List.generate(5, (index) {
-                          return Expanded(
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: index == 0
-                                    ? const Color(0xFF2B3A55)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 30),
-
-                const Text(
-                  "What is this ?",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
-                  ),
-                ),
-
-                SizedBox(
-                  height: 300,
-                  child: Image.asset(
-                    "assets/images/kitty.png",
-                    fit: BoxFit.contain,
-                  ),
-                ),
-
-                const SizedBox(height: 5),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(userAnswer.length, (index) {
-                    return Column(
+                    // ===== BACK + PROGRESS =====
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          userAnswer[index] ?? "",
-                          style: const TextStyle(
-                            fontSize: 40,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(height: 30),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: CircleAvatar(
+                              radius: 20,
+                              backgroundColor: Colors.grey,
+                              child: const Icon(Icons.arrow_back,
+                                  color: Colors.white),
+                            ),
                           ),
                         ),
+                        const SizedBox(height: 15),
 
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          width: 70,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: Colors.black87,
-                            borderRadius: BorderRadius.circular(30),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            children: List.generate(5, (index) {
+                              return Expanded(
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: index == 0
+                                        ? const Color(0xFF2B3A55)
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                              );
+                            }),
                           ),
                         ),
                       ],
-                    );
-                  }),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    const Text(
+                      "What is this ?",
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
+                    ),
+
+                    SizedBox(
+                      height: 300,
+                      child: Image.asset(
+                        "assets/images/kitty.png",
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+
+                    const SizedBox(height: 5),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(userAnswer.length, (index) {
+                        return Column(
+                          children: [
+                            Text(
+                              userAnswer[index] ?? "",
+                              style: const TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 2),
+                              width: 70,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: Colors.black87,
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                    ),
+
+                    const SizedBox(height: 80),
+
+                    _buildHexGrid(),
+
+                    const SizedBox(height: 200),  // biar ada ruang bottom
+                  ],
                 ),
-
-                const SizedBox(height: 80),
-
-                _buildHexGrid(),
-              ],
+              ),
             ),
-
-            // ==========================================================
-            // 🔥 ERROR MESSAGE MELAYANG (TIDAK NGGESER UI)
-            // ==========================================================
+            
+            // overlay error
             if (errorMessage != null)
               Positioned(
                 top: 555,
@@ -220,8 +223,7 @@ class _SpellBeePageState extends State<SpellBeePage> {
                     opacity: errorMessage != null ? 1 : 0,
                     duration: const Duration(milliseconds: 200),
                     child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(20),
