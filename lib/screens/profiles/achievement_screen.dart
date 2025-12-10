@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// --- IMPORT WIDGET NAVBAR ANDA ---
+import '../../widgets/custom_floating_navbar.dart'; 
+import '../../utils/navbar_utils.dart';
+
 class AchievementScreen extends StatefulWidget {
   const AchievementScreen({super.key});
 
@@ -12,103 +16,198 @@ class AchievementScreen extends StatefulWidget {
 class _AchievementScreenState extends State<AchievementScreen> {
   final _supabase = Supabase.instance.client;
   bool _isLoading = true;
+  
+  // List untuk menampung data gabungan (Master + User Progress)
   List<Map<String, dynamic>> _achievementList = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchAchievements();
+    _fetchData();
   }
 
-  Future<void> _fetchAchievements() async {
+  // 1. Cari ID Akun User yang Login
+  Future<void> _fetchData() async {
     try {
-      // --- PERUBAHAN UTAMA DI SINI ---
-      // Kita ambil data dari tabel 'achievement'
-      // DAN minta tolong ambilkan 'icon_path' dari tabel 'achievementicons'
-      final data = await _supabase
+      final user = _supabase.auth.currentUser;
+      if (user == null) return;
+
+      final akunData = await _supabase
+          .from('akun')
+          .select('id_akun')
+          .eq('email', user.email!)
+          .maybeSingle();
+
+      if (akunData != null) {
+        // Jika ID ketemu, ambil achievement dan merge
+        await _fetchMergedAchievements(akunData['id_akun']);
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching user id: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // 2. Logika Merge (Sama persis dengan ProfileScreen)
+  Future<void> _fetchMergedAchievements(int userId) async {
+    try {
+      // A. Ambil Master Data (Join Icon)
+      final masterData = await _supabase
           .from('achievement')
-          .select('*, achievementicons(icon_path)') 
+          .select('*, achievementicons(*)')
           .order('id_achievement', ascending: true);
 
-      // Hasil datanya nanti seperti ini:
-      // {
-      //    "name": "Ingin Tahu",
-      //    "achievementicons": { "icon_path": "icons/monster.svg" }  <-- Nested
-      // }
+      // B. Ambil Progress User
+      final userProgressData = await _supabase
+          .from('userachievements')
+          .select()
+          .eq('id_akun', userId);
 
-      setState(() {
-        _achievementList = List<Map<String, dynamic>>.from(data);
-        _isLoading = false;
-      });
+      // C. Gabungkan
+      List<Map<String, dynamic>> mergedList = [];
+
+      for (var master in masterData) {
+        // Cari progress user untuk achievement ini
+        final userEntry = userProgressData.firstWhere(
+          (u) => u['id_achievement'] == master['id_achievement'],
+          orElse: () => {},
+        );
+
+        final iconData = master['achievementicons'] ?? {};
+        
+        bool isCompleted = userEntry != null ? (userEntry['is_completed'] ?? false) : false;
+        String dynamicSubtitle = isCompleted ? "Completed!" : "Keep going!";
+
+        mergedList.add({
+          // Data Utama
+          'name': master['name'] ?? 'Untitled',
+          'max_progress': master['max_progress'] ?? 10,
+          'subtitle': dynamicSubtitle,
+          
+          // Data Icon (Flattened)
+          'icon_path': iconData['icon_path'], 
+          'background': iconData['background'], 
+          'svg_scale': iconData['svg_scale'],
+          'svg_offset_x': iconData['svg_offset_x'],
+          'svg_offset_y': iconData['svg_offset_y'],
+
+          // Data Progress User
+          'current_progress': userEntry != null ? (userEntry['progress_value'] ?? 0) : 0,
+          'is_completed': isCompleted,
+        });
+      }
+
+      if (mounted) {
+        setState(() {
+          _achievementList = mergedList;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      debugPrint("Error fetching achievements: $e");
-      setState(() => _isLoading = false);
+      debugPrint("Error merging achievements: $e");
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Definisi Navbar
+    final bottomNavbar = CustomFloatingNavBar(
+      currentIndex: 2, 
+      onTap: (index) {
+        NavigationUtils.handleNavigation(context, index, 2);
+      },
+      onScanTap: () {
+        print("Tombol Scan ditekan");
+      },
+    );
+
+    // State Loading
     if (_isLoading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: Colors.white,
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF2C3E50))),
+        body: Stack(
+          children: [
+            const Center(child: CircularProgressIndicator(color: Color(0xFF2C3E50))),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 30),
+                child: bottomNavbar,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
+    // State Content
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
+      body: Stack(
         children: [
-          // 1. CUSTOM HEADER
-          const _CustomHeader(),
-
-          // 2. KONTEN SCROLLABLE
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "All Achievement",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-
-                  // Container Besar List
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.grey.shade400, width: 1),
-                    ),
-                    child: _achievementList.isEmpty
-                        ? const Padding(
-                            padding: EdgeInsets.all(20),
-                            child: Center(child: Text("No achievements yet.")),
-                          )
-                        : ListView.separated(
-                            padding: EdgeInsets.zero,
-                            physics: const NeverScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            itemCount: _achievementList.length,
-                            separatorBuilder: (context, index) =>
-                                const Divider(height: 1, thickness: 1),
-                            itemBuilder: (context, index) {
-                              return _AchievementItem(data: _achievementList[index]);
-                            },
+          // 1. KONTEN HALAMAN (Layer Bawah)
+          Positioned.fill(
+            child: Column(
+              children: [
+                const _CustomHeader(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    // Padding bawah besar agar list paling bawah tidak tertutup Navbar
+                    padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 120),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "All Achievement",
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2C3E50),
                           ),
+                        ),
+                        const SizedBox(height: 15),
+
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade400, width: 1),
+                          ),
+                          child: _achievementList.isEmpty
+                              ? const Padding(
+                                  padding: EdgeInsets.all(20),
+                                  child: Center(child: Text("No achievements yet.")),
+                                )
+                              : ListView.separated(
+                                  padding: EdgeInsets.zero,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  shrinkWrap: true,
+                                  itemCount: _achievementList.length,
+                                  separatorBuilder: (context, index) =>
+                                      const Divider(height: 1, thickness: 1),
+                                  itemBuilder: (context, index) {
+                                    return _AchievementItem(data: _achievementList[index]);
+                                  },
+                                ),
+                        ),
+                        const SizedBox(height: 30),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 30),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
+          
+          // 2. NAVBAR (Layer Atas)
+          Positioned(
+            bottom: 30, left: 0, right: 0,
+            child: bottomNavbar,
           ),
         ],
       ),
@@ -116,15 +215,70 @@ class _AchievementScreenState extends State<AchievementScreen> {
   }
 }
 
-// --- COMPONENTS ---
+// ---------------------------------------------------------------------------
+// HELPER FUNCTIONS (Safe)
+// ---------------------------------------------------------------------------
+
+Widget _buildImage(String? path, {double? width, double? height, BoxFit fit = BoxFit.contain}) {
+  if (path == null || path.isEmpty) {
+    return Container(width: width, height: height, color: Colors.grey.shade200, child: const Icon(Icons.image, color: Colors.grey));
+  }
+  String cleanPath = path.trim();
+  if (!cleanPath.startsWith('http') && !cleanPath.startsWith('assets/')) {
+    cleanPath = 'assets/$cleanPath';
+  }
+
+  if (cleanPath.toLowerCase().endsWith('.svg')) {
+    return SvgPicture.asset(
+      cleanPath, width: width, height: height, fit: fit,
+      placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+  } else if (cleanPath.startsWith('http')) {
+    return Image.network(
+      cleanPath, width: width, height: height, fit: fit,
+      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+    );
+  } else {
+    return Image.asset(
+      cleanPath, width: width, height: height, fit: fit,
+      errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
+    );
+  }
+}
+
+double _safeDouble(dynamic value, double defaultValue) {
+  if (value == null) return defaultValue;
+  if (value is int) return value.toDouble();
+  if (value is double) return value;
+  if (value is String) return double.tryParse(value) ?? defaultValue;
+  return defaultValue;
+}
+
+Color _parseColorFromDb(String? hexString) {
+  if (hexString == null || hexString.isEmpty) return const Color(0xFFD6E6F2);
+  try {
+    String cleanHex = hexString.replaceAll("#", "").replaceAll("0x", "").toUpperCase();
+    if (cleanHex.length == 6) cleanHex = "FF$cleanHex";
+    return Color(int.parse(cleanHex, radix: 16));
+  } catch (e) {
+    return const Color(0xFFD6E6F2);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// COMPONENTS
+// ---------------------------------------------------------------------------
 
 class _CustomHeader extends StatelessWidget {
   const _CustomHeader();
 
   @override
   Widget build(BuildContext context) {
+    // Tambahkan safe area top padding
+    final topPadding = MediaQuery.of(context).padding.top + 20;
+
     return Container(
-      padding: const EdgeInsets.only(top: 50, bottom: 25, left: 10, right: 20),
+      padding: EdgeInsets.fromLTRB(20, topPadding, 20, 25),
       decoration: const BoxDecoration(
         color: Color(0xFFD6E6F2),
         borderRadius: BorderRadius.only(
@@ -136,10 +290,14 @@ class _CustomHeader extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () {
-              Navigator.pop(context);
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                // Fallback jika tidak ada history (misal refresh page)
+                Navigator.pushReplacementNamed(context, '/home');
+              }
             },
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Color(0xFF2C3E50)),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF2C3E50)),
           ),
           const SizedBox(width: 5),
           const Text(
@@ -164,37 +322,29 @@ class _AchievementItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Ambil Nama
+    // Mapping Data
     String title = data['name'] ?? 'Unknown Title';
-    
-    // 2. Ambil Subtitle (Jika ada di DB)
     String subtitle = data['subtitle'] ?? 'Keep going!'; 
-
-    // --- 3. AMBIL ICON PATH (LOGIC BARU) ---
-    String assetPath = 'assets/icons/red_monster_achievement.svg'; // Default fallback
     
-    // Cek apakah data relasi 'achievementicons' ada isinya
-    if (data['achievementicons'] != null) {
-      String rawPath = data['achievementicons']['icon_path'] ?? '';
-      
-      // Bersihkan Path (tambah 'assets/' jika belum ada)
-      if (rawPath.isNotEmpty) {
-        if (!rawPath.startsWith('assets/')) {
-           assetPath = 'assets/$rawPath';
-        } else {
-           assetPath = rawPath;
-        }
-      }
+    // Icon Logic
+    String assetPath = 'assets/icons/monster_ingin_tahu.svg';
+    String rawPath = data['icon_path'] ?? '';
+    if (rawPath.isNotEmpty) {
+       assetPath = rawPath; // Helper _buildImage akan handle prefix assets/
     }
-    // ---------------------------------------
 
-    // Warna Sementara (Hardcoded dulu biar tidak error)
-    Color itemColor = const Color(0xFFD6E6F2); // Biru Muda Default
-
-    // Hitung Progress
+    Color itemColor = _parseColorFromDb(data['background']);
+    
+    // Styling Logic
+    double scale = _safeDouble(data['svg_scale'], 1.0);
+    double offsetX = _safeDouble(data['svg_offset_x'], 0.0);
+    double offsetY = _safeDouble(data['svg_offset_y'], 0.0);
+    
+    // Progress Logic
     int current = data['current_progress'] ?? 0;
     int target = data['max_progress'] ?? 10;
     double progressValue = (target == 0) ? 0 : (current / target);
+    if (progressValue > 1.0) progressValue = 1.0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -206,21 +356,25 @@ class _AchievementItem extends StatelessWidget {
             width: 60,
             height: 60,
             padding: const EdgeInsets.all(10),
+            clipBehavior: Clip.hardEdge, 
             decoration: BoxDecoration(
               color: itemColor,
               borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: itemColor.withOpacity(0.3),
+                  offset: const Offset(0, 4),
+                  blurRadius: 8,
+                )
+              ],
             ),
-            // Logic Icon SVG vs PNG
-            child: assetPath.toLowerCase().endsWith('.svg')
-                ? SvgPicture.asset(
-                    assetPath, 
-                    fit: BoxFit.contain,
-                    placeholderBuilder: (context) => const Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : Image.asset(assetPath, fit: BoxFit.contain),
+            child: Transform.translate(
+              offset: Offset(offsetX, offsetY),
+              child: Transform.scale(
+                scale: scale,
+                child: _buildImage(assetPath, fit: BoxFit.contain),
+              ),
+            ),
           ),
           const SizedBox(width: 15),
 
@@ -261,8 +415,7 @@ class _AchievementItem extends StatelessWidget {
                     value: progressValue,
                     minHeight: 8,
                     backgroundColor: const Color(0xFFDAE4EB),
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
                   ),
                 ),
 
