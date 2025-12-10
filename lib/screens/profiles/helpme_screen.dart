@@ -7,8 +7,10 @@ class HelpMeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      // Hapus SafeArea agar header bisa mentok ke atas layar (overlap status bar)
       body: Column(
         children: [
+          // 1. CUSTOM HEADER (UPDATED)
           const _HelpMeHeader(),
 
           Expanded(
@@ -30,7 +32,9 @@ class HelpMeScreen extends StatelessWidget {
                     context,
                     title: "Difficulties",
                     icon: Icons.description_outlined,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pushNamed(context, '/difficulties');
+                    },
                   ),
                   const SizedBox(height: 15),
                   _buildMenuCard(
@@ -45,6 +49,7 @@ class HelpMeScreen extends StatelessWidget {
                   const Text(
                     "Popular Questions",
                     style: TextStyle(
+                      fontFamily: 'Poppins', // Menambahkan font family agar konsisten
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -103,6 +108,7 @@ class HelpMeScreen extends StatelessWidget {
                   child: Text(
                     title,
                     style: const TextStyle(
+                      fontFamily: 'Poppins',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF455A64),
@@ -149,6 +155,7 @@ class HelpMeScreen extends StatelessWidget {
                   child: Text(
                     question,
                     style: const TextStyle(
+                      fontFamily: 'Poppins',
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Color(0xFF455A64),
@@ -166,15 +173,19 @@ class HelpMeScreen extends StatelessWidget {
   }
 }
 
-// --- CUSTOM HEADER WIDGET ---
+// --- CUSTOM HEADER WIDGET (DIPERBAIKI) ---
 class _HelpMeHeader extends StatelessWidget {
   const _HelpMeHeader();
 
   @override
   Widget build(BuildContext context) {
+    // Menghitung padding atas berdasarkan status bar (poni HP)
+    final topPadding = MediaQuery.of(context).padding.top + 20;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 60, bottom: 25, left: 20, right: 20),
+      // Menggunakan topPadding agar header tidak tertutup status bar
+      padding: EdgeInsets.fromLTRB(20, topPadding, 20, 25),
       decoration: const BoxDecoration(
         color: Color(0xFFD6E6F2), // Warna biru muda
         borderRadius: BorderRadius.only(
@@ -185,15 +196,24 @@ class _HelpMeHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
+            padding: EdgeInsets.zero, // Hilangkan padding default
+            constraints: const BoxConstraints(), // Hilangkan minimum size default
             onPressed: () {
-              Navigator.pop(context);
-            }, // Kembali ke Settings
+              // Logika Back yang Aman
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                // Fallback jika dibuka langsung (opsional)
+                 Navigator.pushReplacementNamed(context, '/home');
+              }
+            }, 
             icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF2C3E50), size: 24),
           ),
           const SizedBox(width: 15),
           const Text(
             "Help Me",
             style: TextStyle(
+              fontFamily: 'Poppins',
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Color(0xFF2C3E50),
