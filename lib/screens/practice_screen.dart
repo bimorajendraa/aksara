@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'games/spellbee/spellbee.dart';
 import 'games/spellbee/spellbee2.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../widgets/custom_floating_navbar.dart';
+import '../../utils/navbar_utils.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -161,6 +163,18 @@ class PracticeScreen extends StatelessWidget {
               const SizedBox(height: 40),
             ],
           ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.only(bottom: 30),
+        child: CustomFloatingNavBar(
+          currentIndex: 1, // karena ini menu Books/Practice
+          onTap: (index) {
+            NavigationUtils.handleNavigation(context, index, 1);
+          },
+          onScanTap: () {
+            Navigator.pushNamed(context, '/live-ocr');
+          },
         ),
       ),
     );
