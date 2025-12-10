@@ -2,7 +2,7 @@
 <img width="468" height="191" alt="aksara_logo" src="https://github.com/user-attachments/assets/92d92bf2-a33f-4e25-9e85-b6de5e309f27" />
 
 
-Aksara adalah aplikasi mobile pembelajaran membaca berbasis **gamifikasi** yang ditujukan untuk anak dan remaja dengan kemampuan literasi dasar yang masih berkembang.  
+Aksara adalah **aplikasi mobile** pembelajaran membaca berbasis **gamifikasi** yang ditujukan untuk anak dan remaja dengan kemampuan literasi dasar yang masih berkembang.  
 Aplikasi ini dikembangkan menggunakan **Flutter** sebagai frontend dan **Supabase (PostgreSQL + Auth + Storage)** sebagai backend.
 
 > Aksara membantu pengguna belajar membaca melalui permainan edukatif, visual interaktif, dan progres belajar yang terukur.
@@ -227,21 +227,67 @@ aksara/
 │  ├─ images/
 │  └─ audio/
 ├─ lib/
-│  ├─ main.dart
-│  └─ src/
-│     ├─ core/
-│     │  ├─ env.dart
-│     │  ├─ theme/
-│     │  └─ routing/
-│     ├─ features/
-│     │  ├─ auth/
-│     │  ├─ home/
-│     │  ├─ books/
-│     │  ├─ practice/
-│     │  ├─ leaderboard/
-│     │  ├─ profile/
-│     │  └─ progress/
-│     └─ widgets/
+│  ├─ auth/
+│  │  ├─ auth_service.dart
+│  │  └─ session_gate.dart
+│  ├─ core/
+│  │  └─ theme/
+│  │     ├─ app_colors.dart
+│  │     ├─ app_spacing.dart
+│  │     └─ app_text_styles.dart
+│  ├─ data/
+│  │  └─ models/
+│  │     └─ level_model.dart
+│  ├─ screens/
+│  │  ├─ auth/
+│  │  │  ├─ already_registered_screen.dart
+│  │  │  ├─ login_screen.dart
+│  │  │  ├─ onboarding_screen.dart
+│  │  │  └─ signup_screen.dart
+│  │  ├─ book/
+│  │  │  ├─ chapter_read_screen.dart
+│  │  │  ├─ story_detail_screen.dart
+│  │  │  └─ story_mode_screen.dart
+│  │  ├─ camera/
+│  │  │  └─ camera_capture_ocr_page.dart
+│  │  ├─ games/
+│  │  │  ├─ drag-drop/
+│  │  │  │  └─ drag_drop_page.dart
+│  │  │  ├─ spellbee/
+│  │  │  │  ├─ spellbee.dart
+│  │  │  │  └─ spellbee2.dart
+│  │  │  ├─ start/
+│  │  │  │  ├─ start_page.dart
+│  │  │  │  ├─ start_page2.dart
+│  │  │  │  ├─ start_page3.dart
+│  │  │  │  └─ start_page4.dart
+│  │  │  ├─ home/
+│  │  │  │  ├─ home_data.dart
+│  │  │  │  ├─ home_screen.dart
+│  │  │  │  ├─ level_card.dart
+│  │  │  │  ├─ level_screen.dart
+│  │  │  │  ├─ map_canvas.dart
+│  │  │  │  ├─ map_node_widget.dart
+│  │  │  │  └─ node_model.dart
+│  │  │  └─ profiles/
+│  │  │     ├─ achievement_screen.dart
+│  │  │     ├─ editalien_screen.dart
+│  │  │     ├─ helpme_screen.dart
+│  │  │     ├─ profile_screen.dart
+│  │  │     ├─ settings_screen.dart
+│  │  │     ├─ supportcontact_screen.dart
+│  │  │     ├─ entry_screen.dart
+│  │  │     ├─ hearthesound.dart
+│  │  │     ├─ leaderboard.dart
+│  │  │     ├─ practice_screen.dart
+│  │  │     └─ writing_practice_screen.dart
+│  ├─ utils/
+│  │  ├─ hash.dart
+│  │  └─ navbar_utils.dart
+│  ├─ widgets/
+│  │  └─ custom_floating_navbar.dart
+│  ├─ env.dart
+│  └─ main.dart
 ├─ test/
 └─ pubspec.yaml
 ```
@@ -310,6 +356,12 @@ Alur kontribusi yang disarankan:
 
 ---
 
+## UI Design Credit
+Original UI design dikembangkan oleh Tim AulNatBim (Institut Teknologi Sepuluh Nopember).
+
+Some UI components used in the development have been modified or adjusted by the development team to fit the implementation requirements.
+---
+
 ## Tim Pengembang
 
 **Kelompok 2 – Mata Kuliah Teknologi Berkembang**  
@@ -324,3 +376,13 @@ Institut Teknologi Sepuluh Nopember (ITS), Surabaya
 - Bimo Rajendra Widyadhana			        (210) 
 
 ---
+
+## License
+Proyek ini dikembangkan sebagai bagian dari tugas akademik untuk mata kuliah Emerging Technology.
+Proyek ini ditujukan semata-mata untuk tujuan pembelajaran dan penelitian dalam bidang teknologi otomotif dan mobilitas.
+
+Apabila Anda ingin menggunakan kembali atau mengadaptasi sebagian dari kode ini, mohon berikan kredit yang layak kepada pengembang dan kontributor asli.
+
+Dokumentasi Teknis - Tim Pengembang Aksara © 2025
+
+
