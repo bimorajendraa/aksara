@@ -310,6 +310,12 @@ Alur kontribusi yang disarankan:
 
 ---
 
+## UI Design Credit
+Original UI design dikembangkan oleh Tim AulNatBim (Institut Teknologi Sepuluh Nopember).
+
+Some UI components used in the development have been modified or adjusted by the development team to fit the implementation requirements.
+---
+
 ## Tim Pengembang
 
 **Kelompok 2 – Mata Kuliah Teknologi Berkembang**  
@@ -324,3 +330,13 @@ Institut Teknologi Sepuluh Nopember (ITS), Surabaya
 - Bimo Rajendra Widyadhana			        (210) 
 
 ---
+
+## License
+Proyek ini dikembangkan sebagai bagian dari tugas akademik untuk mata kuliah Emerging Technology.
+Proyek ini ditujukan semata-mata untuk tujuan pembelajaran dan penelitian dalam bidang teknologi otomotif dan mobilitas.
+
+Apabila Anda ingin menggunakan kembali atau mengadaptasi sebagian dari kode ini, mohon berikan kredit yang layak kepada pengembang dan kontributor asli.
+
+Dokumentasi Teknis - Tim Pengembang Aksara © 2025
+
+
