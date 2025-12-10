@@ -1,4 +1,3 @@
-import 'package:aksara/screens/camera/camera_capture_ocr_page.dart';
 import 'package:aksara/utils/navbar_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
