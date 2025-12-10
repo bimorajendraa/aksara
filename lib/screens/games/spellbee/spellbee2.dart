@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
+
 
 class SpellBeePage2 extends StatefulWidget {
   const SpellBeePage2({super.key});
@@ -31,6 +33,7 @@ class _SpellBeePageState extends State<SpellBeePage2> {
   final String answer = "CAT";
   String? errorMessage;
   String? highlightedLetter;
+  final AudioPlayer _player = AudioPlayer();  
 
   List<Color> gridColors = List.filled(9, Colors.black);
 
@@ -45,6 +48,14 @@ class _SpellBeePageState extends State<SpellBeePage2> {
 
   List<String> selectedSyllables = [];
 
+  Future<void> _playSyllableSound(String text) async {    
+    final letter = text.toLowerCase();
+    await _player.stop();
+    await _player.play(
+      AssetSource("sounds/syllables/$letter.mp3"),
+    );
+  }
+
   bool isValidSyllable(String text) {
     return validSyllables.contains(text);
   }
@@ -53,9 +64,12 @@ class _SpellBeePageState extends State<SpellBeePage2> {
     final tapped = gridLetters[index];
 
     if (!isValidSyllable(tapped)) {
+
       showFloatingError();
       return;
     }
+
+    _playSyllableSound(tapped); 
 
     setState(() {
       gridColors[index] = Colors.blue;
