@@ -19,7 +19,7 @@ class NavigationUtils {
         break;
 
       case 2:
-        Navigator.pushReplacementNamed(context, '/achievement');
+        Navigator.pushReplacementNamed(context, '/leaderboard');
         break;
 
       case 3:
