@@ -113,7 +113,7 @@ class _SpellBeePageState extends State<SpellBeePage2> {
     await Future.delayed(const Duration(seconds: 2));
 
     if (mounted) {
-      Navigator.pushReplacementNamed(context, "/home");
+      Navigator.pushReplacementNamed(context, "/practice");
     }
   }
 
