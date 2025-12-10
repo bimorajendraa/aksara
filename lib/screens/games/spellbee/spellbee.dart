@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class SpellBeePage extends StatefulWidget {
   const SpellBeePage({super.key});
@@ -12,10 +13,32 @@ class _SpellBeePageState extends State<SpellBeePage> {
   final String answer = "CAT";
   String? errorMessage;
   String? highlightedLetter;
+  final AudioPlayer _player = AudioPlayer();
+  final GlobalKey _inputKey = GlobalKey();      
+  double errorTop = 300;                       
   
   List<String?> userAnswer = ["", "", ""];
 
+  Future<void> _playLetterSound(String letter) async {
+    await _player.stop();
+    await _player.play(AssetSource("sounds/alphabet/${letter.toLowerCase()}.mp3"));
+  }
+
+  void _calculateErrorPosition() {             
+    final render = _inputKey.currentContext?.findRenderObject() as RenderBox?;
+    if (render == null) return;
+
+    final offset = render.localToGlobal(Offset.zero);
+
+    setState(() {
+      errorTop = offset.dy + render.size.height + 8;
+    });
+  }
+
   void selectLetter(String letter) {
+
+    _playLetterSound(letter);
+
     int index = userAnswer.indexOf("");
 
     if (index == -1) return;
@@ -47,20 +70,16 @@ class _SpellBeePageState extends State<SpellBeePage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors
-          .transparent, // ⬅️ Tambahkan ini agar tidak ada warna gelap di belakang dialog
+      barrierColor: Colors.transparent,
       builder: (context) {
         return Stack(
           children: [
-            // Blur background
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
               child: Container(
                 color: Colors.white.withOpacity(0.02), 
               ),
             ),
-
-            // Popup image
             Center(
               child: Image.asset(
                 "assets/images/yeay_correct.png",
@@ -74,7 +93,6 @@ class _SpellBeePageState extends State<SpellBeePage> {
       },
     );
 
-    // TUNGGU 3 DETIK LALU CLOSE POPUP DAN PINDAH PAGE
     await Future.delayed(const Duration(seconds: 2));
 
     if (mounted) {
@@ -88,9 +106,10 @@ class _SpellBeePageState extends State<SpellBeePage> {
     }
   }
 
-  // 🟥 ERROR MELAYANG (Overlay)
   void showFloatingError() {
     setState(() => errorMessage = "Wrong letter!");
+
+    _calculateErrorPosition();             
 
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) setState(() => errorMessage = null);
@@ -114,7 +133,6 @@ class _SpellBeePageState extends State<SpellBeePage> {
                   children: [
                     const SizedBox(height: 5),
 
-                    // ===== BACK + PROGRESS =====
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -176,7 +194,8 @@ class _SpellBeePageState extends State<SpellBeePage> {
 
                     const SizedBox(height: 5),
 
-                    Row(
+                    Row(                            
+                      key: _inputKey,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(userAnswer.length, (index) {
                         return Column(
@@ -206,16 +225,15 @@ class _SpellBeePageState extends State<SpellBeePage> {
 
                     _buildHexGrid(),
 
-                    const SizedBox(height: 200),  // biar ada ruang bottom
+                    const SizedBox(height: 10),
                   ],
                 ),
               ),
             ),
             
-            // overlay error
             if (errorMessage != null)
               Positioned(
-                top: 555,
+                top: errorTop,         
                 left: 0,
                 right: 0,
                 child: Center(
@@ -246,9 +264,6 @@ class _SpellBeePageState extends State<SpellBeePage> {
     );
   }
 
-  // ===============================================
-  //   HEX BUTTON
-  // ===============================================
   Widget _hexButton(String letter, {double size = 70}) {
     final bool isHighlighted = (letter == highlightedLetter);
 
@@ -261,6 +276,7 @@ class _SpellBeePageState extends State<SpellBeePage> {
         child: InkWell(
           onTap: () => selectLetter(letter),
           splashColor: Colors.black12,
+          highlightColor: Colors.transparent,
           child: SizedBox(
             width: size,
             height: size,
@@ -280,9 +296,6 @@ class _SpellBeePageState extends State<SpellBeePage> {
     );
   }
 
-  // =======================
-  //     HEX GRID
-  // =======================
   Widget _buildHexGrid() {
     final double hexSize = 90;
     final double vOffset = -hexSize * 0.48;
@@ -341,11 +354,8 @@ class _SpellBeePageState extends State<SpellBeePage> {
       ],
     );
   }
-} // END
+} 
 
-// ===================================================
-// HEXAGON CLIPPER
-// ===================================================
 class _HexClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {

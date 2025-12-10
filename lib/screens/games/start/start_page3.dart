@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'start_page4.dart';
 
 class StartPage3 extends StatefulWidget {
@@ -33,6 +34,7 @@ class _StartPageState extends State<StartPage3> {
 
   final letters = List<String>.generate(26, (i) => String.fromCharCode(65 + i));
   final Set<String> clickedLetters = {};
+  final AudioPlayer _player = AudioPlayer();
 
   // controller seperti di StartPage1
   final ScrollController _scrollController = ScrollController();
@@ -52,11 +54,16 @@ class _StartPageState extends State<StartPage3> {
   double popupWidth = 240;
   double popupHeight = 120;
 
+  Future<void> _playLetterSound(String letter) async {
+    final file = letter.toLowerCase();
+    await _player.stop();
+    await _player.play(AssetSource('sounds/alphabet/$file.mp3'));
+  }
+
   @override
   void initState() {
     super.initState();
 
-    // listener scroll → kalau tutorial masih on, popup ikut bergerak
     _scrollController.addListener(() {
       if (showTutorial) {
         WidgetsBinding.instance.addPostFrameCallback((_) => _measureAndPositionPopup());
@@ -312,7 +319,15 @@ class _StartPageState extends State<StartPage3> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Icon(Icons.refresh, size: 40, color: Colors.white),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _playLetterSound(letter),
+                  child: const Icon(
+                    Icons.refresh,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                ),
               ],
             ),
           ),
@@ -541,6 +556,8 @@ class _StartPageState extends State<StartPage3> {
           clickedLetters.add(letter);
           pointerIndex = index + 1 < 5 ? index + 1 : -1;
         });
+
+        _playLetterSound(letter);
 
         showGeneralDialog(
           context: context,
