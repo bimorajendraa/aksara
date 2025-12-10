@@ -79,6 +79,7 @@ flutter:
     - assets/images/
     - assets/sounds/alphabet/
     - assets/sounds/syllables/
+    - assets/sounds/hearthesound/
 
   fonts:
     - family: Poppins
