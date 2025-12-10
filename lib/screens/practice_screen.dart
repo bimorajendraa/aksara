@@ -1,8 +1,34 @@
+import 'package:aksara/screens/hearthesound.dart';
 import 'package:flutter/material.dart';
+import 'games/spellbee/spellbee.dart';
+import 'games/spellbee/spellbee2.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+final supabase = Supabase.instance.client;
 
 class PracticeScreen extends StatelessWidget {
   final String username; 
   const PracticeScreen({super.key, required this.username});
+
+  Future<String> getUsernameFromSupabase() async {
+    final user = supabase.auth.currentUser;
+
+    if (user == null) return username;
+
+    final response = await supabase
+        .from('akun')
+        .select('username')
+        .eq('email', user.email!)
+        .single();
+
+    final fetchedUsername = response['username'] as String?;
+
+    return fetchedUsername ?? username;
+  }
+
+  Future<String> fetchUsername() async {
+    return await getUsernameFromSupabase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,13 +41,19 @@ class PracticeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              Text(
-                "Hi, $username!",
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xff2B4C68),
-                ),
+              FutureBuilder(
+                future: fetchUsername(),
+                builder: (context, snapshot) {
+                  final name = snapshot.data ?? username;
+                  return Text(
+                    "Hi, $name!",
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff2B4C68),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 4),
 
@@ -87,21 +119,36 @@ class PracticeScreen extends StatelessWidget {
               PracticeCard(
                 title: "Hear the Sound",
                 image: "assets/images/hear_the_sound_guy.png",
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HearTheSoundPage()),
+                  );
+                },
               ),
               const SizedBox(height: 12),
 
               PracticeCard(
                 title: "Spell the Bee",
                 image: "assets/images/spell_the_bee_guy.png",
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SpellBeePage()),
+                  );
+                },
               ),
               const SizedBox(height: 12),
 
               PracticeCard(
                 title: "Mini Quiz",
                 image: "assets/images/mini_quiz_guy.png",
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SpellBeePage2()),
+                  );
+                },
               ),
               const SizedBox(height: 12),
 
@@ -248,7 +295,7 @@ class PracticeCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 90,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.only(left: 16),
         decoration: BoxDecoration(
           color: const Color(0xff425F77),
           borderRadius: BorderRadius.circular(18),
@@ -266,7 +313,7 @@ class PracticeCard extends StatelessWidget {
             const Spacer(),
             Image.asset(
               image,
-              height: 70,
+              height: 100,
             )
           ],
         ),

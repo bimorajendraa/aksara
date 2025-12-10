@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
         '/supportcontact': (context) => SupportContactScreen(),
         '/editalien': (context) => EditAlienScreen(),
         '/writingpractice': (context) => WritingPracticeScreen(),
-        '/practice': (context) => PracticeScreen(username: 'User'),
+        '/practice': (context) => const PracticeScreen(username: ''),
         '/live-ocr': (context) => const CameraCaptureOCRPage(),
         '/leaderboard': (context) => const LeaderboardPage(),
         '/hear-the-sound': (context) => HearTheSoundPage()

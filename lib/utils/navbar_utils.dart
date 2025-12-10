@@ -15,7 +15,7 @@ class NavigationUtils {
 
       case 1:
         // Pastikan nama route di main.dart adalah '/book' atau '/story-mode' (sesuaikan)
-        Navigator.pushReplacementNamed(context, '/story-mode');
+        Navigator.pushReplacementNamed(context, '/practice');
         break;
 
       case 2:
