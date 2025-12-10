@@ -2,7 +2,7 @@
 <img width="468" height="191" alt="aksara_logo" src="https://github.com/user-attachments/assets/92d92bf2-a33f-4e25-9e85-b6de5e309f27" />
 
 
-Aksara adalah aplikasi mobile pembelajaran membaca berbasis **gamifikasi** yang ditujukan untuk anak dan remaja dengan kemampuan literasi dasar yang masih berkembang.  
+Aksara adalah **aplikasi mobile** pembelajaran membaca berbasis **gamifikasi** yang ditujukan untuk anak dan remaja dengan kemampuan literasi dasar yang masih berkembang.  
 Aplikasi ini dikembangkan menggunakan **Flutter** sebagai frontend dan **Supabase (PostgreSQL + Auth + Storage)** sebagai backend.
 
 > Aksara membantu pengguna belajar membaca melalui permainan edukatif, visual interaktif, dan progres belajar yang terukur.
