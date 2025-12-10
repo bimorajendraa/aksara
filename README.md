@@ -227,21 +227,67 @@ aksara/
 │  ├─ images/
 │  └─ audio/
 ├─ lib/
-│  ├─ main.dart
-│  └─ src/
-│     ├─ core/
-│     │  ├─ env.dart
-│     │  ├─ theme/
-│     │  └─ routing/
-│     ├─ features/
-│     │  ├─ auth/
-│     │  ├─ home/
-│     │  ├─ books/
-│     │  ├─ practice/
-│     │  ├─ leaderboard/
-│     │  ├─ profile/
-│     │  └─ progress/
-│     └─ widgets/
+│  ├─ auth/
+│  │  ├─ auth_service.dart
+│  │  └─ session_gate.dart
+│  ├─ core/
+│  │  └─ theme/
+│  │     ├─ app_colors.dart
+│  │     ├─ app_spacing.dart
+│  │     └─ app_text_styles.dart
+│  ├─ data/
+│  │  └─ models/
+│  │     └─ level_model.dart
+│  ├─ screens/
+│  │  ├─ auth/
+│  │  │  ├─ already_registered_screen.dart
+│  │  │  ├─ login_screen.dart
+│  │  │  ├─ onboarding_screen.dart
+│  │  │  └─ signup_screen.dart
+│  │  ├─ book/
+│  │  │  ├─ chapter_read_screen.dart
+│  │  │  ├─ story_detail_screen.dart
+│  │  │  └─ story_mode_screen.dart
+│  │  ├─ camera/
+│  │  │  └─ camera_capture_ocr_page.dart
+│  │  ├─ games/
+│  │  │  ├─ drag-drop/
+│  │  │  │  └─ drag_drop_page.dart
+│  │  │  ├─ spellbee/
+│  │  │  │  ├─ spellbee.dart
+│  │  │  │  └─ spellbee2.dart
+│  │  │  ├─ start/
+│  │  │  │  ├─ start_page.dart
+│  │  │  │  ├─ start_page2.dart
+│  │  │  │  ├─ start_page3.dart
+│  │  │  │  └─ start_page4.dart
+│  │  │  ├─ home/
+│  │  │  │  ├─ home_data.dart
+│  │  │  │  ├─ home_screen.dart
+│  │  │  │  ├─ level_card.dart
+│  │  │  │  ├─ level_screen.dart
+│  │  │  │  ├─ map_canvas.dart
+│  │  │  │  ├─ map_node_widget.dart
+│  │  │  │  └─ node_model.dart
+│  │  │  └─ profiles/
+│  │  │     ├─ achievement_screen.dart
+│  │  │     ├─ editalien_screen.dart
+│  │  │     ├─ helpme_screen.dart
+│  │  │     ├─ profile_screen.dart
+│  │  │     ├─ settings_screen.dart
+│  │  │     ├─ supportcontact_screen.dart
+│  │  │     ├─ entry_screen.dart
+│  │  │     ├─ hearthesound.dart
+│  │  │     ├─ leaderboard.dart
+│  │  │     ├─ practice_screen.dart
+│  │  │     └─ writing_practice_screen.dart
+│  ├─ utils/
+│  │  ├─ hash.dart
+│  │  └─ navbar_utils.dart
+│  ├─ widgets/
+│  │  └─ custom_floating_navbar.dart
+│  ├─ env.dart
+│  └─ main.dart
 ├─ test/
 └─ pubspec.yaml
 ```
