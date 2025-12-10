@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class HearTheSoundPage extends StatefulWidget {
   const HearTheSoundPage({super.key});
@@ -10,6 +11,7 @@ class HearTheSoundPage extends StatefulWidget {
 class _HearTheSoundPageState extends State<HearTheSoundPage> {
   // Index soal yang sedang aktif (0 = soal pertama)
   int _currentIndex = 0;
+  final AudioPlayer _player = AudioPlayer();
 
   // Data Soal (Bisa ditambah jika punya monster 3 dst)
   final List<Map<String, dynamic>> _questions = [
@@ -101,15 +103,22 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
 
   // Fungsi Pindah ke Soal Berikutnya
   void _nextQuestion() {
-    setState(() {
-      if (_currentIndex < _questions.length - 1) {
+    if (_currentIndex < _questions.length - 1) {
+      // Masih ada soal berikutnya → lanjut
+      setState(() {
         _currentIndex++;
-      } else {
-        // Jika soal habis, bisa kembali ke home atau reset
-        // Navigator.pop(context); // Uncomment untuk kembali
-        _currentIndex = 0; // Reset ke awal untuk demo
-      }
-    });
+      });
+    } else {
+      // Soal terakhir sudah dijawab benar → kembali ke halaman sebelumnya (/practice)
+      Navigator.pop(context);
+      // Kalau kamu MAU pakai named route, bisa pakai ini sebagai alternatif:
+      // Navigator.pushNamedAndRemoveUntil(context, '/practice', (route) => false);
+    }
+  }
+
+  void _playSound(String fileName) async {
+    await _player.stop();
+    await _player.play(AssetSource('sounds/hearthesound/$fileName'));
   }
 
   @override
@@ -193,8 +202,11 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
                             // Tombol Sound
                             GestureDetector(
                               onTap: () {
-                                // Logic play sound disini
-                                print("Play Sound!");
+                                if (_currentIndex == 0) {
+                                  _playSound('hello.mp3');
+                                } else if (_currentIndex == 1) {
+                                  _playSound('dog.mp3');
+                                }
                               },
                               child: Image.asset(
                                 'assets/images/soundon.png',
