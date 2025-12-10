@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../home/home_screen.dart';
 import 'start_page2.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
@@ -31,9 +32,11 @@ class _StartPageState extends State<StartPage> {
   int pointerIndex = 0; // target pertama = index 0 (A)
   String? selectedLetter;
   int currentPage = 0;
+
   final letters = List<String>.generate(26, (i) => String.fromCharCode(65 + i));
   final Set<String> clickedLetters = {};
   final ScrollController _scrollController = ScrollController();
+  final AudioPlayer _player = AudioPlayer();
 
   // GlobalKeys untuk setiap TEXT (huruf) agar bisa diukur posisinya
   final List<GlobalKey> letterTextKeys = List.generate(26, (_) => GlobalKey());
@@ -51,7 +54,8 @@ class _StartPageState extends State<StartPage> {
     // tambahkan listener supaya popup ikut bergeser saat user scroll
     _scrollController.addListener(() {
       if (showTutorial) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _measureAndPositionPopup());
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _measureAndPositionPopup());
       }
     });
 
@@ -64,6 +68,7 @@ class _StartPageState extends State<StartPage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _player.dispose();
     super.dispose();
   }
 
@@ -74,6 +79,12 @@ class _StartPageState extends State<StartPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _measureAndPositionPopup();
     });
+  }
+
+  Future<void> _playLetterSound(String letter) async {
+    final file = letter.toLowerCase(); // a.mp3, b.mp3, ...
+    await _player.stop();
+    await _player.play(AssetSource('sounds/alphabet/$file.mp3'));
   }
 
   // Panggil ini tiap kali pointerIndex berubah atau saat ingin tampilkan popup
@@ -87,7 +98,8 @@ class _StartPageState extends State<StartPage> {
     final ctx = key.currentContext;
 
     if (ctx == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _measureAndPositionPopup());
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _measureAndPositionPopup());
       return;
     }
 
@@ -95,7 +107,8 @@ class _StartPageState extends State<StartPage> {
 
     // Ambil posisi huruf (text) secara akurat
     final safePadding = MediaQuery.of(context).padding.top;
-    final letterOffset = render.localToGlobal(Offset.zero) - Offset(0, safePadding);
+    final letterOffset =
+        render.localToGlobal(Offset.zero) - Offset(0, safePadding);
 
     final size = render.size;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -196,7 +209,8 @@ class _StartPageState extends State<StartPage> {
               children: [
                 Container(
                   width: popupWidth,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: const Color.fromRGBO(86, 124, 141, 1),
                     borderRadius: BorderRadius.circular(14),
@@ -296,7 +310,23 @@ class _StartPageState extends State<StartPage> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Icon(Icons.refresh, size: 40, color: Colors.white),
+
+                // 🔁 REPLAY BUTTON – area klik diperbesar
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    _playLetterSound(letter);
+                  },
+                  child: const SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: Icon(
+                      Icons.refresh,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -344,7 +374,8 @@ class _StartPageState extends State<StartPage> {
         left: screenWidth * 0.08,
         right: screenWidth * 0.08,
       ),
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: 10),
+      padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.04, vertical: 10),
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 186, 216, 255),
         borderRadius: BorderRadius.circular(25),
@@ -355,9 +386,12 @@ class _StartPageState extends State<StartPage> {
           Row(
             children: List.generate(5, (index) {
               return Padding(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
+                padding:
+                    EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
                 child: Icon(
-                  index < hearts ? Icons.favorite : Icons.favorite_border_rounded,
+                  index < hearts
+                      ? Icons.favorite
+                      : Icons.favorite_border_rounded,
                   color: const Color.fromRGBO(212, 0, 0, 1),
                   size: 26,
                 ),
@@ -402,7 +436,8 @@ class _StartPageState extends State<StartPage> {
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const HomeScreen()),
               );
             },
             child: CircleAvatar(
@@ -416,7 +451,9 @@ class _StartPageState extends State<StartPage> {
             child: Container(
               height: 10,
               decoration: BoxDecoration(
-                color: currentPage == 0 ? const Color.fromRGBO(4, 4, 63, 1) : Colors.grey.shade400,
+                color: currentPage == 0
+                    ? const Color.fromRGBO(4, 4, 63, 1)
+                    : Colors.grey.shade400,
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
@@ -426,7 +463,9 @@ class _StartPageState extends State<StartPage> {
             child: Container(
               height: 10,
               decoration: BoxDecoration(
-                color: currentPage == 1 ? const Color.fromRGBO(4, 4, 63, 1) : Colors.grey.shade400,
+                color: currentPage == 1
+                    ? const Color.fromRGBO(4, 4, 63, 1)
+                    : Colors.grey.shade400,
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
@@ -466,7 +505,10 @@ class _StartPageState extends State<StartPage> {
 
         return GestureDetector(
           onTap: () {
-            if (showTutorial) setState(() => showTutorial = false);
+            if (showTutorial) {
+              setState(() => showTutorial = false);
+            }
+
             setState(() {
               selectedLetter = letter;
               progress = (letterIndex + 1) / letters.length;
@@ -479,12 +521,15 @@ class _StartPageState extends State<StartPage> {
                   if (skip <= nextGridIndex) nextGridIndex++;
                 }
                 pointerIndex = nextGridIndex;
-                // ukur ulang posisi popup untuk pointerIndex baru
-                WidgetsBinding.instance.addPostFrameCallback((_) => _measureAndPositionPopup());
+                WidgetsBinding.instance
+                    .addPostFrameCallback((_) => _measureAndPositionPopup());
               } else {
                 pointerIndex = -1;
               }
             });
+
+            // 🔊 mainkan suara saat huruf ditekan
+            _playLetterSound(letter);
 
             showGeneralDialog(
               context: context,
@@ -522,11 +567,10 @@ class _StartPageState extends State<StartPage> {
                       color: const Color.fromRGBO(252, 209, 156, 1),
                     ),
                   ),
-
                 Center(
                   child: Text(
                     letter,
-                    key: letterTextKeys[letterIndex], // <-- key disini
+                    key: letterTextKeys[letterIndex], 
                     style: TextStyle(
                       fontSize: (screenWidth * 0.10).clamp(26.0, 48.0),
                       fontWeight: FontWeight.w900,
@@ -554,13 +598,15 @@ class _StartPageState extends State<StartPage> {
             ? () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const StartPage2()),
+                  MaterialPageRoute(
+                      builder: (context) => const StartPage2()),
                 );
               }
             : null,
         child: CircleAvatar(
           radius: screenWidth * 0.11,
-          backgroundColor: isActive ? const Color.fromRGBO(4, 4, 63, 1) : Colors.grey,
+          backgroundColor:
+              isActive ? const Color.fromRGBO(4, 4, 63, 1) : Colors.grey,
           child: Icon(
             Icons.arrow_forward,
             color: Colors.white,
