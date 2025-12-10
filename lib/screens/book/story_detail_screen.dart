@@ -12,25 +12,21 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
   bool loading = true;
   bool invalidArgs = false;
 
-  // Data buku
   late int idBook;
   late Map book;
 
-  // Data chapter
   List<dynamic> chapters = [];
 
-  // Progress user
-  int progress = 0;
+  int progress = 0; // percent book progress
   int lastChapter = 0;
 
   int? idAkunInt;
+
   int parseChapter(dynamic chapterField) {
     if (chapterField is int) return chapterField;
     if (chapterField is String) {
       final match = RegExp(r'\d+').firstMatch(chapterField);
-      if (match != null) {
-        return int.tryParse(match.group(0)!) ?? 1;
-      }
+      if (match != null) return int.tryParse(match.group(0)!) ?? 1;
     }
     return 1;
   }
@@ -82,7 +78,6 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     final client = Supabase.instance.client;
 
     try {
-      // Chapters
       final chapterFuture = client
           .from('bookdetails')
           .select()
@@ -91,6 +86,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
 
       Future<List<dynamic>>? progressFuture;
       final akunId = idAkunInt;
+
       if (akunId != null) {
         progressFuture = client
             .from('userbookprogress')
@@ -105,6 +101,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
 
       if (progressFuture != null) {
         final list = await progressFuture;
+
         if (list.isNotEmpty) {
           final row = list.first as Map<String, dynamic>;
           progress = row['progress_percentage'] ?? 0;
@@ -125,12 +122,6 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     }
   }
 
-  double chapterProgress(int chapterNumber) {
-    if (lastChapter == 0) return 0.0;
-    return chapterNumber <= lastChapter ? 1.0 : 0.0;
-  }
-
-  // -----------------------------------------------------------
   Future<void> openChapter(int chapterNumber) async {
     if (chapters.isEmpty) return;
 
@@ -203,17 +194,18 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
               ),
 
               const SizedBox(height: 8),
+
               Text(
                 "level ${book["difficulty"]}",
                 style: const TextStyle(fontSize: 18, color: Colors.black54),
               ),
+
               const SizedBox(height: 20),
 
               GestureDetector(
                 onTap: () {
                   final first = getFirstChapterNumber();
                   final chapterToOpen = lastChapter == 0 ? first : lastChapter;
-
                   openChapter(chapterToOpen);
                 },
                 child: Container(
@@ -290,5 +282,16 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
         ),
       ),
     );
+  }
+
+  double chapterProgress(int chapterNumber) {
+    if (lastChapter == 0) return 0.0;
+
+    final totalChapters = chapters.length;
+
+    if (chapterNumber < lastChapter) return 1.0;
+    if (chapterNumber > lastChapter) return 0.0;
+
+    return (progress / 100).clamp(0.0, 1.0);
   }
 }

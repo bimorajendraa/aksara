@@ -10,189 +10,218 @@ class StartPage2 extends StatefulWidget {
 }
 
 class _StartPageState2 extends State<StartPage2> {
-  int hearts = 5; // sama seperti start_page pertama
+  int hearts = 5;
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // ukuran efektif agar layout tidak melebar berlebihan di laptop
+    final effectiveWidth = screenWidth.clamp(320.0, 500.0).toDouble();
+    final effectiveHeight = screenHeight.clamp(600.0, 900.0).toDouble();
+
+    // ukuran tombol back yang disesuaikan dan dibatasi
+    final double backSize = (screenWidth * 0.06).clamp(30.0, 38.0);
+    final double backIconSize = (backSize * 0.6).clamp(20.0, 24.0);
+
+    // margin horizontal sama dengan healthbar (w * 0.08)
+    final double horizontalMargin = screenWidth * 0.08;
+
     return Scaffold(
       backgroundColor: const Color(0xff567c8d),
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(height: effectiveHeight * 0.02),
 
-            // ---------------- HEALTH BAR (versi yang benar) ----------------
-            _buildHealthBar2(),
+              /// HEALTH BAR — mengikuti StartPage
+              _buildHealthBar2(screenWidth, screenHeight),
 
-            const SizedBox(height: 15),
+              SizedBox(height: effectiveHeight * 0.02),
 
-            // ---------------- Back Button ----------------
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 35),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const StartPage()),
-                    );
-                  },
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white.withOpacity(0.5),
-                    child: const Icon(Icons.arrow_back, color: Colors.black),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 70),
-
-            // ---------------- TITLE ----------------
-            const Text(
-              "Those are the 26\nletters",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 70),
-
-            // ---------------- MONSTER / CHARACTER ----------------
-            SizedBox(
-              height: 180,
-              child: Image.asset(
-                "assets/images/monster_oren.png",
-                fit: BoxFit.contain,
-              ),
-            ),
-
-            const SizedBox(height: 40),
-
-            // ---------------- QUESTION BUBBLE ----------------
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Stack(
-                clipBehavior: Clip.none, // <-- penting: biar widget boleh keluar area stack
-                alignment: Alignment.center,
-                children: [
-                  // Bubble teks
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.35),
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: const Text(
-                      "now, what is a vocal letters?",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
+              /// BACK BUTTON — sejajar dengan ujung kiri healthbar dan ukurannya di-clamp
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: EdgeInsets.only(left: horizontalMargin),
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: backSize,
+                      height: backSize,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFB3BDC4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.arrow_back,
+                        size: backIconSize,
+                        color: Colors.black,
                       ),
                     ),
                   ),
-
-                  Positioned(
-                    left: -3,
-                    top: -20,
-                    child: Column(
-                      children: [
-                        Transform.rotate(
-                          angle: -0.4, // semakin besar nilai → semakin miring
-                          child: const Icon(Icons.question_mark, color: Colors.white, size: 40),
-                        ),
-                        const SizedBox(height: 30)
-                      ],
-                    ),
-                  ),
-
-                  Positioned(
-                    right: -3,
-                    top: 18,
-                    child: Column(
-                      children: [
-                        Transform.rotate(
-                          angle: 0.2,
-                          child: const Icon(Icons.question_mark, color: Colors.white, size: 40),
-                        ),
-                        const SizedBox(height: 2)
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-
-            const SizedBox(height: 100),
-
-
-            // ---------------- NEXT BUTTON ----------------
-            GestureDetector(
-              onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const StartPage3()),
-                    );
-                  },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 30),
-                width: 95,
-                height: 95,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-                child: const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.arrow_forward,
-                    color: Color(0xFF607D8B),
-                    size: 68,
-                  ),
                 ),
               ),
-            ),
-          ],
+
+              SizedBox(height: effectiveHeight * 0.07),
+
+              // semua isi berikut dibatasi max width agar rapi di layar besar
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 500),
+                  child: Column(
+                    children: [
+                      // TITLE
+                      Text(
+                        "Those are the 26\nletters",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: effectiveWidth * 0.075,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      SizedBox(height: effectiveHeight * 0.06),
+
+                      // MONSTER IMAGE
+                      SizedBox(
+                        height: effectiveHeight * 0.22,
+                        child: Image.asset(
+                          "assets/images/monster_oren.png",
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+
+                      SizedBox(height: effectiveHeight * 0.05),
+
+                      // BUBBLE
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: effectiveWidth * 0.03),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: effectiveWidth * 0.08,
+                                vertical: effectiveHeight * 0.008,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.35),
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                              child: Text(
+                                "now, what is a vocal letters?",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: effectiveWidth * 0.05,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+
+                            Positioned(
+                              left: -effectiveWidth * 0.015,
+                              top: -effectiveHeight * 0.03,
+                              child: Transform.rotate(
+                                angle: -0.4,
+                                child: Icon(
+                                  Icons.question_mark,
+                                  size: effectiveWidth * 0.10,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+
+                            Positioned(
+                              right: -effectiveWidth * 0.015,
+                              top: effectiveHeight * 0.015,
+                              child: Transform.rotate(
+                                angle: 0.2,
+                                child: Icon(
+                                  Icons.question_mark,
+                                  size: effectiveWidth * 0.10,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: effectiveHeight * 0.08),
+
+                      // NEXT BUTTON
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const StartPage3()),
+                          );
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: effectiveHeight * 0.03),
+                          width: effectiveWidth * 0.23,
+                          height: effectiveWidth * 0.23,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.arrow_forward,
+                              size: effectiveWidth * 0.15,
+                              color: const Color(0xFF607D8B),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHealthBar2() {
+  /// HEALTH BAR sama persis seperti di StartPage: margin mengikuti screen width
+  Widget _buildHealthBar2(double w, double h) {
     return Container(
-      margin: const EdgeInsets.only(top: 40, left: 30, right: 30),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      margin: EdgeInsets.only(
+        top: h * 0.05,
+        left: w * 0.08,
+        right: w * 0.08,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 10,
+      ),
       decoration: BoxDecoration(
-        color: const Color(0xffc8d9e6),
+        color: const Color.fromARGB(255, 186, 216, 255),
         borderRadius: BorderRadius.circular(25),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // HEARTS
           Row(
             children: List.generate(5, (index) {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
+                padding: EdgeInsets.symmetric(horizontal: w * 0.01),
                 child: Icon(
-                  index < hearts
-                      ? Icons.favorite
-                      : Icons.favorite_border_rounded,
+                  index < hearts ? Icons.favorite : Icons.favorite_border_rounded,
                   color: const Color.fromRGBO(212, 0, 0, 1),
                   size: 26,
                 ),
               );
             }),
           ),
-
-          // COIN
           Row(
             children: [
               Image.asset(
@@ -211,7 +240,7 @@ class _StartPageState2 extends State<StartPage2> {
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );

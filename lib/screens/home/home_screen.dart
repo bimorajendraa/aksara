@@ -1,5 +1,9 @@
+import 'package:aksara/screens/writing_practice_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../utils/navbar_utils.dart';
+import '../../widgets/custom_floating_navbar.dart';
+import '../games/start/start_page.dart';
 
 import 'package:aksara/utils/navbar_utils.dart';
 import 'package:aksara/widgets/custom_floating_navbar.dart';
@@ -524,3 +528,262 @@ class NextLevelCard extends StatelessWidget {
   }
 }
 
+/// ===========================================================
+/// BOTTOM NAVBAR
+/// ===========================================================
+/// Ini nav bar bawah yang ada home / book / medal / user.
+/// Hanya layout static, belum ada onTap atau route logic.
+/// Kalau mau aktif tab lain, tinggal ganti warna icon di sini.
+
+
+/// ===========================================================
+/// HOME SCREEN — PAGE UTAMA STORY MODE
+/// ===========================================================
+/// Bagian penting yang bisa lu utak-atik:
+///   - _buildNodes() : pola posisi node & statusnya
+///   - spacing       : jarak vertikal antar node
+///   - xFactor       : posisi kiri/kanan node
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
+  List<MapNode> _buildNodes() {
+    const spacing = 120.0;
+    return [
+      MapNode(xFactor: 0.50, yOffset: 0, state: NodeState.completed),
+      MapNode(xFactor: 0.85, yOffset: spacing, state: NodeState.completed),
+      MapNode(xFactor: 0.50, yOffset: spacing * 2, state: NodeState.current),
+      MapNode(xFactor: 0.15, yOffset: spacing * 3, state: NodeState.locked),
+      MapNode(xFactor: 0.50, yOffset: spacing * 4, state: NodeState.locked),
+      MapNode(xFactor: 0.85, yOffset: spacing * 5, state: NodeState.locked),
+      MapNode(xFactor: 0.50, yOffset: spacing * 6, state: NodeState.locked),
+      MapNode(xFactor: 0.15, yOffset: spacing * 7, state: NodeState.locked),
+      MapNode(xFactor: 0.50, yOffset: spacing * 8, state: NodeState.locked),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final nodes = _buildNodes();
+
+    final currentIndex = nodes.indexWhere((n) => n.state == NodeState.current);
+    final effectiveCurrentIndex = currentIndex == -1 ? 0 : currentIndex;
+
+    final offsets = nodes.map((n) {
+      return Offset(
+        n.xFactor * screenWidth,
+        n.yOffset,
+      );
+    }).toList();
+
+    final mapHeight = nodes.last.yOffset + 180;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF476280),
+      body: Stack(
+        alignment: Alignment.bottomCenter, // Pastikan Navbar di bawah
+        children: [
+          // 1. Background
+          Positioned.fill(
+            child: Container(
+              color: const Color(0xFF476280),
+            ),
+          ),
+
+          // 2. Konten Utama (Scrollable)
+          Positioned.fill(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 120), // Padding bawah agar tidak tertutup navbar
+              physics: const BouncingScrollPhysics(),
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    // --- Header (Heart & Coin) ---
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC8D9E6),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: List.generate(5, (i) {
+                                return Padding(
+                                  padding: EdgeInsets.only(right: i < 4 ? 6 : 0),
+                                  child: SvgPicture.asset(
+                                    "assets/images/heart.svg",
+                                    width: 22, height: 22,
+                                  ),
+                                );
+                              }),
+                            ),
+                            Row(
+                              children: [
+                                SvgPicture.asset(
+                                  "assets/images/coin.svg",
+                                  width: 24, height: 24,
+                                ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  "13",
+                                  style: TextStyle(
+                                    color: Color(0xFF0E0F1A),
+                                    fontSize: 18, fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // --- Card Level 1 ---
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC8D9E6),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            Image.asset(
+                              "assets/images/monster1.png",
+                              width: 64, height: 64, fit: BoxFit.contain,
+                            ),
+                            const SizedBox(width: 14),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Level 1",
+                                    style: TextStyle(
+                                      fontSize: 24, fontWeight: FontWeight.w700,
+                                      color: Color(0xFF0E0F1A),
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    "Get to know letters",
+                                    style: TextStyle(
+                                      fontSize: 13, color: Color(0xFF5C7590),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // --- Area Map (Canvas & Nodes) ---
+                    Center(
+                      child: SizedBox(
+                        width: screenWidth * 0.9,
+                        height: mapHeight,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: CustomPaint(painter: DotPatternPainter()),
+                            ),
+                            // Flow Connector
+                            ...List.generate(nodes.length - 1, (i) {
+                              final isCompleted = i < effectiveCurrentIndex;
+                              String direction;
+                              switch (i % 4) {
+                                case 0: direction = 'kanan-bawah'; break;
+                                case 1: direction = 'bawah-kiri'; break;
+                                case 2: direction = 'kiri-bawah'; break;
+                                default: direction = 'bawah-kanan';
+                              }
+                              final startOffset = Offset(
+                                nodes[i].xFactor * screenWidth * 0.9,
+                                offsets[i].dy,
+                              );
+                              final endOffset = Offset(
+                                nodes[i + 1].xFactor * screenWidth * 0.9,
+                                offsets[i + 1].dy,
+                              );
+                              return FlowConnector(
+                                start: startOffset,
+                                end: endOffset,
+                                isCompleted: isCompleted,
+                                direction: direction,
+                              );
+                            }),
+                            // Nodes
+                            ...List.generate(nodes.length, (i) {
+                              final nodeX = nodes[i].xFactor * screenWidth * 0.9;
+                              return Positioned(
+                                left: nodeX - MapNode.outerWidth / 2,
+                                top: offsets[i].dy,
+                                child: GestureDetector(
+                                onTap: () {
+                                  if (i == 1) { // change index to whichever node should open the writing screen
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const WritingPracticeScreen()),
+                                    );
+                                  } else if (i == 0) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const StartPage()),
+                                    );
+                                  }
+                                },
+                                child: MapNodeWidget(state: nodes[i].state),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // --- Next Level Card ---
+                    const NextLevelCard(
+                      levelNumber: 2,
+                      monsterAsset: "assets/images/monster2.png",
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Navbar Melayang (Paling Atas)
+          Positioned(
+            bottom: 30,
+            left: 0,
+            right: 0,
+            child: CustomFloatingNavBar(
+              currentIndex: 0, // Set 0 karena ini Home
+              onTap: (index) {
+                NavigationUtils.handleNavigation(context, index, 0);
+              }, // Sambungkan Fungsi Navigasi
+              onScanTap: () => print("Scan Clicked"),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

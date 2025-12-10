@@ -29,7 +29,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() => isLoading = true);
 
     final auth = AuthService();
-
     final error = await auth.register(
       email: email,
       username: username,
@@ -41,6 +40,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } else {
       _showMessage("Akun berhasil dibuat! Silakan login.");
       // ignore: use_build_context_synchronously
+      Navigator.pushReplacementNamed(context, '/login');
+    }
+
+    setState(() => isLoading = false);
+  }
+
+  // GOOGLE SIGN UP
+  Future<void> _signUpWithGoogle() async {
+    setState(() => isLoading = true);
+
+    final auth = AuthService();
+    final error = await auth.signInWithGoogle();
+
+    if (error != null) {
+      _showMessage(error);
+    } else {
+      _showMessage("Akun berhasil dibuat melalui Google!");
       Navigator.pushReplacementNamed(context, '/login');
     }
 
@@ -136,7 +152,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
               const SizedBox(height: 25),
 
-              _googleButton(),
+              _googleButton(), // sudah benar
 
               const SizedBox(height: 25),
 
@@ -148,29 +164,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       "Already have an account? ",
                       style: TextStyle(fontSize: 16, color: Colors.black54),
                     ),
-
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/login');
-                        },
-
-                        highlightColor: Colors.transparent,
-                        splashColor: Colors.transparent,
-                        hoverColor: Colors.transparent,
-
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 4),
-                          child: Text(
-                            "Login",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                              decoration: TextDecoration.none, // no underline
-                            ),
-                          ),
+                    GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, '/login'),
+                      child: const Text(
+                        "Login",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       ),
                     ),
@@ -246,22 +247,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Widget _googleButton() {
-    return Container(
-      height: 58,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(40),
-        border: Border.all(color: Colors.black26),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset("assets/icons/google.png", width: 22),
-          const SizedBox(width: 10),
-          const Text(
-            "Google",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-        ],
+    return GestureDetector(
+      onTap: _signUpWithGoogle,
+      child: Container(
+        height: 58,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(40),
+          border: Border.all(color: Colors.black26),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset("assets/icons/google.png", width: 22),
+            const SizedBox(width: 10),
+            const Text(
+              "Google",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
       ),
     );
   }

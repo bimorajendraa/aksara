@@ -2,12 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-// SERVICES
-import 'package:aksara/services/user_loader_service.dart';
-import 'package:aksara/services/user_session.dart';
-import 'package:aksara/services/game_progress_service.dart';
-import 'package:aksara/services/level_progress_service.dart';
-
 class SpellBeePage extends StatefulWidget {
   const SpellBeePage({super.key});
 
@@ -20,105 +14,59 @@ class _SpellBeePageState extends State<SpellBeePage> {
   String? errorMessage;
   String? highlightedLetter;
   final AudioPlayer _player = AudioPlayer();
-
-  final GlobalKey _inputKey = GlobalKey();
-  double errorTop = 300;
-
+  final GlobalKey _inputKey = GlobalKey();      
+  double errorTop = 300;                       
+  
   List<String?> userAnswer = ["", "", ""];
-
-  @override
-  void initState() {
-    super.initState();
-    _ensureUserLoaded();
-  }
-
-  /// =============================================================
-  /// WAJIB: Pastikan idAkun loaded sebelum save progress
-  /// =============================================================
-  Future<void> _ensureUserLoaded() async {
-    if (UserSession.instance.idAkun == null) {
-      print("🔵 [SpellBee] Loading user ID…");
-      await UserLoaderService.instance.loadUserId();
-      print("🟢 [SpellBee] idAkun = ${UserSession.instance.idAkun}");
-    }
-  }
 
   Future<void> _playLetterSound(String letter) async {
     await _player.stop();
-    await _player.play(
-      AssetSource("sounds/alphabet/${letter.toLowerCase()}.mp3"),
-    );
+    await _player.play(AssetSource("sounds/alphabet/${letter.toLowerCase()}.mp3"));
   }
 
-  void _calculateErrorPosition() {
-    final render =
-        _inputKey.currentContext?.findRenderObject() as RenderBox?;
+  void _calculateErrorPosition() {             
+    final render = _inputKey.currentContext?.findRenderObject() as RenderBox?;
     if (render == null) return;
 
     final offset = render.localToGlobal(Offset.zero);
+
     setState(() {
       errorTop = offset.dy + render.size.height + 8;
     });
   }
 
   void selectLetter(String letter) {
+
     _playLetterSound(letter);
 
     int index = userAnswer.indexOf("");
+
     if (index == -1) return;
 
     if (letter == answer[index]) {
       setState(() {
         userAnswer[index] = letter;
-        highlightedLetter = letter;
-        errorMessage = null;
-      });
+        if (letter == answer[index]) {
+          setState(() {
+            userAnswer[index] = letter;
+            errorMessage = null;
+            highlightedLetter = letter;
+          });
 
-      checkIfCompleted();
+          checkIfCompleted(); 
+        }
+        errorMessage = null;
+        highlightedLetter = letter;
+      });
     } else {
       showFloatingError();
-      highlightedLetter = null;
+      setState(() {
+        highlightedLetter = null;
+      });
     }
   }
 
-  /// =============================================================
-  /// FINAL COMPLETION LOGIC → SAVE PROGRESS KE SUPABASE
-  /// =============================================================
-  Future<void> _handleLevelCompleted() async {
-    final idAkun = UserSession.instance.idAkun;
-
-    if (idAkun == null) {
-      print("❌ [SpellBee] idAkun NULL, tidak bisa simpan progress");
-      return;
-    }
-
-    print("🏆 [SpellBee] Saving progress...");
-
-    // Tambah score +10
-    await GameProgressService.instance.updateAggregatedProgress(
-      idAkun: idAkun,
-      gameKey: "spellbee",
-      isCorrect: true,
-    );
-
-    // Ambil current level
-    final currentLevel =
-        await LevelProgressService.instance.getCurrentLevel(idAkun);
-
-    print("🔵 Current level user = $currentLevel");
-
-    // Naikkan 1 level
-    final nextLevel =
-        await LevelProgressService.instance.incrementLevel(idAkun);
-
-    print("🟢 User level naik → $currentLevel → $nextLevel");
-  }
-
-
-  Future<void> showCompletionPopup() async {
-    // simpan progress sebelum popup close
-    await _handleLevelCompleted();
-
+  void showCompletionPopup() async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -128,7 +76,9 @@ class _SpellBeePageState extends State<SpellBeePage> {
           children: [
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: Container(color: Colors.white.withOpacity(0.02)),
+              child: Container(
+                color: Colors.white.withOpacity(0.02), 
+              ),
             ),
             Center(
               child: Image.asset(
@@ -137,7 +87,7 @@ class _SpellBeePageState extends State<SpellBeePage> {
                 height: 700,
                 fit: BoxFit.contain,
               ),
-            ),
+            )
           ],
         );
       },
@@ -146,7 +96,7 @@ class _SpellBeePageState extends State<SpellBeePage> {
     await Future.delayed(const Duration(seconds: 2));
 
     if (mounted) {
-      Navigator.pushReplacementNamed(context, "/home");
+      Navigator.pushReplacementNamed(context, "/practice");
     }
   }
 
@@ -158,14 +108,15 @@ class _SpellBeePageState extends State<SpellBeePage> {
 
   void showFloatingError() {
     setState(() => errorMessage = "Wrong letter!");
-    _calculateErrorPosition();
+
+    _calculateErrorPosition();             
 
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) setState(() => errorMessage = null);
     });
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     final h = MediaQuery.of(context).size.height;
 
@@ -182,9 +133,6 @@ class _SpellBeePageState extends State<SpellBeePage> {
                   children: [
                     const SizedBox(height: 5),
 
-                    // --------------------------------------------------
-                    // HEADER AREA (UI sama persis)
-                    // --------------------------------------------------
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -204,14 +152,12 @@ class _SpellBeePageState extends State<SpellBeePage> {
                         const SizedBox(height: 15),
 
                         Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Row(
                             children: List.generate(5, (index) {
                               return Expanded(
                                 child: Container(
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 4),
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
                                   height: 8,
                                   decoration: BoxDecoration(
                                     color: index == 0
@@ -248,11 +194,10 @@ class _SpellBeePageState extends State<SpellBeePage> {
 
                     const SizedBox(height: 5),
 
-                    Row(
+                    Row(                            
                       key: _inputKey,
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children:
-                          List.generate(userAnswer.length, (index) {
+                      children: List.generate(userAnswer.length, (index) {
                         return Column(
                           children: [
                             Text(
@@ -263,8 +208,7 @@ class _SpellBeePageState extends State<SpellBeePage> {
                               ),
                             ),
                             Container(
-                              margin: const EdgeInsets.symmetric(
-                                  horizontal: 2),
+                              margin: const EdgeInsets.symmetric(horizontal: 2),
                               width: 70,
                               height: 8,
                               decoration: BoxDecoration(
@@ -285,22 +229,18 @@ class _SpellBeePageState extends State<SpellBeePage> {
                 ),
               ),
             ),
-
-            // --------------------------------------------------
-            // ERROR FLOATING (UI tidak diubah)
-            // --------------------------------------------------
+            
             if (errorMessage != null)
               Positioned(
-                top: errorTop,
+                top: errorTop,         
                 left: 0,
                 right: 0,
                 child: Center(
                   child: AnimatedOpacity(
-                    opacity: 1,
+                    opacity: errorMessage != null ? 1 : 0,
                     duration: const Duration(milliseconds: 200),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(20),
@@ -323,9 +263,6 @@ class _SpellBeePageState extends State<SpellBeePage> {
     );
   }
 
-  // --------------------------------------------------------------------------
-  // HEX BUTTON UI (TIDAK DIUBAH)
-  // --------------------------------------------------------------------------
   Widget _hexButton(String letter, {double size = 70}) {
     final bool isHighlighted = (letter == highlightedLetter);
 
@@ -370,26 +307,25 @@ class _SpellBeePageState extends State<SpellBeePage> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [_hexButton("T", size: hexSize)]),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          _hexButton("T", size: hexSize),
+        ]),
 
         SizedBox(height: rowSpacing),
 
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Transform.translate(
-              offset:
-                  Offset(hexSize * 0.2, vOffset - secondRowRaise),
+              offset: Offset(hexSize * 0.2, vOffset - secondRowRaise),
               child: _hexButton("F", size: hexSize),
             ),
             SizedBox(width: hGap),
             _hexButton("B", size: hexSize),
             SizedBox(width: hGap),
             Transform.translate(
-              offset:
-                  Offset(-hexSize * 0.2, vOffset - secondRowRaise),
+              offset: Offset(-hexSize * 0.2, vOffset - secondRowRaise),
               child: _hexButton("O", size: hexSize),
             ),
           ],
@@ -399,18 +335,17 @@ class _SpellBeePageState extends State<SpellBeePage> {
 
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Transform.translate(
-              offset:
-                  Offset(hexSize * 0.2, vOffset - thirdRowRaise),
+              offset: Offset(hexSize * 0.2, vOffset - thirdRowRaise),
               child: _hexButton("C", size: hexSize),
             ),
             SizedBox(width: hGap),
             _hexButton("D", size: hexSize),
             SizedBox(width: hGap),
             Transform.translate(
-              offset:
-                  Offset(-hexSize * 0.2, vOffset - thirdRowRaise),
+              offset: Offset(-hexSize * 0.2, vOffset - thirdRowRaise),
               child: _hexButton("A", size: hexSize),
             ),
           ],
@@ -418,29 +353,25 @@ class _SpellBeePageState extends State<SpellBeePage> {
       ],
     );
   }
-}
+} 
 
-// =======================================================================
-// HEXAGON CLIPPER
-// =======================================================================
 class _HexClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
-    final w = size.width;
-    final h = size.height;
+    final Path path = Path();
+    final double w = size.width;
+    final double h = size.height;
 
-    final path = Path()
-      ..moveTo(w * 0.25, 0)
-      ..lineTo(w * 0.75, 0)
-      ..lineTo(w, h * 0.5)
-      ..lineTo(w * 0.75, h)
-      ..lineTo(w * 0.25, h)
-      ..lineTo(0, h * 0.5)
-      ..close();
-
+    path.moveTo(w * 0.25, 0);
+    path.lineTo(w * 0.75, 0);
+    path.lineTo(w, h * 0.5);
+    path.lineTo(w * 0.75, h);
+    path.lineTo(w * 0.25, h);
+    path.lineTo(0, h * 0.5);
+    path.close();
     return path;
   }
 
   @override
-  bool shouldReclip(oldClipper) => false;
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

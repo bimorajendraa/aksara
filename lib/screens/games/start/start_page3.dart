@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'start_page4.dart';
 
 class StartPage3 extends StatefulWidget {
@@ -33,93 +34,216 @@ class _StartPageState extends State<StartPage3> {
 
   final letters = List<String>.generate(26, (i) => String.fromCharCode(65 + i));
   final Set<String> clickedLetters = {};
+  final AudioPlayer _player = AudioPlayer();
+
+  // controller seperti di StartPage1
+  final ScrollController _scrollController = ScrollController();
+
+  // GlobalKey untuk tiap huruf AIUEO (untuk posisi popup)
+  final Map<String, GlobalKey> letterTextKeys = {
+    "A": GlobalKey(),
+    "I": GlobalKey(),
+    "U": GlobalKey(),
+    "E": GlobalKey(),
+    "O": GlobalKey(),
+  };
+
+  // data posisi popup seperti StartPage1
+  double? popupLeft;
+  double? popupTop;
+  double popupWidth = 240;
+  double popupHeight = 120;
+
+  Future<void> _playLetterSound(String letter) async {
+    final file = letter.toLowerCase();
+    await _player.stop();
+    await _player.play(AssetSource('sounds/alphabet/$file.mp3'));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _scrollController.addListener(() {
+      if (showTutorial) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _measureAndPositionPopup());
+      }
+    });
+
+    // ukur posisi popup pertama kali setelah layout jadi
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureAndPositionPopup();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // misal orientasi berubah, ukur ulang
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureAndPositionPopup();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // mirip StartPage1, tapi untuk 5 huruf AIUEO
+  void _measureAndPositionPopup() {
+    if (!showTutorial) return;
+
+    if (pointerIndex < 0 || pointerIndex > 4) return;
+
+    // urutan pointerIndex: 0:A,1:I,2:U,3:E,4:O
+    final listLetters = ["A", "I", "U", "E", "O"];
+    final String currentLetter = listLetters[pointerIndex];
+
+    final key = letterTextKeys[currentLetter];
+    if (key == null) return;
+
+    final ctx = key.currentContext;
+    if (ctx == null) {
+      // kalau belum kebaca, coba lagi frame berikutnya
+      WidgetsBinding.instance.addPostFrameCallback((_) => _measureAndPositionPopup());
+      return;
+    }
+
+    final render = ctx.findRenderObject() as RenderBox;
+    final safePadding = MediaQuery.of(context).padding.top;
+
+    // posisi text huruf relatif ke layar
+    final letterOffset = render.localToGlobal(Offset.zero) - Offset(0, safePadding);
+    final size = render.size;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // ukuran popup berdasarkan lebar huruf (seperti StartPage1, tapi 5 huruf besar)
+    final double cellBase = size.width * 2.0;
+    popupWidth = cellBase.clamp(140.0, 320.0);
+    popupHeight = popupWidth * 0.55;
+
+    final double centerOfLetter = letterOffset.dx + size.width / 2;
+    final double topOfLetter = letterOffset.dy;
+
+    double left = centerOfLetter - popupWidth / 2;
+    double top = topOfLetter - popupHeight - 10.0;
+
+    // batas kiri/kanan
+    left = left.clamp(8.0, screenWidth - popupWidth - 8.0);
+
+    // kalau kepentok atas, geser ke bawah huruf
+    if (top < 8.0) {
+      top = topOfLetter + size.height + 10.0;
+    }
+
+    setState(() {
+      popupLeft = left;
+      popupTop = top;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth  = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          _buildMainContent(),
-
-          AnimatedOpacity(
-            opacity: showTutorial ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 300),
-            child: IgnorePointer(
-              ignoring: !showTutorial,
-              child: showTutorial ? _buildTutorialPopup() : const SizedBox(),
+          // === STRUCTURE SCROLL mirip StartPage1 ===
+          SingleChildScrollView(
+            controller: _scrollController,
+            padding: EdgeInsets.only(bottom: screenHeight * 0.02),
+            physics: const BouncingScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: screenHeight + 1),
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    SizedBox(height: screenHeight * 0.015),
+                    _buildHealthBar(screenWidth),
+                    SizedBox(height: screenHeight * 0.005),
+                    _buildPagination(screenWidth),
+                    SizedBox(height: screenHeight * 0.02),
+                    _buildTitle(screenWidth),
+                    SizedBox(height: screenHeight * 0.06),
+                    _buildLettersGrid(),
+                    SizedBox(height: screenHeight * 0.12),
+                    _buildNextButton(screenWidth, screenHeight),
+                    SizedBox(height: screenHeight * 0.02),
+                  ],
+                ),
+              ),
             ),
           ),
+
+          // === TUTORIAL OVERLAY: bentuk & style persis StartPage1 ===
+          if (showTutorial)
+            AnimatedOpacity(
+              opacity: 1,
+              duration: const Duration(milliseconds: 250),
+              child: IgnorePointer(
+                ignoring: false,
+                child: _buildTutorialPopup(screenWidth, screenHeight),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  // MAIN CONTENT ======================================================
-  Widget _buildMainContent() {
-    return SafeArea(
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
-          _buildHealthBar(),
-          const SizedBox(height: 5),
-          _buildPagination(),
-          const SizedBox(height: 20),
-          _buildTitle(),
-          const SizedBox(height: 60),
-          _buildLettersGrid(),
-          const SizedBox(height: 120),
-          _buildNextButton(),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
+  // ====================== TUTORIAL POPUP (COPY STYLE STARTPAGE1) =====
 
-  // TUTORIAL POPUP ====================================================
-  Widget _buildTutorialPopup() {
+  Widget _buildTutorialPopup(double screenWidth, double screenHeight) {
+    if (popupLeft == null || popupTop == null) return const SizedBox();
+
     return GestureDetector(
       onTap: () => setState(() => showTutorial = false),
       child: Stack(
         children: [
           Container(
-            color: const Color.fromRGBO(86, 124, 141, 0.5),
+            width: double.infinity,
+            height: double.infinity,
+            color: const Color.fromRGBO(86, 124, 141, 0.45),
           ),
 
+          // POPUP
           Positioned(
-            top: 460,
-            left: 160,
-            right: 20,
+            left: popupLeft,
+            top: popupTop,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 40,
-                    vertical: 55,
-                  ),
+                  width: popupWidth,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: const Color.fromRGBO(86, 124, 141, 1),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Text(
+                  child: Text(
                     "Click the letter",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: (popupWidth * 0.16).clamp(14, 22),
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
 
+                // SEGITIGA PENUNJUK (bawah tengah) persis StartPage1
                 Positioned(
-                  top: 0,
-                  left: -12,
+                  bottom: -12,
+                  left: popupWidth * 0.45,
                   child: ClipPath(
                     clipper: _TopRightTriangleClipper(),
                     child: Container(
-                      width: 30,
-                      height: 40,
+                      width: 22,
+                      height: 22,
                       color: const Color.fromRGBO(86, 124, 141, 1),
                     ),
                   ),
@@ -132,11 +256,15 @@ class _StartPageState extends State<StartPage3> {
     );
   }
 
-  // POPUP HURUF =======================================================
+  // ====================== POPUP HURUF ================================
+
   Widget letterPopup(String letter) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = screenWidth.clamp(320.0, 480.0);
+
     return Container(
-      width: 280,
-      height: 280,
+      width: effectiveWidth * 0.8,
+      height: effectiveWidth * 0.8,
       decoration: BoxDecoration(
         color: const Color(0xFF5F7D8C),
         borderRadius: BorderRadius.circular(40),
@@ -169,9 +297,9 @@ class _StartPageState extends State<StartPage3> {
                   children: [
                     Text(
                       letter.toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: "Poppins",
-                        fontSize: 120,
+                        fontSize: effectiveWidth * 0.20,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         decoration: TextDecoration.none,
@@ -180,9 +308,9 @@ class _StartPageState extends State<StartPage3> {
                     const SizedBox(width: 10),
                     Text(
                       letter.toLowerCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: "Poppins",
-                        fontSize: 120,
+                        fontSize: effectiveWidth * 0.20,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         decoration: TextDecoration.none,
@@ -191,7 +319,15 @@ class _StartPageState extends State<StartPage3> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Icon(Icons.refresh, size: 40, color: Colors.white),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _playLetterSound(letter),
+                  child: const Icon(
+                    Icons.refresh,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                ),
               ],
             ),
           ),
@@ -200,17 +336,20 @@ class _StartPageState extends State<StartPage3> {
     );
   }
 
-  // TITLE =============================================================
-  Widget _buildTitle() {
+  // ====================== TITLE ======================================
+
+  Widget _buildTitle(double screenWidth) {
+    final double titleSize = (screenWidth * 0.12).clamp(32.0, 60.0);
+
     return Column(
       children: [
-        // ---- VOCAL ----
+        // VOCAL
         Stack(
           children: [
             Text(
               "VOCAL",
               style: TextStyle(
-                fontSize: 40,
+                fontSize: titleSize,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
                 foreground: Paint()
@@ -219,10 +358,10 @@ class _StartPageState extends State<StartPage3> {
                   ..color = Colors.black,
               ),
             ),
-            const Text(
+            Text(
               "VOCAL",
               style: TextStyle(
-                fontSize: 40,
+                fontSize: titleSize,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
                 color: Colors.white,
@@ -230,16 +369,14 @@ class _StartPageState extends State<StartPage3> {
             ),
           ],
         ),
-
-        const SizedBox(height: 5), // Jarak antar kata
-
-        // ---- LETTERS ----
+        SizedBox(height: screenWidth * 0.02),
+        // LETTERS
         Stack(
           children: [
             Text(
               "LETTERS",
               style: TextStyle(
-                fontSize: 40,
+                fontSize: titleSize,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
                 foreground: Paint()
@@ -248,10 +385,10 @@ class _StartPageState extends State<StartPage3> {
                   ..color = Colors.black,
               ),
             ),
-            const Text(
+            Text(
               "LETTERS",
               style: TextStyle(
-                fontSize: 40,
+                fontSize: titleSize,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
                 color: Colors.white,
@@ -263,11 +400,18 @@ class _StartPageState extends State<StartPage3> {
     );
   }
 
-  // HEALTH BAR ========================================================
-  Widget _buildHealthBar() {
+  // ====================== HEALTH BAR =================================
+
+  Widget _buildHealthBar(double screenWidth) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Container(
-      margin: const EdgeInsets.only(top: 40, left: 30, right: 30),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      margin: EdgeInsets.only(
+        top: screenHeight * 0.05,
+        left: screenWidth * 0.08,
+        right: screenWidth * 0.08,
+      ),
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: 10),
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 186, 216, 255),
         borderRadius: BorderRadius.circular(25),
@@ -278,18 +422,15 @@ class _StartPageState extends State<StartPage3> {
           Row(
             children: List.generate(5, (index) {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
                 child: Icon(
-                  index < hearts
-                      ? Icons.favorite
-                      : Icons.favorite_border_rounded,
+                  index < hearts ? Icons.favorite : Icons.favorite_border_rounded,
                   color: const Color.fromRGBO(212, 0, 0, 1),
                   size: 26,
                 ),
               );
             }),
           ),
-
           Row(
             children: [
               Image.asset(
@@ -308,50 +449,49 @@ class _StartPageState extends State<StartPage3> {
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );
   }
 
-  // PAGINATION ========================================================
-  Widget _buildPagination() {
+  // ====================== PAGINATION =================================
+
+  Widget _buildPagination(double screenWidth) {
     return Container(
-      margin: const EdgeInsets.only(top: 10, left: 30, right: 20),
+      margin: EdgeInsets.only(
+        top: 10,
+        left: screenWidth * 0.08,
+        right: screenWidth * 0.05,
+      ),
       child: Row(
         children: [
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              Navigator.pop(context);
+            },
             child: CircleAvatar(
               radius: 20,
               backgroundColor: Colors.grey.shade600,
               child: const Icon(Icons.close, size: 30, color: Colors.white),
             ),
           ),
-
           const SizedBox(width: 10),
-
           Expanded(
             child: Container(
               height: 10,
               decoration: BoxDecoration(
-                color: currentPage == 0
-                    ? const Color.fromRGBO(4, 4, 63, 1)
-                    : const Color.fromRGBO(4, 4, 63, 1),
+                color: const Color.fromRGBO(4, 4, 63, 1),
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
           ),
-
           const SizedBox(width: 5),
-
           Expanded(
             child: Container(
               height: 10,
               decoration: BoxDecoration(
-                color: currentPage == 1
-                    ? const Color.fromRGBO(4, 4, 63, 1)
-                    : const Color.fromRGBO(4, 4, 63, 1),
+                color: const Color.fromRGBO(4, 4, 63, 1),
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
@@ -362,12 +502,13 @@ class _StartPageState extends State<StartPage3> {
     );
   }
 
-  // GRID LETTERS ======================================================
+  // ====================== GRID AIUEO =================================
+
   Widget _buildLettersGrid() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // ===== BARIS 1: A I U =====
+        // Baris 1: A I U
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -378,16 +519,15 @@ class _StartPageState extends State<StartPage3> {
             _buildLetterItem("U", 2),
           ],
         ),
-
-        // ===== BARIS 2: E O =====
+        // Baris 2: E O
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(width: 60),        // spacer kiri
+            const SizedBox(width: 60),
             _buildLetterItem("E", 3),
             const SizedBox(width: 20),
             _buildLetterItem("O", 4),
-            const SizedBox(width: 40),        // spacer kanan
+            const SizedBox(width: 40),
           ],
         ),
       ],
@@ -395,14 +535,13 @@ class _StartPageState extends State<StartPage3> {
   }
 
   final Map<String, Offset> pointerOffsets = {
-    "A": const Offset(25, -5),
-    "I": const Offset(5, -5),   
-    "U": const Offset(25, -5),
-    "E": const Offset(20, -5),   
-    "O": const Offset(25, -5),
+    "A": Offset(25, -5),
+    "I": Offset(5, -5),
+    "U": Offset(25, -5),
+    "E": Offset(20, -5),
+    "O": Offset(25, -5),
   };
 
-  // ====== WIDGET HURUF + POINTER ======
   Widget _buildLetterItem(String letter, int index) {
     final bool isClicked = clickedLetters.contains(letter);
 
@@ -417,6 +556,8 @@ class _StartPageState extends State<StartPage3> {
           clickedLetters.add(letter);
           pointerIndex = index + 1 < 5 ? index + 1 : -1;
         });
+
+        _playLetterSound(letter);
 
         showGeneralDialog(
           context: context,
@@ -436,11 +577,9 @@ class _StartPageState extends State<StartPage3> {
           },
         );
       },
-
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // POINTER
           if (pointerIndex == index && !showTutorial)
             Positioned(
               bottom: pointerOffsets[letter]!.dy,
@@ -451,18 +590,15 @@ class _StartPageState extends State<StartPage3> {
                 color: Color.fromRGBO(252, 209, 156, 1),
               ),
             ),
-
-          // HURUF
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
               letter,
+              key: letterTextKeys[letter], // <- dipakai untuk hitung posisi popup
               style: TextStyle(
                 fontSize: 100,
                 fontWeight: FontWeight.w700,
-                color: isClicked
-                    ? Colors.blue 
-                    : Colors.black,            
+                color: isClicked ? Colors.blue : Colors.black,
               ),
             ),
           ),
@@ -471,28 +607,34 @@ class _StartPageState extends State<StartPage3> {
     );
   }
 
-  // NEXT BUTTON =======================================================
-  Widget _buildNextButton() {
+  // ====================== NEXT BUTTON ================================
+
+  Widget _buildNextButton(double screenWidth, double screenHeight) {
     bool isActive = selectedLetter != null;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 40),
+      padding: EdgeInsets.only(bottom: screenHeight * 0.3),
       child: GestureDetector(
         onTap: isActive
             ? () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const StartPage4()),
+                  MaterialPageRoute(
+                    builder: (context) => const StartPage4(),
+                  ),
                 );
               }
             : null,
-        child: CircleAvatar(
-          radius: 40,
-          backgroundColor: const Color.fromRGBO(4, 4, 63, 1),
-          child: const Icon(
-            Icons.arrow_forward,
-            color: Colors.white,
-            size: 68,
+        child: Container(
+          alignment: Alignment.center,
+          child: CircleAvatar(
+            radius: (screenWidth * 0.09).clamp(38, 50),
+            backgroundColor: const Color.fromRGBO(4, 4, 63, 1),
+            child: Icon(
+              Icons.arrow_forward,
+              color: Colors.white,
+              size: (screenWidth * 0.12).clamp(28, 48),
+            ),
           ),
         ),
       ),
