@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../home/home_screen.dart';
 import 'start_page2.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
@@ -27,99 +29,212 @@ class _StartPageState extends State<StartPage> {
   bool showTutorial = true;
   int hearts = 5;
   double progress = 0.15;
-  int pointerIndex = 0;
+  int pointerIndex = 0; // target pertama = index 0 (A)
   String? selectedLetter;
   int currentPage = 0;
 
   final letters = List<String>.generate(26, (i) => String.fromCharCode(65 + i));
   final Set<String> clickedLetters = {};
+  final ScrollController _scrollController = ScrollController();
+  final AudioPlayer _player = AudioPlayer();
+
+  // GlobalKeys untuk setiap TEXT (huruf) agar bisa diukur posisinya
+  final List<GlobalKey> letterTextKeys = List.generate(26, (_) => GlobalKey());
+
+  // Popup measurement results
+  double? popupLeft;
+  double? popupTop;
+  double popupWidth = 240;
+  double popupHeight = 120;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // tambahkan listener supaya popup ikut bergeser saat user scroll
+    _scrollController.addListener(() {
+      if (showTutorial) {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _measureAndPositionPopup());
+      }
+    });
+
+    // Schedule measurement setelah widget pertama kali build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureAndPositionPopup();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Setelah dependency berubah (mis. orientation), ukur ulang
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureAndPositionPopup();
+    });
+  }
+
+  Future<void> _playLetterSound(String letter) async {
+    final file = letter.toLowerCase(); // a.mp3, b.mp3, ...
+    await _player.stop();
+    await _player.play(AssetSource('sounds/alphabet/$file.mp3'));
+  }
+
+  // Panggil ini tiap kali pointerIndex berubah atau saat ingin tampilkan popup
+  void _measureAndPositionPopup() {
+    if (!showTutorial) return;
+
+    // Pastikan index valid
+    if (pointerIndex < 0 || pointerIndex >= letterTextKeys.length) return;
+
+    final key = letterTextKeys[pointerIndex];
+    final ctx = key.currentContext;
+
+    if (ctx == null) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _measureAndPositionPopup());
+      return;
+    }
+
+    final render = ctx.findRenderObject() as RenderBox;
+
+    // Ambil posisi huruf (text) secara akurat
+    final safePadding = MediaQuery.of(context).padding.top;
+    final letterOffset =
+        render.localToGlobal(Offset.zero) - Offset(0, safePadding);
+
+    final size = render.size;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // ukuran popup berdasarkan ukuran huruf (agar mengikuti cell), batasi supaya tidak terlalu besar
+    final double cellBase = size.width * 2.0; // dasar ukuran popup dari lebar huruf
+    popupWidth = cellBase.clamp(140.0, 320.0);
+    popupHeight = popupWidth * 0.55;
+
+    // posisi berdasarkan huruf (bukan container)
+    final double centerOfLetter = letterOffset.dx + render.size.width / 2;
+    final double topOfLetter = letterOffset.dy;
+
+    double left = centerOfLetter - popupWidth / 2;
+    double top = topOfLetter - popupHeight - 10.0; // jarak 10px rapat
+
+    // koreksi tepi layar
+    left = left.clamp(8.0, screenWidth - popupWidth - 8.0);
+
+    // kalau kepentok atas, tampilkan di bawah huruf
+    if (top < 8.0) {
+      top = topOfLetter + render.size.height + 10.0;
+    }
+
+    setState(() {
+      popupLeft = left;
+      popupTop = top;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          _buildMainContent(),
-
-          AnimatedOpacity(
-            opacity: showTutorial ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 300),
-            child: IgnorePointer(
-              ignoring: !showTutorial,
-              child: showTutorial ? _buildTutorialPopup() : const SizedBox(),
+          SingleChildScrollView(
+            controller: _scrollController,
+            padding: EdgeInsets.only(bottom: screenHeight * 0.02),
+            physics: const BouncingScrollPhysics(),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  SizedBox(height: screenHeight * 0.015),
+                  _buildHealthBar(screenWidth),
+                  SizedBox(height: screenHeight * 0.005),
+                  _buildPagination(screenWidth),
+                  SizedBox(height: screenHeight * 0.02),
+                  _buildTitle(screenWidth),
+                  SizedBox(height: screenHeight * 0.02),
+                  _buildLettersGrid(screenWidth, screenHeight), // Grid non-scrollable
+                  SizedBox(height: screenHeight * 0.01),
+                  _buildNextButton(screenWidth, screenHeight),
+                  SizedBox(height: screenHeight * 0.02),
+                ],
+              ),
             ),
           ),
-        ],
-      ),
-    );
-  }
 
-  // MAIN CONTENT ======================================================
-  Widget _buildMainContent() {
-    return SafeArea(
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
-          _buildHealthBar(),
-          const SizedBox(height: 5),
-          _buildPagination(),
-          const SizedBox(height: 20),
-          _buildTitle(),
-          const SizedBox(height: 20),
-          Expanded(child: _buildLettersGrid()),
-          const SizedBox(height: 10),
-          _buildNextButton(),
-          const SizedBox(height: 20),
+          // Tutorial overlay (gunakan measured popupLeft & popupTop)
+          if (showTutorial)
+            AnimatedOpacity(
+              opacity: 1,
+              duration: const Duration(milliseconds: 250),
+              child: IgnorePointer(
+                ignoring: false,
+                child: _buildTutorialPopup(screenWidth, screenHeight),
+              ),
+            ),
         ],
       ),
     );
   }
 
   // TUTORIAL POPUP ====================================================
-  Widget _buildTutorialPopup() {
+  Widget _buildTutorialPopup(double screenWidth, double screenHeight) {
+    if (popupLeft == null || popupTop == null) return const SizedBox();
+
     return GestureDetector(
       onTap: () => setState(() => showTutorial = false),
       child: Stack(
         children: [
           Container(
-            color: const Color.fromRGBO(86, 124, 141, 0.5),
+            width: double.infinity,
+            height: double.infinity,
+            color: const Color.fromRGBO(86, 124, 141, 0.45),
           ),
 
+          // POPUP
           Positioned(
-            top: 300,
-            left: 113,
-            right: 20,
+            left: popupLeft,
+            top: popupTop,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Container(
+                  width: popupWidth,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 40,
-                    vertical: 55,
-                  ),
+                      horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: const Color.fromRGBO(86, 124, 141, 1),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Text(
+                  child: Text(
                     "Click the letter",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: (popupWidth * 0.16).clamp(14, 22),
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
 
+                // SEGITIGA PENUNJUK
                 Positioned(
-                  top: 0,
-                  left: -12,
+                  bottom: -12,
+                  left: popupWidth * 0.45,
                   child: ClipPath(
                     clipper: _TopRightTriangleClipper(),
                     child: Container(
-                      width: 30,
-                      height: 40,
+                      width: 22,
+                      height: 22,
                       color: const Color.fromRGBO(86, 124, 141, 1),
                     ),
                   ),
@@ -134,9 +249,14 @@ class _StartPageState extends State<StartPage> {
 
   // POPUP HURUF =======================================================
   Widget letterPopup(String letter) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // BATAS ukuran popup biar tidak terlalu besar di laptop
+    final effectiveWidth = screenWidth.clamp(320, 480).toDouble();
+
     return Container(
-      width: 280,
-      height: 280,
+      width: effectiveWidth * 0.8,
+      height: effectiveWidth * 0.8,
       decoration: BoxDecoration(
         color: const Color(0xFF5F7D8C),
         borderRadius: BorderRadius.circular(40),
@@ -159,7 +279,6 @@ class _StartPageState extends State<StartPage> {
               ),
             ),
           ),
-
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -169,9 +288,9 @@ class _StartPageState extends State<StartPage> {
                   children: [
                     Text(
                       letter.toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: "Poppins",
-                        fontSize: 120,
+                        fontSize: effectiveWidth * 0.20,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         decoration: TextDecoration.none,
@@ -180,9 +299,9 @@ class _StartPageState extends State<StartPage> {
                     const SizedBox(width: 10),
                     Text(
                       letter.toLowerCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: "Poppins",
-                        fontSize: 120,
+                        fontSize: effectiveWidth * 0.20,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         decoration: TextDecoration.none,
@@ -191,7 +310,23 @@ class _StartPageState extends State<StartPage> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Icon(Icons.refresh, size: 40, color: Colors.white),
+
+                // 🔁 REPLAY BUTTON – area klik diperbesar
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    _playLetterSound(letter);
+                  },
+                  child: const SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: Icon(
+                      Icons.refresh,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -201,13 +336,15 @@ class _StartPageState extends State<StartPage> {
   }
 
   // TITLE =============================================================
-  Widget _buildTitle() {
+  Widget _buildTitle(double screenWidth) {
+    double titleSize = (screenWidth * 0.12).clamp(32.0, 60.0);
+
     return Stack(
       children: [
         Text(
           "LETTERS",
           style: TextStyle(
-            fontSize: 40,
+            fontSize: titleSize,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
             foreground: Paint()
@@ -216,10 +353,10 @@ class _StartPageState extends State<StartPage> {
               ..color = Colors.black,
           ),
         ),
-        const Text(
+        Text(
           "LETTERS",
           style: TextStyle(
-            fontSize: 40,
+            fontSize: titleSize,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
             color: Colors.white,
@@ -230,10 +367,15 @@ class _StartPageState extends State<StartPage> {
   }
 
   // HEALTH BAR ========================================================
-  Widget _buildHealthBar() {
+  Widget _buildHealthBar(double screenWidth) {
     return Container(
-      margin: const EdgeInsets.only(top: 40, left: 30, right: 30),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      margin: EdgeInsets.only(
+        top: MediaQuery.of(context).size.height * 0.05,
+        left: screenWidth * 0.08,
+        right: screenWidth * 0.08,
+      ),
+      padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.04, vertical: 10),
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 186, 216, 255),
         borderRadius: BorderRadius.circular(25),
@@ -244,7 +386,8 @@ class _StartPageState extends State<StartPage> {
           Row(
             children: List.generate(5, (index) {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
+                padding:
+                    EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
                 child: Icon(
                   index < hearts
                       ? Icons.favorite
@@ -255,7 +398,6 @@ class _StartPageState extends State<StartPage> {
               );
             }),
           ),
-
           Row(
             children: [
               Image.asset(
@@ -274,29 +416,37 @@ class _StartPageState extends State<StartPage> {
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );
   }
 
   // PAGINATION ========================================================
-  Widget _buildPagination() {
+  Widget _buildPagination(double screenWidth) {
     return Container(
-      margin: const EdgeInsets.only(top: 10, left: 30, right: 20),
+      margin: EdgeInsets.only(
+        top: 10,
+        left: screenWidth * 0.08,
+        right: screenWidth * 0.05,
+      ),
       child: Row(
         children: [
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const HomeScreen()),
+              );
+            },
             child: CircleAvatar(
               radius: 20,
               backgroundColor: Colors.grey.shade600,
               child: const Icon(Icons.close, size: 30, color: Colors.white),
             ),
           ),
-
           const SizedBox(width: 10),
-
           Expanded(
             child: Container(
               height: 10,
@@ -308,9 +458,7 @@ class _StartPageState extends State<StartPage> {
               ),
             ),
           ),
-
           const SizedBox(width: 5),
-
           Expanded(
             child: Container(
               height: 10,
@@ -329,143 +477,140 @@ class _StartPageState extends State<StartPage> {
   }
 
   // GRID LETTERS ======================================================
-    Widget _buildLettersGrid() {
-      final letters = this.letters;
-      final Set<int> skippedIndexes = {24};
-      final int gridCount = letters.length + skippedIndexes.length;
+  Widget _buildLettersGrid(double screenWidth, double screenHeight) {
+    final letters = this.letters;
+    final Set<int> skippedIndexes = {24};
+    final int gridCount = letters.length + skippedIndexes.length;
+    final double cellWidth = screenWidth * 0.8 / 4;
+    final double cellHeight = cellWidth * 1.2;
 
-      int skippedBefore(int gridIndex) {
-        return skippedIndexes.where((s) => s < gridIndex).length;
-      }
-
-      return GridView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          childAspectRatio: 1.2,
-        ),
-        itemCount: gridCount,
-        itemBuilder: (context, gridIndex) {
-          if (skippedIndexes.contains(gridIndex)) return Container();
-
-          final int letterIndex = gridIndex - skippedBefore(gridIndex);
-          final letter = letters[letterIndex];
-
-          // Cek apakah huruf sudah diklik sebelumnya
-          final bool isClicked = clickedLetters.contains(letter);
-
-          return GestureDetector(
-            onTap: () {
-              if (showTutorial) {
-                setState(() => showTutorial = false);
-              }
-
-              setState(() {
-                selectedLetter = letter;
-                progress = (letterIndex + 1) / letters.length;
-
-                // Simpan huruf yang sudah diklik
-                clickedLetters.add(letter);
-
-                // ==== PINDAHKAN ICON TANGAN KE HURUF BERIKUTNYA ====
-                int nextLetterIndex = letterIndex + 1;
-
-                if (nextLetterIndex < letters.length) {
-                  // Cari gridIndex sesuai skippedIndexes
-                  int nextGridIndex = nextLetterIndex;
-                  for (int skip in skippedIndexes) {
-                    if (skip <= nextGridIndex) {
-                      nextGridIndex++;
-                    }
-                  }
-                  pointerIndex = nextGridIndex;
-                } else {
-                  // Jika sudah huruf terakhir, sembunyikan tangan
-                  pointerIndex = -1;
-                }
-              });
-
-              showGeneralDialog(
-                context: context,
-                barrierDismissible: false,
-                barrierLabel: "Popup",
-                barrierColor: Colors.transparent,
-                pageBuilder: (_, __, ___) {
-                  return Stack(
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        color: const Color.fromRGBO(136, 153, 171, 0.8),
-                      ),
-                      Center(child: letterPopup(letter)),
-                    ],
-                  );
-                },
-              );
-            },
-
-
-            child: Container(
-              padding: const EdgeInsets.only(top: 20),
-              child: Stack(
-                alignment: Alignment.topCenter,
-                clipBehavior: Clip.none,
-                children: [
-                  if (pointerIndex == gridIndex && !showTutorial)
-                    const Positioned(
-                      top: 45,
-                      left: 24,
-                      child: Icon(
-                        Icons.pan_tool_alt,
-                        size: 40,
-                        color: Color.fromRGBO(252, 209, 156, 1),
-                      ),
-                    ),
-
-                  Center(
-                    child: Text(
-                      letter,
-                      style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        color: isClicked ? Colors.blue : Colors.black,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
+    int skippedBefore(int gridIndex) {
+      return skippedIndexes.where((s) => s < gridIndex).length;
     }
 
+    return GridView.builder(
+      shrinkWrap: true, // penting agar GridView menyesuaikan tinggi kontennya
+      physics: const NeverScrollableScrollPhysics(), // biar scroll di SingleChildScrollView
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        childAspectRatio: 1.2,
+      ),
+      itemCount: gridCount,
+      itemBuilder: (context, gridIndex) {
+        if (skippedIndexes.contains(gridIndex)) return Container();
+        final int letterIndex = gridIndex - skippedBefore(gridIndex);
+        final letter = letters[letterIndex];
+        final bool isClicked = clickedLetters.contains(letter);
+
+        return GestureDetector(
+          onTap: () {
+            if (showTutorial) {
+              setState(() => showTutorial = false);
+            }
+
+            setState(() {
+              selectedLetter = letter;
+              progress = (letterIndex + 1) / letters.length;
+              clickedLetters.add(letter);
+
+              int nextLetterIndex = letterIndex + 1;
+              if (nextLetterIndex < letters.length) {
+                int nextGridIndex = nextLetterIndex;
+                for (int skip in skippedIndexes) {
+                  if (skip <= nextGridIndex) nextGridIndex++;
+                }
+                pointerIndex = nextGridIndex;
+                WidgetsBinding.instance
+                    .addPostFrameCallback((_) => _measureAndPositionPopup());
+              } else {
+                pointerIndex = -1;
+              }
+            });
+
+            // 🔊 mainkan suara saat huruf ditekan
+            _playLetterSound(letter);
+
+            showGeneralDialog(
+              context: context,
+              barrierDismissible: false,
+              barrierLabel: "Popup",
+              barrierColor: Colors.transparent,
+              pageBuilder: (_, __, ___) {
+                return Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      color: const Color.fromRGBO(136, 153, 171, 0.8),
+                    ),
+                    Center(child: letterPopup(letter)),
+                  ],
+                );
+              },
+            );
+          },
+          // apply the key to the TEXT widget that represents the letter (presisi)
+          child: Container(
+            padding: EdgeInsets.only(top: screenHeight * 0.02),
+            child: Stack(
+              alignment: Alignment.topCenter,
+              clipBehavior: Clip.none,
+              children: [
+                if (pointerIndex == gridIndex && !showTutorial)
+                  Positioned(
+                    top: cellHeight * 0.45,
+                    left: cellWidth * 0.33,
+                    child: Icon(
+                      Icons.pan_tool_alt,
+                      size: cellWidth * 0.35,
+                      color: const Color.fromRGBO(252, 209, 156, 1),
+                    ),
+                  ),
+                Center(
+                  child: Text(
+                    letter,
+                    key: letterTextKeys[letterIndex], 
+                    style: TextStyle(
+                      fontSize: (screenWidth * 0.10).clamp(26.0, 48.0),
+                      fontWeight: FontWeight.w900,
+                      color: isClicked ? Colors.blue : Colors.black,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   // NEXT BUTTON =======================================================
-  Widget _buildNextButton() {
-    bool isActive = clickedLetters.length == letters.length; ;
+  Widget _buildNextButton(double screenWidth, double screenHeight) {
+    bool isActive = clickedLetters.length == letters.length;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 40),
+      padding: EdgeInsets.only(bottom: screenHeight * 0.05),
       child: GestureDetector(
         onTap: isActive
             ? () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const StartPage2()),
+                  MaterialPageRoute(
+                      builder: (context) => const StartPage2()),
                 );
               }
             : null,
         child: CircleAvatar(
-          radius: 40,
+          radius: screenWidth * 0.11,
           backgroundColor:
               isActive ? const Color.fromRGBO(4, 4, 63, 1) : Colors.grey,
           child: Icon(
             Icons.arrow_forward,
             color: Colors.white,
-            size: 68,
+            size: screenWidth * 0.17,
           ),
         ),
       ),
