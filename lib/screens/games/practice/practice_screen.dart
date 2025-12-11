@@ -2,6 +2,7 @@ import 'package:aksara/screens/hearthesound.dart';
 import 'package:flutter/material.dart';
 import '../spellbee/spellbee.dart';
 import '../spellbee/spellbee2.dart';
+import '../games/monster_color_match/monster_color_match_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../widgets/custom_floating_navbar.dart';
 import '../../../../utils/navbar_utils.dart';
@@ -43,6 +44,7 @@ class PracticeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
+              // ================= USERNAME FROM SUPABASE =================
               FutureBuilder(
                 future: fetchUsername(),
                 builder: (context, snapshot) {
@@ -57,6 +59,7 @@ class PracticeScreen extends StatelessWidget {
                   );
                 },
               ),
+
               const SizedBox(height: 4),
 
               const Text(
@@ -70,7 +73,7 @@ class PracticeScreen extends StatelessWidget {
 
               const SizedBox(height: 25),
 
-              // STORY MODE
+              // ================= STORY MODE =================
               const Text(
                 "Story Mode",
                 style: TextStyle(
@@ -79,6 +82,7 @@ class PracticeScreen extends StatelessWidget {
                   color: Color(0xff2B4C68),
                 ),
               ),
+
               const SizedBox(height: 14),
 
               SizedBox(
@@ -107,7 +111,7 @@ class PracticeScreen extends StatelessWidget {
 
               const SizedBox(height: 25),
 
-              // PRACTICE SECTION
+              // ================= PRACTICE SECTION =================
               const Text(
                 "Practice Section",
                 style: TextStyle(
@@ -116,44 +120,62 @@ class PracticeScreen extends StatelessWidget {
                   color: Color(0xff2B4C68),
                 ),
               ),
+
               const SizedBox(height: 14),
 
+              // ---------------- Hear the Sound ----------------
               PracticeCard(
                 title: "Hear the Sound",
                 image: "assets/images/hear_the_sound_guy.png",
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const HearTheSoundPage()),
+                    MaterialPageRoute(builder: (_) => const HearTheSoundPage()),
                   );
                 },
               ),
               const SizedBox(height: 12),
 
+              // ---------------- Spell Bee ----------------
               PracticeCard(
                 title: "Spell the Bee",
                 image: "assets/images/spell_the_bee_guy.png",
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SpellBeePage()),
+                    MaterialPageRoute(builder: (_) => const SpellBeePage()),
                   );
                 },
               ),
               const SizedBox(height: 12),
 
+              // ---------------- Mini Quiz (SpellBee2) ----------------
               PracticeCard(
                 title: "Mini Quiz",
                 image: "assets/images/mini_quiz_guy.png",
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SpellBeePage2()),
+                    MaterialPageRoute(builder: (_) => const SpellBeePage2()),
                   );
                 },
               ),
               const SizedBox(height: 12),
 
+              // ---------------- Monster Color Match — NEW GAME ----------------
+              PracticeCard(
+                title: "Monster Color Match",
+                image: "assets/images/monster_color_match_guy.png",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MonsterColorMatchPage()),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // ---------------- Pull the Arrow ----------------
               PracticeCard(
                 title: "Pull the Arrow",
                 image: "assets/images/pull_the_arrow_guy.png",
@@ -165,10 +187,12 @@ class PracticeScreen extends StatelessWidget {
           ),
         ),
       ),
+
+      // ================= BOTTOM NAV =================
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(bottom: 30),
         child: CustomFloatingNavBar(
-          currentIndex: 1, // karena ini menu Books/Practice
+          currentIndex: 1,
           onTap: (index) {
             NavigationUtils.handleNavigation(context, index, 1);
           },
@@ -214,7 +238,6 @@ class StoryCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            // IMAGE
             Container(
               height: 150,
               decoration: BoxDecoration(
