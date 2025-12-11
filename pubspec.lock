@@ -455,11 +455,7 @@ packages:
       sha256: e3641ec5d63ebf0d9b41bd43201a66e3fc79a65db5f61fc181f04cd27aab950c
       url: "https://pub.dev"
     source: hosted
-<<<<<<< HEAD
-    version: "1.17.0"
-=======
     version: "1.16.0"
->>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
   mime:
     dependency: transitive
     description:

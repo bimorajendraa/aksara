@@ -224,10 +224,6 @@ class _SpellBeePageState extends State<SpellBeePage> {
                     const SizedBox(height: 80),
 
                     _buildHexGrid(),
-<<<<<<< HEAD
-=======
-
->>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
                     const SizedBox(height: 10),
                   ],
                 ),
