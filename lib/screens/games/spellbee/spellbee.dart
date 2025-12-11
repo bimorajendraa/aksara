@@ -2,6 +2,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
+// ====================== SUPABASE SERVICES ======================
+import 'package:aksara/services/user_loader_service.dart';
+import 'package:aksara/services/user_session.dart';
+import 'package:aksara/services/game_progress_service.dart';
+import 'package:aksara/services/level_progress_service.dart';
+// ================================================================
+
 class SpellBeePage extends StatefulWidget {
   const SpellBeePage({super.key});
 
@@ -15,28 +22,36 @@ class _SpellBeePageState extends State<SpellBeePage> {
   String? highlightedLetter;
   final AudioPlayer _player = AudioPlayer();
   final GlobalKey _inputKey = GlobalKey();      
-  double errorTop = 300;                       
-  
+  double errorTop = 300;                  
   List<String?> userAnswer = ["", "", ""];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();     // <-- WAJIB AGAR SUPABASE PUNYA ID AKUN
+  }
+
+  Future<void> _loadUser() async {
+    await UserLoaderService.instance.loadUserId();
+    print("🟦 SPELLBEE: ID Loaded = ${UserSession.instance.idAkun}");
+  }
 
   Future<void> _playLetterSound(String letter) async {
     await _player.stop();
-    await _player.play(AssetSource("sounds/alphabet/${letter.toLowerCase()}.mp3"));
+    await _player.play(
+      AssetSource("sounds/alphabet/${letter.toLowerCase()}.mp3"),
+    );
   }
 
-  void _calculateErrorPosition() {             
+  void _calculateErrorPosition() {
     final render = _inputKey.currentContext?.findRenderObject() as RenderBox?;
     if (render == null) return;
 
     final offset = render.localToGlobal(Offset.zero);
-
-    setState(() {
-      errorTop = offset.dy + render.size.height + 8;
-    });
+    setState(() => errorTop = offset.dy + render.size.height + 8);
   }
 
   void selectLetter(String letter) {
-
     _playLetterSound(letter);
 
     int index = userAnswer.indexOf("");
@@ -46,24 +61,51 @@ class _SpellBeePageState extends State<SpellBeePage> {
     if (letter == answer[index]) {
       setState(() {
         userAnswer[index] = letter;
-        if (letter == answer[index]) {
-          setState(() {
-            userAnswer[index] = letter;
-            errorMessage = null;
-            highlightedLetter = letter;
-          });
-
-          checkIfCompleted(); 
-        }
         errorMessage = null;
         highlightedLetter = letter;
       });
+
+      checkIfCompleted();
     } else {
       showFloatingError();
-      setState(() {
-        highlightedLetter = null;
-      });
+      setState(() => highlightedLetter = null);
     }
+  }
+
+  Future<void> _onGameCompleted() async {
+    final id = UserSession.instance.idAkun;
+
+    if (id != null) {
+      print("🟢 SPELLBEE COMPLETE → Updating Supabase progress...");
+
+      await GameProgressService.instance.updateAggregatedProgress(
+        idAkun: id,
+        gameKey: "spellbee",
+        isCorrect: true,
+      );
+
+      final before = await LevelProgressService.instance.getCurrentLevel(id);
+      final next = await LevelProgressService.instance.incrementLevel(id);
+
+      print("🏆 LEVEL UP: $before → $next");
+    }
+
+    showCompletionPopup();
+  }
+
+  void checkIfCompleted() {
+    if (!userAnswer.contains("")) {
+      _onGameCompleted();
+    }
+  }
+
+  void showFloatingError() {
+    setState(() => errorMessage = "Wrong letter!");
+    _calculateErrorPosition();
+
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => errorMessage = null);
+    });
   }
 
   void showCompletionPopup() async {
@@ -77,7 +119,7 @@ class _SpellBeePageState extends State<SpellBeePage> {
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
               child: Container(
-                color: Colors.white.withOpacity(0.02), 
+                color: Colors.white.withOpacity(0.02),
               ),
             ),
             Center(
@@ -96,27 +138,12 @@ class _SpellBeePageState extends State<SpellBeePage> {
     await Future.delayed(const Duration(seconds: 2));
 
     if (mounted) {
-      Navigator.pushReplacementNamed(context, "/practice");
+      Navigator.pop(context);    // tutup popup
+      Navigator.pop(context);    // balik ke home
     }
   }
 
-  void checkIfCompleted() {
-    if (!userAnswer.contains("")) {
-      showCompletionPopup();
-    }
-  }
-
-  void showFloatingError() {
-    setState(() => errorMessage = "Wrong letter!");
-
-    _calculateErrorPosition();             
-
-    Future.delayed(const Duration(milliseconds: 900), () {
-      if (mounted) setState(() => errorMessage = null);
-    });
-  }
-
- @override
+  @override
   Widget build(BuildContext context) {
     final h = MediaQuery.of(context).size.height;
 
@@ -194,7 +221,7 @@ class _SpellBeePageState extends State<SpellBeePage> {
 
                     const SizedBox(height: 5),
 
-                    Row(                            
+                    Row(
                       key: _inputKey,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(userAnswer.length, (index) {
@@ -232,7 +259,7 @@ class _SpellBeePageState extends State<SpellBeePage> {
             
             if (errorMessage != null)
               Positioned(
-                top: errorTop,         
+                top: errorTop,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -353,7 +380,7 @@ class _SpellBeePageState extends State<SpellBeePage> {
       ],
     );
   }
-} 
+}
 
 class _HexClipper extends CustomClipper<Path> {
   @override

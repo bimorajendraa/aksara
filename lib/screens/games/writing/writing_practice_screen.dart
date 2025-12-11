@@ -1,7 +1,13 @@
 // lib/screens/writing_practice_screen.dart
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:aksara/screens/home/home_screen.dart'; // <-- fixed import (use your package name)
+import 'package:aksara/screens/home/home_screen.dart';
+
+// SUPABASE SERVICES
+import 'package:aksara/services/user_loader_service.dart';
+import 'package:aksara/services/user_session.dart';
+import 'package:aksara/services/game_progress_service.dart';
+import 'package:aksara/services/level_progress_service.dart';
 
 class WritingPracticeScreen extends StatelessWidget {
   const WritingPracticeScreen({super.key});
@@ -26,6 +32,19 @@ class UnitListPage extends StatefulWidget {
 class _UnitListPageState extends State<UnitListPage> {
   final PageController _pageController = PageController();
   int _pageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId();
+  }
+
+  Future<void> _loadUserId() async {
+    if (UserSession.instance.idAkun == null) {
+      await UserLoaderService.instance.loadUserId();
+    }
+    print("🟦 [WritingPractice] Loaded user id = ${UserSession.instance.idAkun}");
+  }
 
   final List<String> _alphabet = [
     'A','a','B','b','C','c','D','d','E','e','F','f','G','g',
@@ -58,7 +77,6 @@ class _UnitListPageState extends State<UnitListPage> {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      // back to home - replace route to avoid stacking many screens
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -115,9 +133,9 @@ class _UnitListPageState extends State<UnitListPage> {
   }
 
   // =============================================================
-  // FINISH CHECK — all letters must have turned yellow (filled == true)
+  // FINISH CHECK — Supabase Integration HERE
   // =============================================================
-  void _handleFinish(BuildContext context) {
+  void _handleFinish(BuildContext context) async {
     bool allDone = LetterCanvasTracker.allCompleted;
 
     if (!allDone) {
@@ -131,6 +149,27 @@ class _UnitListPageState extends State<UnitListPage> {
       return;
     }
 
+    // --------------------- SUPABASE INTEGRATION ------------------------
+    final idAkun = UserSession.instance.idAkun;
+
+    if (idAkun != null) {
+      print("🟦 [WritingPractice] Updating aggregated progress...");
+
+      await GameProgressService.instance.updateAggregatedProgress(
+        idAkun: idAkun,
+        gameKey: "writing_practice",
+        isCorrect: true,
+      );
+
+      final before = await LevelProgressService.instance.getCurrentLevel(idAkun);
+      final next = await LevelProgressService.instance.incrementLevel(idAkun);
+
+      print("🟢 LEVEL UP → $before → $next");
+    } else {
+      print("❌ User ID NULL, skipping updates...");
+    }
+
+    // --------------------- SUCCESS POPUP ------------------------
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -153,7 +192,7 @@ class _UnitListPageState extends State<UnitListPage> {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// COMPLETION TRACKER — NOW CHECKS `filled == true`
+/// COMPLETION TRACKER — CHECKS if all letters filled
 ///////////////////////////////////////////////////////////////////////////////
 
 class LetterCanvasTracker {
@@ -249,7 +288,6 @@ class UnitPage extends StatefulWidget {
 class _UnitPageState extends State<UnitPage> {
   static const int rowsPerSection = 3;
   int currentSection = 0;
-
   final ValueNotifier<bool> pencilMode = ValueNotifier(true);
 
   late final List<List<String>> rows;
@@ -261,7 +299,6 @@ class _UnitPageState extends State<UnitPage> {
 
     rows = [];
     for (int i = 0; i < widget.letters.length; i += 2) {
-      // ensure second exists (should be true in our alphabet chunking)
       final second = (i + 1) < widget.letters.length ? widget.letters[i + 1] : '';
       rows.add([widget.letters[i], second]);
     }
@@ -503,7 +540,7 @@ class LetterRowWidget extends StatelessWidget {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// LETTER CANVAS — NOW REPORTS COMPLETION ONLY WHEN YELLOW
+/// LETTER CANVAS — REPORTS COMPLETION WHEN "filled == true"
 ///////////////////////////////////////////////////////////////////////////////
 
 class LetterCanvas extends StatefulWidget {
@@ -533,7 +570,6 @@ class _LetterCanvasState extends State<LetterCanvas>
     super.initState();
     widget.pencilModeNotifier.addListener(_toolChanged);
 
-    // default = not completed
     LetterCanvasTracker.markNotFilled(widget.letter);
   }
 
@@ -657,7 +693,7 @@ class _LetterCanvasState extends State<LetterCanvas>
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// PAINTER (unchanged)
+/// PAINTER
 ///////////////////////////////////////////////////////////////////////////////
 
 class _LetterPainter extends CustomPainter {
@@ -705,7 +741,6 @@ class _LetterPainter extends CustomPainter {
       canvas.drawPath(path, p);
     }
 
-    // GOLD overlay when filled
     if (filled) {
       final gold = TextPainter(
         text: TextSpan(

@@ -7,6 +7,10 @@ import 'package:aksara/widgets/custom_floating_navbar.dart';
 // GAMES
 import 'package:aksara/screens/games/drag-drop/drag_drop_page.dart';
 import 'package:aksara/screens/games/spellbee/spellbee.dart';
+import 'package:aksara/screens/games/spellbee/spellbee2.dart';
+import 'package:aksara/screens/games/start/start_page.dart';
+import 'package:aksara/screens/games/writing/writing_practice_screen.dart';
+import 'package:aksara/screens/games/monsterColorDragDrop/monster_color_drag_drop_page.dart';
 
 // SERVICES
 import 'package:aksara/services/user_loader_service.dart';
@@ -133,6 +137,9 @@ class MapNodeWidget extends StatelessWidget {
         icon = SvgPicture.asset(
           "assets/icons/book-open.svg",
           width: MapNode.iconSize,
+          color: Color.fromARGB(255, 255, 255, 255)
+
+    
         );
         break;
 
@@ -142,6 +149,7 @@ class MapNodeWidget extends StatelessWidget {
         icon = SvgPicture.asset(
           "assets/icons/book.svg",
           width: MapNode.iconSize,
+          color: Color.fromARGB(255, 255, 255, 255)
         );
         break;
 
@@ -173,67 +181,99 @@ class MapNodeWidget extends StatelessWidget {
   }
 }
 
-/// ===========================================================================
-/// NEXT LEVEL CARD
-/// ===========================================================================
-class NextLevelCard extends StatelessWidget {
-  final int levelNumber;
-  final String monsterAsset;
+  /// ===========================================================================
+  /// NEXT LEVEL CARD — FIGMA ACCURATE
+  /// ===========================================================================
+  class NextLevelCard extends StatelessWidget {
+    final int levelNumber;
 
-  const NextLevelCard({
-    super.key,
-    required this.levelNumber,
-    required this.monsterAsset,
-  });
+    const NextLevelCard({
+      super.key,
+      required this.levelNumber,
+    });
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDCE9F3),
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Next: Level $levelNumber",
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  "Keep going! Unlock more lessons.",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
-            ),
+    @override
+    Widget build(BuildContext context) {
+      final monsterPath = "assets/images/monster$levelNumber.png";
+
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 99, 127, 159), // FIGMA OUTER DARK
+          borderRadius: BorderRadius.circular(26),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 47, 65, 86), // FIGMA INNER BLUE-GREY
+            borderRadius: BorderRadius.circular(22),
           ),
+          child: Row(
+            children: [
+              // LEFT CONTENT
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Level $levelNumber",
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Color.fromRGBO(99, 127, 159, 1),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      "What is number? how we spell it? how to write it?",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                        color: Color.fromRGBO(99, 127, 159, 1), // LIGHT BLUE-GREY FIGMA
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-          const SizedBox(width: 12),
+                    // LITTLE CIRCLE ARROW
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color.fromRGBO(99, 127, 159, 1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Color.fromARGB(255, 47, 65, 86),
+                        size: 26,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-          Image.asset(
-            monsterAsset,
-            width: 70,
-            height: 70,
-            fit: BoxFit.contain,
+              const SizedBox(width: 16),
+
+              // MONSTER IMAGE
+              Image.asset(
+                monsterPath,
+                width: 80,
+                height: 80,
+                errorBuilder: (_, __, ___) {
+                  return Image.asset(
+                    "assets/images/monster1.png",
+                    width: 80,
+                    height: 80,
+                  );
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        ),
+      );
+    }
   }
-}
 
 
 /// ===========================================================================
@@ -327,11 +367,6 @@ Widget fullHeader(int currentLevel) {
         ),
 
         const SizedBox(height: 16),
-
-        NextLevelCard(
-          levelNumber: currentLevel + 1,
-          monsterAsset: "assets/images/monster2.png",
-        ),
       ],
     ),
   );
@@ -422,7 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (index) {
       case 1:
         Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const DragDropPage()));
+            MaterialPageRoute(builder: (_) => const StartPage()));
         return;
 
       case 2:
@@ -433,6 +468,35 @@ class _HomeScreenState extends State<HomeScreen> {
       case 3:
         Navigator.push(
             context, MaterialPageRoute(builder: (_) => const SpellBeePage()));
+        return;
+
+      case 4:
+        Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const SpellBeePage2()));
+        return;
+
+      case 5:
+        Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const MonsterColorMatchPage()));
+
+      case 6:
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const DragDropPage()));
+        return;
+
+      case 7:
+        Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const SpellBeePage()));
+        return;
+
+      case 8:
+        Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const SpellBeePage2()));
+        return;
+
+      case 9:
+        Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const WritingPracticeScreen()));
         return;
 
       default:
@@ -526,7 +590,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 NextLevelCard(
                   levelNumber: currentLevel + 1,
-                  monsterAsset: "assets/images/monster2.png",
                 ),
               ],
             ),

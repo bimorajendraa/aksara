@@ -6,6 +6,7 @@ import 'start_page3.dart';
 import 'package:aksara/services/user_loader_service.dart';
 import 'package:aksara/services/user_session.dart';
 import 'package:aksara/services/level_progress_service.dart';
+import 'package:aksara/services/game_progress_service.dart';   // <<< WAJIB
 
 class StartPage4 extends StatefulWidget {
   const StartPage4({super.key});
@@ -31,7 +32,7 @@ class _StartPage4State extends State<StartPage4> {
   }
 
   /// ============================================================
-  /// HANDLE NEXT → NAIKKAN LEVEL + REDIRECT HOME
+  /// HANDLE NEXT → UPDATE PROGRESS + LEVEL + REDIRECT HOME
   /// ============================================================
   Future<void> _completeStartFlow() async {
     final idAkun = UserSession.instance.idAkun;
@@ -39,11 +40,21 @@ class _StartPage4State extends State<StartPage4> {
     if (idAkun != null) {
       print("🔵 [StartPage4] Current user id = $idAkun");
 
+      // 1) UPDATE GAME PROGRESS SUPABASE
+      print("🟪 [StartPage4] Updating game progress...");
+      await GameProgressService.instance.updateAggregatedProgress(
+        idAkun: idAkun,
+        gameKey: "start_unit_1",       // <<< sesuaikan nama game yang lu mau
+        isCorrect: true,
+      );
+
+      // 2) GET CURRENT LEVEL
       final current =
           await LevelProgressService.instance.getCurrentLevel(idAkun);
 
       print("🟦 [StartPage4] current level before up = $current");
 
+      // 3) INCREMENT LEVEL
       final next =
           await LevelProgressService.instance.incrementLevel(idAkun);
 
@@ -138,7 +149,7 @@ class _StartPage4State extends State<StartPage4> {
               SizedBox(height: effectiveHeight * 0.07),
 
               /// ============================
-              /// NEXT BUTTON — NAIK LEVEL!
+              /// NEXT BUTTON — UPDATE + NEXT
               /// ============================
               GestureDetector(
                 onTap: _completeStartFlow,

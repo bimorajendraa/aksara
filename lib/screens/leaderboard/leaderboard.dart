@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../widgets/custom_floating_navbar.dart'; 
-import '../../utils/navbar_utils.dart';
+import '../../../widgets/custom_floating_navbar.dart'; 
+import '../../../utils/navbar_utils.dart';
 
 class LeaderboardPage extends StatefulWidget {
   const LeaderboardPage({super.key});

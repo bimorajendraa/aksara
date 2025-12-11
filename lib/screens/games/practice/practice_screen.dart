@@ -9,7 +9,7 @@ import '../../../../utils/navbar_utils.dart';
 final supabase = Supabase.instance.client;
 
 class PracticeScreen extends StatelessWidget {
-  final String username; 
+  final String username;
   const PracticeScreen({super.key, required this.username});
 
   Future<String> getUsernameFromSupabase() async {
