@@ -1,10 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/hash.dart';
-<<<<<<< HEAD
 import 'package:aksara/services/user_session.dart';
-=======
->>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
 
 class AuthService {
   final supabase = Supabase.instance.client;
@@ -50,13 +47,9 @@ class AuthService {
         return "Password salah!";
       }
 
-<<<<<<< HEAD
       // 3. Login Supabase Auth (wajib) dan hydrate untuk id
       await supabase.auth.signInWithPassword(email: email, password: password);
       await hydrateFromCurrentUser();
-=======
-      await supabase.auth.signInWithPassword(email: email, password: password);
->>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
 
       return null;
     } catch (e) {
@@ -115,7 +108,6 @@ class AuthService {
   }
 
   bool get isLoggedIn => supabase.auth.currentUser != null;
-<<<<<<< HEAD
 
     /// Panggil ini setelah login sukses.
   Future<void> hydrateUserSessionFromAkun(String email) async {
@@ -166,6 +158,4 @@ Future<void> hydrateFromCurrentUser() async {
   );
 
   print("[AuthService] Hydrated from currentUser → idAkun=${akunRow['id_akun']}");
-=======
->>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
 }

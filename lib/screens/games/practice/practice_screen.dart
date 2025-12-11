@@ -1,15 +1,15 @@
 import 'package:aksara/screens/hearthesound.dart';
 import 'package:flutter/material.dart';
-import 'games/spellbee/spellbee.dart';
-import 'games/spellbee/spellbee2.dart';
+import '../spellbee/spellbee.dart';
+import '../spellbee/spellbee2.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../widgets/custom_floating_navbar.dart';
-import '../../utils/navbar_utils.dart';
+import '../../../../widgets/custom_floating_navbar.dart';
+import '../../../../utils/navbar_utils.dart';
 
 final supabase = Supabase.instance.client;
 
 class PracticeScreen extends StatelessWidget {
-  final String username; 
+  final String username;
   const PracticeScreen({super.key, required this.username});
 
   Future<String> getUsernameFromSupabase() async {
