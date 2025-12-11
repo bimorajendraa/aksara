@@ -1,3 +1,32 @@
+<<<<<<< HEAD
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import 'package:aksara/utils/navbar_utils.dart';
+import 'package:aksara/widgets/custom_floating_navbar.dart';
+
+// GAMES
+import 'package:aksara/screens/games/drag-drop/drag_drop_page.dart';
+import 'package:aksara/screens/games/spellbee/spellbee.dart';
+import 'package:aksara/screens/games/start/start_page.dart';
+
+// SERVICES
+import 'package:aksara/services/user_loader_service.dart';
+import 'package:aksara/services/user_session.dart';
+import 'package:aksara/services/level_progress_service.dart';
+
+/// ===========================================================================
+/// ENUM
+/// ===========================================================================
+enum NodeState { completed, current, locked }
+
+/// ===========================================================================
+/// MODEL NODE CONFIG
+/// ===========================================================================
+class MapNode {
+  final double xFactor;
+  final double yOffset;
+=======
 import 'package:aksara/screens/writing_practice_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -21,6 +50,7 @@ class MapNode {
   final double yOffset;
 
   /// Status node (completed / current / locked)
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
   final NodeState state;
 
   MapNode({
@@ -29,6 +59,11 @@ class MapNode {
     required this.state,
   });
 
+<<<<<<< HEAD
+  static const double outerWidth = 85.78;
+  static const double outerHeight = 92.0;
+
+=======
   /// Ukuran kotak node (width & height)
   /// Kalau mau node lebih besar/kecil, ubah di sini.
   // Explicit sizes requested by the user:
@@ -37,10 +72,16 @@ class MapNode {
   // - icon size: 47 x 47
   static const double outerWidth = 85.78;
   static const double outerHeight = 92.0;
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
   static const double innerSize = 75.84;
   static const double iconSize = 47.0;
 }
 
+<<<<<<< HEAD
+/// ===========================================================================
+/// DOT BACKGROUND
+/// ===========================================================================
+=======
 /// ===========================================================
 /// DOT PATTERN BACKGROUND DI AREA MAP
 /// ===========================================================
@@ -49,10 +90,18 @@ class MapNode {
 ///   - dotSize   : besar titik
 ///   - spacingX  : jarak antar titik horizontal
 ///   - spacingY  : jarak antar titik vertikal
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
 class DotPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
+<<<<<<< HEAD
+      ..color = const Color.fromARGB(255, 47, 65, 86).withOpacity(0.25);
+
+    for (double y = 30; y < size.height; y += 55) {
+      for (double x = 30; x < size.width; x += 55) {
+        canvas.drawCircle(Offset(x, y), 4, paint);
+=======
       // Warna dot (disesuaikan dengan figma)
       ..color = const Color.fromARGB(0, 47, 65, 86).withOpacity(0.85)
       ..style = PaintingStyle.fill;
@@ -65,6 +114,7 @@ class DotPatternPainter extends CustomPainter {
     for (double y = spacingY / 2; y < size.height; y += spacingY) {
       for (double x = spacingX / 2; x < size.width; x += spacingX) {
         canvas.drawCircle(Offset(x, y), dotSize, paint);
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
       }
     }
   }
@@ -73,6 +123,15 @@ class DotPatternPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+<<<<<<< HEAD
+/// ===========================================================================
+/// FLOW CONNECTOR — ORIGINAL, TIDAK DIUBAH
+/// ===========================================================================
+class FlowConnector extends StatelessWidget {
+  final Offset start;
+  final Offset end;
+  final bool isCompleted;
+=======
 /// ===========================================================
 /// FLOW CONNECTOR (PATH YANG MELENGKUNG ANTAR NODE)
 /// ===========================================================
@@ -97,6 +156,7 @@ class FlowConnector extends StatelessWidget {
 
   /// Nama arah SVG yang dipakai
   /// 'kanan-bawah', 'bawah-kiri', 'kiri-bawah', 'bawah-kanan'
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
   final String direction;
 
   const FlowConnector({
@@ -109,6 +169,19 @@ class FlowConnector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
+    final svgAsset = 'assets/icons/$direction.svg';
+
+    final color =
+        isCompleted ? const Color(0xFF98DAF5) : const Color(0xFF5C7590);
+
+    double extraDrop = 0;
+
+    if (direction == 'bawah-kiri' || direction == 'bawah-kanan') {
+      extraDrop = 28;
+    }
+
+=======
     // Pilih file SVG sesuai direction
     final svgAsset = 'assets/icons/$direction.svg';
 
@@ -131,10 +204,16 @@ class FlowConnector extends StatelessWidget {
 
     // Untuk kiri-bawah & bawah-kiri, rect-nya dihitung dari end (biar arah benar)
     // selain itu dihitung dari start
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
     final left = (direction == 'kiri-bawah' || direction == 'bawah-kiri')
         ? end.dx
         : start.dx;
 
+<<<<<<< HEAD
+    final top = start.dy + MapNode.outerHeight / 2 + extraDrop;
+
+    final width = (end.dx - start.dx).abs();
+=======
     // Rect di-anchorkan di bawah node awal + extraDrop
     final top = start.dy + MapNode.outerHeight / 2 + extraDrop;
 
@@ -142,6 +221,7 @@ class FlowConnector extends StatelessWidget {
     final width = (end.dx - start.dx).abs();
 
     // Tinggi rect = jarak vertikal antara node, minus setengah node pertama
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
     final height = end.dy - start.dy - MapNode.outerHeight / 2;
 
     return Positioned(
@@ -158,6 +238,11 @@ class FlowConnector extends StatelessWidget {
   }
 }
 
+<<<<<<< HEAD
+/// ===========================================================================
+/// NODE VISUAL
+/// ===========================================================================
+=======
 /// ==========================
 /// =================================
 /// NODE WIDGET (KOTAK BUKU / LOCK)
@@ -166,6 +251,7 @@ class FlowConnector extends StatelessWidget {
 ///   - warna border / isi
 ///   - icon yang dipakai
 /// Kalau mau ganti warna tema / bentuk node, cukup ubah class ini.
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
 class MapNodeWidget extends StatelessWidget {
   final NodeState state;
 
@@ -173,6 +259,19 @@ class MapNodeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
+    Color outer;
+    Color inner;
+    Widget icon;
+
+    switch (state) {
+      case NodeState.completed:
+        outer = const Color(0xFF5BA8C8);
+        inner = const Color(0xFF8ED4F5);
+        icon = SvgPicture.asset(
+          "assets/icons/book-open.svg",
+          width: MapNode.iconSize,
+=======
     Color outerBg;
     Color innerBg;
     Widget icon;
@@ -194,10 +293,41 @@ class MapNodeWidget extends StatelessWidget {
           width: iconSize,
           height: iconSize,
           colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
         );
         break;
 
       case NodeState.current:
+<<<<<<< HEAD
+        outer = const Color(0xFF9DB3C7);
+        inner = const Color(0xFFCFDDE9);
+        icon = SvgPicture.asset(
+          "assets/icons/book.svg",
+          width: MapNode.iconSize,
+        );
+        break;
+
+      default:
+        outer = const Color(0xFF637F9F);
+        inner = const Color(0xFF2F4156);
+        icon = const Icon(Icons.lock, color: Colors.white, size: 32);
+    }
+
+    return Container(
+      width: MapNode.outerWidth,
+      height: MapNode.outerHeight,
+      decoration: BoxDecoration(
+        color: outer,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Center(
+        child: Container(
+          width: MapNode.innerSize,
+          height: MapNode.innerSize,
+          decoration: BoxDecoration(
+            color: inner,
+            borderRadius: BorderRadius.circular(18),
+=======
         // Node aktif (abu terang, icon buku biru gelap)
         outerBg = const Color(0xFF9DB3C7);
         innerBg = const Color(0xFFCFDDE9);
@@ -238,6 +368,7 @@ class MapNodeWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: innerBg,
             borderRadius: BorderRadius.circular(innerRadius),
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
           ),
           child: Center(child: icon),
         ),
@@ -246,12 +377,18 @@ class MapNodeWidget extends StatelessWidget {
   }
 }
 
+<<<<<<< HEAD
+/// ===========================================================================
+/// NEXT LEVEL CARD
+/// ===========================================================================
+=======
 /// ===========================================================
 /// CARD NEXT LEVEL DI PALING BAWAH
 /// ===========================================================
 /// Ini yang "Level 2 - What is number?" bla bla.
 /// Kalau nanti text / monster per level beda, tinggal
 /// ganti param levelNumber & monsterAsset
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
 class NextLevelCard extends StatelessWidget {
   final int levelNumber;
   final String monsterAsset;
@@ -265,7 +402,10 @@ class NextLevelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+<<<<<<< HEAD
+=======
       // Margin atas 40 biar ada jarak dari node terakhir
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
       margin: const EdgeInsets.fromLTRB(20, 40, 20, 30),
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
@@ -280,7 +420,10 @@ class NextLevelCard extends StatelessWidget {
         ),
         child: Row(
           children: [
+<<<<<<< HEAD
+=======
             // Bagian teks kiri (Level 2 & deskripsi)
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,6 +445,12 @@ class NextLevelCard extends StatelessWidget {
                       height: 1.4,
                     ),
                   ),
+<<<<<<< HEAD
+                ],
+              ),
+            ),
+            Image.asset(monsterAsset, width: 80, height: 80),
+=======
                   const SizedBox(height: 14),
                   // Tombol bulat panah ke kanan
                   Container(
@@ -328,6 +477,7 @@ class NextLevelCard extends StatelessWidget {
               height: 80,
               fit: BoxFit.contain,
             ),
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
           ],
         ),
       ),
@@ -335,6 +485,11 @@ class NextLevelCard extends StatelessWidget {
   }
 }
 
+<<<<<<< HEAD
+/// ===========================================================================
+/// HOME SCREEN — FULL FIX
+/// ===========================================================================
+=======
 /// ===========================================================
 /// BOTTOM NAVBAR
 /// ===========================================================
@@ -350,6 +505,7 @@ class NextLevelCard extends StatelessWidget {
 ///   - _buildNodes() : pola posisi node & statusnya
 ///   - spacing       : jarak vertikal antar node
 ///   - xFactor       : posisi kiri/kanan node
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -358,6 +514,126 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+<<<<<<< HEAD
+  int currentLevel = 1;
+  bool loading = true;     // <— penting! biar UI ga render sebelum data siap
+
+  @override
+  void initState() {
+    super.initState();
+    initFlow();
+  }
+
+  Future<void> initFlow() async {
+    print("🟦 [HomeScreen] initFlow() mulai…");
+
+    if (UserSession.instance.idAkun == null) {
+      print("⚠️ idAkun null → mencoba loadUserId…");
+      await UserLoaderService.instance.loadUserId();
+    }
+
+    print("🟢 idAkun sekarang = ${UserSession.instance.idAkun}");
+
+    await loadProgress();
+
+    loading = false;
+    setState(() {});
+  }
+
+  Future<void> loadProgress() async {
+    final id = UserSession.instance.idAkun;
+    if (id == null) {
+      print("❌ [HomeScreen] loadProgress gagal → idAkun NULL");
+      return;
+    }
+
+    print("🟦 Ambil current level dari database…");
+
+    currentLevel = await LevelProgressService.instance.getCurrentLevel(id);
+
+    print("🔥 [HomeScreen] CURRENT LEVEL = $currentLevel");
+  }
+
+  /// =======================================================================
+  /// BUILD NODES dynamically based on currentLevel
+  /// =======================================================================
+  List<MapNode> _buildNodes() {
+    const spacing = 120.0;
+
+    return List.generate(9, (i) {
+      final level = i + 1;
+
+      NodeState state;
+      if (level < currentLevel) {
+        state = NodeState.completed;
+      } else if (level == currentLevel) {
+        state = NodeState.current;
+      } else {
+        state = NodeState.locked;
+      }
+
+      double xFactor;
+      if (i % 2 == 0) xFactor = 0.50;
+      else if (i % 4 == 1) xFactor = 0.85;
+      else xFactor = 0.15;
+
+      return MapNode(
+        xFactor: xFactor,
+        yOffset: spacing * i,
+        state: state,
+      );
+    });
+  }
+
+  /// =======================================================================
+  /// OPEN GAME BASED ON LEVEL INDEX
+  /// =======================================================================
+  void openLevel(int levelIndex) {
+    print("🟦 [HomeScreen] openLevel($levelIndex)");
+
+    switch (levelIndex) {
+      case 1:
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const DragDropPage()));
+        return;
+
+      case 2:
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const DragDropPage()));
+        return;
+
+      case 3:
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const SpellBeePage()));
+        return;
+
+      default:
+        print("⚠️ Level $levelIndex belum ada gamenya");
+    }
+  }
+
+  /// =======================================================================
+  /// BUILD UI
+  /// =======================================================================
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF476280),
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
+    final width = MediaQuery.of(context).size.width;
+    final nodes = _buildNodes();
+
+    final offsets =
+        nodes.map((n) => Offset(n.xFactor * width * 0.9, n.yOffset)).toList();
+
+    final mapHeight = nodes.last.yOffset + 200;
+=======
 
   List<MapNode> _buildNodes() {
     const spacing = 120.0;
@@ -390,10 +666,79 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
 
     final mapHeight = nodes.last.yOffset + 180;
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
 
     return Scaffold(
       backgroundColor: const Color(0xFF476280),
       body: Stack(
+<<<<<<< HEAD
+        children: [
+          Positioned.fill(child: Container(color: const Color(0xFF476280))),
+
+          SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 120),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                _header(),
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: width * 0.9,
+                  height: mapHeight,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: CustomPaint(painter: DotPatternPainter())),
+
+                      // CONNECTORS
+                      ...List.generate(nodes.length - 1, (i) {
+                        final direction = [
+                          "kanan-bawah",
+                          "bawah-kiri",
+                          "kiri-bawah",
+                          "bawah-kanan"
+                        ][i % 4];
+
+                        return FlowConnector(
+                          start: offsets[i],
+                          end: offsets[i + 1],
+                          isCompleted: (i + 1) < currentLevel,
+                          direction: direction,
+                        );
+                      }),
+
+                      // NODES
+                      ...List.generate(nodes.length, (i) {
+                        final level = i + 1;
+
+                        return Positioned(
+                          left: offsets[i].dx - MapNode.outerWidth / 2,
+                          top: offsets[i].dy,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (nodes[i].state == NodeState.locked) {
+                                print("⛔ LEVEL $level dikunci");
+                                return;
+                              }
+                              openLevel(level);
+                            },
+                            child: MapNodeWidget(state: nodes[i].state),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+
+                NextLevelCard(
+                  levelNumber: currentLevel + 1,
+                  monsterAsset: "assets/images/monster2.png",
+                ),
+              ],
+            ),
+          ),
+
+=======
         alignment: Alignment.bottomCenter, // Pastikan Navbar di bawah
         children: [
           // 1. Background
@@ -577,16 +922,132 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           // 3. Navbar Melayang (Paling Atas)
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
           Positioned(
             bottom: 30,
             left: 0,
             right: 0,
             child: CustomFloatingNavBar(
+<<<<<<< HEAD
+              currentIndex: 0,
+              onTap: (i) => NavigationUtils.handleNavigation(context, i, 0),
+              onScanTap: () {},
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// =======================================================================
+  /// HEADER
+  /// =======================================================================
+  Widget _header() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF6B85A1),
+        borderRadius: BorderRadius.circular(30),
+      ),
+
+      child: Column(
+        children: [
+          // HEALTH BAR RECTANGLE
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFDCE9F3),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // hearts
+                Row(
+                  children: List.generate(5, (i) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Icon(
+                        Icons.favorite,
+                        color: i < 5 ? const Color(0xFFE25A5A) : const Color(0xFFE5B2B2),
+                        size: 26,
+                      ),
+                    );
+                  }),
+                ),
+
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF1A6),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Icon(Icons.attach_money, size: 20, color: Colors.black),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      "13",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // LEVEL CARD RECTANGLE
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD3E1EF),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              children: [
+                Image.asset("assets/images/monster1.png", width: 80, height: 80),
+
+                const SizedBox(width: 14),
+
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Level 1",
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        "Get to know letters",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black54,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ],
+=======
               currentIndex: 0, // Set 0 karena ini Home
               onTap: (index) {
                 NavigationUtils.handleNavigation(context, index, 0);
               }, // Sambungkan Fungsi Navigasi
               onScanTap: () => print("Scan Clicked"),
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
             ),
           ),
         ],

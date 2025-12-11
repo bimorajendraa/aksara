@@ -296,4 +296,8 @@ class _SpellBeePageState extends State<SpellBeePage2> {
       ),
     );
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 147adc4881ed146917d7bb89ce8368b252deb78a
