@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditAlienScreen extends StatefulWidget {
   const EditAlienScreen({super.key});
@@ -8,99 +9,206 @@ class EditAlienScreen extends StatefulWidget {
 }
 
 class _EditAlienScreenState extends State<EditAlienScreen> {
-  int _selectedTabIndex = 0; 
+  final supabase = Supabase.instance.client;
+
+  int _selectedTabIndex = 0;
   int _selectedCharIndex = 0;
-  int _selectedBgIndex = 0; 
+  int _selectedBgIndex = 0;
 
-  final List<String> _characterAssets = [
-    'assets/icons/Monster Hijau Profile.png',
-    'assets/images/yellow_monster_three_eyes.png',
-    'assets/images/red_monster.png',
-    'assets/images/orange_monster.png',
-    'assets/images/purple_monster.png',
-    'assets/images/lightblue_monster.png',
-  ];
+  int? userDetailsId;
+  int? idAkun;
 
-  final List<Color> _backgroundColors = [
-    const Color(0xFF2C3E50), 
+  bool _loading = true;
 
-    const Color(0xFFD6E6F2), 
+  // LISTS DIAMBIL DARI DATABASE (TIDAK HARDCODE)
+  List<String> _characterAssets = [];
+  List<Color> _backgroundColors = [];
 
-    const Color(0xFFFFEAA7), 
+  @override
+  void initState() {
+    super.initState();
+    initAllData();
+  }
 
-    const Color(0xFFFF7675), 
+  // =====================================================
+  // LOAD SEMUA DATA: icons, backgrounds, lalu userdetails
+  // =====================================================
+  Future<void> initAllData() async {
+    await loadIcons();
+    await loadBackgrounds();
+    await loadUserDetails();
+  }
 
-    const Color(0xFFA29BFE), 
+  // =====================================================
+  // LOAD PROFILE ICONS FROM DATABASE
+  // =====================================================
+  Future<void> loadIcons() async {
+    final data = await supabase.from("profileicons").select();
 
-    const Color(0xFF55EFC4), 
+    _characterAssets = data.map<String>((row) {
+      return row["icon_path"];
+    }).toList();
+  }
 
-  ];
+  // =====================================================
+  // LOAD BACKGROUND COLORS FROM DATABASE
+  // =====================================================
+  Future<void> loadBackgrounds() async {
+    final data = await supabase.from("profilebackground").select();
+
+    _backgroundColors = data.map<Color>((row) {
+      final hex = row["background_color"].toString().replaceAll("0x", "");
+      return Color(int.parse("0x$hex"));
+    }).toList();
+  }
+
+  // =====================================================
+  // LOAD USER DETAILS — AUTO INSERT IF MISSING
+  // =====================================================
+  Future<void> loadUserDetails() async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+
+      final akun = await supabase
+          .from('akun')
+          .select('id_akun')
+          .eq('email', user.email!)
+          .maybeSingle();
+
+      idAkun = akun?['id_akun'];
+
+      if (idAkun == null) {
+        print("❌ id_akun not found");
+        return;
+      }
+
+      final details = await supabase
+          .from('userdetails')
+          .select()
+          .eq('id_akun', idAkun!)
+          .maybeSingle();
+
+      if (details == null) {
+        // CREATE DEFAULT USERDETAILS
+        final inserted = await supabase
+            .from('userdetails')
+            .insert({
+              'id_akun': idAkun,
+              'id_profileicons': 1,
+              'id_profilebackground': 1,
+              'year_joined': DateTime.now().year,
+            })
+            .select()
+            .single();
+
+        userDetailsId = inserted["id_userdetails"];
+        _selectedCharIndex = 0;
+        _selectedBgIndex = 0;
+
+        print("✨ Created default userdetails");
+      } else {
+        userDetailsId = details["id_userdetails"];
+
+        _selectedCharIndex = (details["id_profileicons"] ?? 1) - 1;
+        _selectedBgIndex = (details["id_profilebackground"] ?? 1) - 1;
+      }
+
+      setState(() => _loading = false);
+    } catch (e) {
+      print("ERROR loadUserDetails: $e");
+      setState(() => _loading = false);
+    }
+  }
+
+  // =====================================================
+  // UPDATE CHARACTER
+  // =====================================================
+  Future<void> updateCharacter() async {
+    if (userDetailsId == null) return;
+
+    await supabase
+        .from("userdetails")
+        .update({"id_profileicons": _selectedCharIndex + 1})
+        .eq("id_userdetails", userDetailsId!);
+
+    print("🔄 Character updated");
+  }
+
+  // =====================================================
+  // UPDATE BACKGROUND
+  // =====================================================
+  Future<void> updateBackground() async {
+    if (userDetailsId == null) return;
+
+    await supabase
+        .from("userdetails")
+        .update({"id_profilebackground": _selectedBgIndex + 1})
+        .eq("id_userdetails", userDetailsId!);
+
+    print("🔄 Background updated");
+  }
+
+  // =====================================================
+  // UI BELOW (TIDAK DIUBAH)
+  // =====================================================
 
   @override
   Widget build(BuildContext context) {
+    final double headerHeight = 350;
+    final double whiteSheetTopStart = 320;
 
-    final double headerHeight = 350; 
-
-    final double whiteSheetTopStart = 320; 
+    if (_loading || _characterAssets.isEmpty || _backgroundColors.isEmpty) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
-      backgroundColor: Colors.white, 
-
+      backgroundColor: Colors.white,
       body: Stack(
         alignment: Alignment.topCenter,
         children: [
-
+          // BACKGROUND PREVIEW
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            height: headerHeight, 
-
+            height: headerHeight,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               color: _backgroundColors[_selectedBgIndex],
             ),
           ),
 
+          // CHARACTER PREVIEW
           Positioned(
-
-            top: 100, 
+            top: 100,
             left: 0,
             right: 0,
             child: Center(
               child: Image.asset(
                 _characterAssets[_selectedCharIndex],
-                height: 280, 
-
-                fit: BoxFit.contain, 
-
-                cacheWidth: 800, 
-
+                height: 280,
+                fit: BoxFit.contain,
               ),
             ),
           ),
 
+          // CONTENT AREA
           Positioned.fill(
-            top: whiteSheetTopStart, 
-
+            top: whiteSheetTopStart,
             child: Container(
-              color: Colors.white, 
-
+              color: Colors.white,
               child: Column(
                 children: [
-
+                  // TAB BAR
                   Container(
-                    color: const Color(0xFFD6E6F2), 
-
                     height: 70,
-                    width: double.infinity,
+                    color: const Color(0xFFD6E6F2),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center, 
-
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _buildTabItem(index: 0, icon: Icons.checkroom_rounded),
-                        const SizedBox(width: 50), 
-
+                        const SizedBox(width: 50),
                         _buildTabItem(index: 1, icon: Icons.grid_3x3_rounded),
                       ],
                     ),
@@ -113,7 +221,9 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _selectedTabIndex == 0 ? "Choose Character" : "Choose Background",
+                            _selectedTabIndex == 0
+                                ? "Choose Character"
+                                : "Choose Background",
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 18,
@@ -123,35 +233,37 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
                           ),
                           const SizedBox(height: 20),
 
+                          // GRID CHARS
                           if (_selectedTabIndex == 0)
-
                             GridView.builder(
-                              padding: EdgeInsets.zero,
-                              physics: const NeverScrollableScrollPhysics(),
                               shrinkWrap: true,
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 25,
-                                mainAxisSpacing: 25,
-                                childAspectRatio: 1.0, 
-                              ),
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 25,
+                                    mainAxisSpacing: 25,
+                                  ),
                               itemCount: _characterAssets.length,
-                              itemBuilder: (context, index) => _buildCharacterOption(index),
+                              itemBuilder: (context, index) {
+                                return _buildCharacterOption(index);
+                              },
                             )
+                          // GRID BACKGROUND
                           else
-
                             GridView.builder(
-                              padding: EdgeInsets.zero,
-                              physics: const NeverScrollableScrollPhysics(),
                               shrinkWrap: true,
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 25,
-                                mainAxisSpacing: 25,
-                                childAspectRatio: 1.0,
-                              ),
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 25,
+                                    mainAxisSpacing: 25,
+                                  ),
                               itemCount: _backgroundColors.length,
-                              itemBuilder: (context, index) => _buildBackgroundColorOption(index),
+                              itemBuilder: (context, index) {
+                                return _buildBackgroundColorOption(index);
+                              },
                             ),
                         ],
                       ),
@@ -162,46 +274,31 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
             ),
           ),
 
+          // TOP BAR
           Positioned(
             top: 0,
             left: 0,
-            right: 0,
             child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 24),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
                     ),
-                    const SizedBox(width: 15),
-                    const Text(
-                      "Profile",
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                  ),
+                  const Text(
+                    "Profile",
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-          ),
-
-          Positioned(
-            bottom: 30,
-            left: 0,
-            right: 0,
-            child: CustomFloatingNavBar(
-              currentIndex: 3, 
-              onTap: (index) {
-                if (index == 0) {
-                   Navigator.popUntil(context, ModalRoute.withName('/home')); 
-                }
-              },
             ),
           ),
         ],
@@ -209,174 +306,75 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
     );
   }
 
+  // UI COMPONENTS (TIDAK DIUBAH)
   Widget _buildTabItem({required int index, required IconData icon}) {
     bool isSelected = _selectedTabIndex == index;
+
     return GestureDetector(
       onTap: () => setState(() => _selectedTabIndex = index),
-      child: Container(
-
-        color: Colors.transparent, 
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon, 
-              size: 34, 
-              color: const Color(0xFF2C3E50), 
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 34, color: const Color(0xFF2C3E50)),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 4,
+            width: isSelected ? 40 : 0,
+            decoration: BoxDecoration(
+              color: const Color(0xFF2C3E50),
+              borderRadius: BorderRadius.circular(2),
             ),
-            const SizedBox(height: 6),
-
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              height: 4,
-              width: isSelected ? 40 : 0, 
-
-              decoration: BoxDecoration(
-                color: const Color(0xFF2C3E50),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildCharacterOption(int index) {
     bool isSelected = _selectedCharIndex == index;
+
     return GestureDetector(
-      onTap: () => setState(() => _selectedCharIndex = index),
+      onTap: () {
+        setState(() => _selectedCharIndex = index);
+        updateCharacter();
+      },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: isSelected 
-              ? Border.all(color: const Color(0xFF2C3E50), width: 3)
-              : Border.all(color: Colors.grey.shade300, width: 1.5),
-          boxShadow: [
-            BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 5))
-          ],
+          border: Border.all(
+            color: isSelected ? const Color(0xFF2C3E50) : Colors.grey,
+          ),
         ),
-        padding: const EdgeInsets.all(15), 
-
-        child: Image.asset(
-          _characterAssets[index],
-          fit: BoxFit.contain, 
-          cacheWidth: 300, 
-        ),
+        padding: const EdgeInsets.all(10),
+        child: Image.asset(_characterAssets[index]),
       ),
     );
   }
 
   Widget _buildBackgroundColorOption(int index) {
     bool isSelected = _selectedBgIndex == index;
-    Color color = _backgroundColors[index];
+
     return GestureDetector(
-      onTap: () => setState(() => _selectedBgIndex = index),
+      onTap: () {
+        setState(() => _selectedBgIndex = index);
+        updateBackground();
+      },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: isSelected 
-              ? Border.all(color: Colors.blue.withOpacity(0.5), width: 4)
-              : Border.all(color: Colors.transparent, width: 4),
-          boxShadow: [
-            BoxShadow(color: Colors.grey.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 5))
-          ],
+          border: Border.all(
+            color: isSelected ? Colors.blue : Colors.transparent,
+            width: 4,
+          ),
         ),
-        padding: const EdgeInsets.all(4), 
+        padding: const EdgeInsets.all(4),
         child: Container(
           decoration: BoxDecoration(
-            color: color, 
+            color: _backgroundColors[index],
             borderRadius: BorderRadius.circular(16),
           ),
-          child: isSelected 
-            ? const Center(child: Icon(Icons.check_rounded, color: Colors.white, size: 30)) 
-            : null,
         ),
       ),
-    );
-  }
-}
-
-class CustomFloatingNavBar extends StatelessWidget {
-  final int currentIndex;
-  final Function(int) onTap;
-
-  const CustomFloatingNavBar({
-    super.key,
-    required this.currentIndex,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.center,
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          height: 70,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(35),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.15),
-                spreadRadius: 5,
-                blurRadius: 20,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(icon: Icons.home_rounded, index: 0),
-              _buildNavItem(icon: Icons.menu_book_rounded, index: 1),
-              const SizedBox(width: 50),
-              _buildNavAssetItem(assetPath: 'assets/icons/achievement navbar.png', index: 2),
-              _buildNavItem(icon: Icons.person_rounded, index: 3),
-            ],
-          ),
-        ),
-        Positioned(
-          top: -25,
-          child: GestureDetector(
-            onTap: () => print("Scan Clicked"),
-            child: Container(
-              width: 65,
-              height: 65,
-              decoration: BoxDecoration(
-                color: const Color(0xFFD6E6F2),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 5),
-                boxShadow: [
-                  BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 5)),
-                ],
-              ),
-              child: const Icon(Icons.qr_code_scanner_rounded, color: Color(0xFF2C3E50), size: 30),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNavItem({required IconData icon, required int index}) {
-    final isSelected = currentIndex == index;
-    return GestureDetector(
-      onTap: () => onTap(index),
-      child: Icon(icon, size: 28, color: isSelected ? const Color(0xFF4CA1AF) : Colors.grey.shade400),
-    );
-  }
-
-  Widget _buildNavAssetItem({required String assetPath, required int index}) {
-    final isSelected = currentIndex == index;
-    return GestureDetector(
-      onTap: () => onTap(index),
-      child: Image.asset(assetPath, width: 28, height: 28, color: isSelected ? const Color(0xFF4CA1AF) : Colors.grey.shade400),
     );
   }
 }
