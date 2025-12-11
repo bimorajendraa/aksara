@@ -5,6 +5,7 @@ import 'env.dart';
 import 'route/route_list.dart';
 import 'route/auth_route_observer.dart';
 import 'screens/book/chapter_read_screen.dart';
+import 'services/user_loader_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,8 @@ void main() async {
     url: Env.supabaseUrl,
     anonKey: Env.supabaseAnonKey,
   );
+
+  await UserLoaderService.instance.loadUserId();
 
   runApp(const MyApp());
 }

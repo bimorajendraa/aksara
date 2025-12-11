@@ -1,29 +1,26 @@
-import 'package:aksara/screens/writing_practice_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../utils/navbar_utils.dart';
-import '../../widgets/custom_floating_navbar.dart';
-import '../games/start/start_page.dart';
 
 import 'package:aksara/utils/navbar_utils.dart';
 import 'package:aksara/widgets/custom_floating_navbar.dart';
 
+// GAMES
 import 'package:aksara/screens/games/drag-drop/drag_drop_page.dart';
 import 'package:aksara/screens/games/spellbee/spellbee.dart';
+import 'package:aksara/screens/games/start/start_page.dart';
 
 // SERVICES
 import 'package:aksara/services/user_loader_service.dart';
 import 'package:aksara/services/user_session.dart';
 import 'package:aksara/services/level_progress_service.dart';
 
-
 /// ===========================================================================
-/// ENUM STATUS NODE
+/// ENUM
 /// ===========================================================================
 enum NodeState { completed, current, locked }
 
 /// ===========================================================================
-/// MODEL SATU NODE DI MAP
+/// MODEL NODE CONFIG
 /// ===========================================================================
 class MapNode {
   final double xFactor;
@@ -38,6 +35,7 @@ class MapNode {
 
   static const double outerWidth = 85.78;
   static const double outerHeight = 92.0;
+
   static const double innerSize = 75.84;
   static const double iconSize = 47.0;
 }
@@ -49,16 +47,11 @@ class DotPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color.fromARGB(255, 47, 65, 86).withOpacity(0.25)
-      ..style = PaintingStyle.fill;
+      ..color = const Color.fromARGB(255, 47, 65, 86).withOpacity(0.25);
 
-    const double dotSize = 4;
-    const double spacingX = 55.0;
-    const double spacingY = 55.0;
-
-    for (double y = spacingY / 2; y < size.height; y += spacingY) {
-      for (double x = spacingX / 2; x < size.width; x += spacingX) {
-        canvas.drawCircle(Offset(x, y), dotSize, paint);
+    for (double y = 30; y < size.height; y += 55) {
+      for (double x = 30; x < size.width; x += 55) {
+        canvas.drawCircle(Offset(x, y), 4, paint);
       }
     }
   }
@@ -68,7 +61,7 @@ class DotPatternPainter extends CustomPainter {
 }
 
 /// ===========================================================================
-/// FLOW CONNECTOR
+/// FLOW CONNECTOR — ORIGINAL, TIDAK DIUBAH
 /// ===========================================================================
 class FlowConnector extends StatelessWidget {
   final Offset start;
@@ -86,22 +79,23 @@ class FlowConnector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final svgAsset = "assets/icons/$direction.svg";
+    final svgAsset = 'assets/icons/$direction.svg';
 
-    final color = isCompleted
-        ? const Color(0xFF98DAF5)
-        : const Color(0xFF5C7590);
+    final color =
+        isCompleted ? const Color(0xFF98DAF5) : const Color(0xFF5C7590);
 
     double extraDrop = 0;
-    if (direction == "bawah-kiri" || direction == "bawah-kanan") {
+
+    if (direction == 'bawah-kiri' || direction == 'bawah-kanan') {
       extraDrop = 28;
     }
 
-    final left = (direction == "kiri-bawah" || direction == "bawah-kiri")
+    final left = (direction == 'kiri-bawah' || direction == 'bawah-kiri')
         ? end.dx
         : start.dx;
 
     final top = start.dy + MapNode.outerHeight / 2 + extraDrop;
+
     final width = (end.dx - start.dx).abs();
     final height = end.dy - start.dy - MapNode.outerHeight / 2;
 
@@ -120,7 +114,7 @@ class FlowConnector extends StatelessWidget {
 }
 
 /// ===========================================================================
-/// NODE WIDGET
+/// NODE VISUAL
 /// ===========================================================================
 class MapNodeWidget extends StatelessWidget {
   final NodeState state;
@@ -129,54 +123,49 @@ class MapNodeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color outerBg;
-    Color innerBg;
+    Color outer;
+    Color inner;
     Widget icon;
 
     switch (state) {
       case NodeState.completed:
-        outerBg = const Color(0xFF5BA8C8);
-        innerBg = const Color(0xFF8ED4F5);
+        outer = const Color(0xFF5BA8C8);
+        inner = const Color(0xFF8ED4F5);
         icon = SvgPicture.asset(
           "assets/icons/book-open.svg",
           width: MapNode.iconSize,
-          height: MapNode.iconSize,
-          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
         );
         break;
 
       case NodeState.current:
-        outerBg = const Color(0xFF9DB3C7);
-        innerBg = const Color(0xFFCFDDE9);
+        outer = const Color(0xFF9DB3C7);
+        inner = const Color(0xFFCFDDE9);
         icon = SvgPicture.asset(
           "assets/icons/book.svg",
           width: MapNode.iconSize,
-          height: MapNode.iconSize,
-          colorFilter: const ColorFilter.mode(Color(0xFF3D4F5F), BlendMode.srcIn),
         );
         break;
 
       default:
-        outerBg = const Color(0xFF637F9F);
-        innerBg = const Color(0xFF2F4156);
-        icon = Icon(Icons.lock, color: const Color(0xFF7D8FA3), size: MapNode.iconSize);
-        break;
+        outer = const Color(0xFF637F9F);
+        inner = const Color(0xFF2F4156);
+        icon = const Icon(Icons.lock, color: Colors.white, size: 32);
     }
 
     return Container(
       width: MapNode.outerWidth,
       height: MapNode.outerHeight,
       decoration: BoxDecoration(
-        color: outerBg,
-        borderRadius: BorderRadius.circular(MapNode.outerWidth * 0.25),
+        color: outer,
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Center(
         child: Container(
           width: MapNode.innerSize,
           height: MapNode.innerSize,
           decoration: BoxDecoration(
-            color: innerBg,
-            borderRadius: BorderRadius.circular(MapNode.innerSize * 0.18),
+            color: inner,
+            borderRadius: BorderRadius.circular(18),
           ),
           child: Center(child: icon),
         ),
@@ -186,272 +175,8 @@ class MapNodeWidget extends StatelessWidget {
 }
 
 /// ===========================================================================
-/// HOMESCREEN FINAL WITH NEW PROGRESS SYSTEM
+/// NEXT LEVEL CARD
 /// ===========================================================================
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-
-  int currentLevel = 1;
-
-  @override
-  void initState() {
-    super.initState();
-    initializeUserAndLoadProgress();
-  }
-
-  /// ============================================================
-  /// LOAD USER SESSION FIRST (GUARANTEED)
-  /// ============================================================
-  Future<void> initializeUserAndLoadProgress() async {
-    // make sure idAkun exists
-    if (UserSession.instance.idAkun == null) {
-      print("🔵 [Home] idAkun NULL → loading…");
-      await UserLoaderService.instance.loadUserId();
-    }
-
-    await loadProgress();
-  }
-
-  /// ============================================================
-  /// LOAD CURRENT LEVEL USING NEW SERVICE
-  /// ============================================================
-  Future<void> loadProgress() async {
-    final idAkun = UserSession.instance.idAkun;
-
-    if (idAkun == null) {
-      print("❌ [Home] Cannot load progress → idAkun null");
-      return;
-    }
-
-    currentLevel = await LevelProgressService.instance.getCurrentLevel(idAkun);
-
-    print("🟢 [Home] currentLevel = $currentLevel");
-
-    setState(() {});
-  }
-
-  /// ============================================================
-  /// BUILD NODE STATES BASED ON currentLevel
-  /// ============================================================
-  List<MapNode> _buildNodes() {
-    const spacing = 120.0;
-    List<MapNode> list = [];
-
-    for (int i = 1; i <= 9; i++) {
-      NodeState state;
-
-      if (i < currentLevel) {
-        state = NodeState.completed;
-      } else if (i == currentLevel) {
-        state = NodeState.current;
-      } else {
-        state = NodeState.locked;
-      }
-
-      double xFactor;
-      int idx = i - 1;
-
-      if (idx % 2 == 0) {
-        xFactor = 0.5;
-      } else if (idx % 4 == 1) {
-        xFactor = 0.85;
-      } else {
-        xFactor = 0.15;
-      }
-
-      list.add(MapNode(
-        xFactor: xFactor,
-        yOffset: spacing * idx,
-        state: state,
-      ));
-    }
-
-    return list;
-  }
-
-  
-  /// ============================================================
-  /// BUILD UI
-  /// ============================================================
-  @override
-  Widget build(BuildContext context) {
-    final nodes = _buildNodes();
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    final offsets =
-        nodes.map((n) => Offset(n.xFactor * screenWidth * 0.9, n.yOffset)).toList();
-
-    final mapHeight = nodes.last.yOffset + 200;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF476280),
-      body: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-
-          Positioned.fill(child: Container(color: const Color(0xFF476280))),
-
-          Positioned.fill(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 120),
-              child: SafeArea(
-                child: Column(
-                  children: [
-
-                    // HEADER (COIN + HEART)
-                    _header(),
-
-                    const SizedBox(height: 16),
-
-                    // MAP AREA
-                    SizedBox(
-                      width: screenWidth * 0.9,
-                      height: mapHeight,
-                      child: Stack(
-                        children: [
-
-                          Positioned.fill(
-                            child: CustomPaint(painter: DotPatternPainter()),
-                          ),
-
-                          // CONNECTORS
-                          ...List.generate(nodes.length - 1, (i) {
-                            final isCompleted =
-                                nodes[i].state == NodeState.completed;
-
-                            final direction = [
-                              "kanan-bawah",
-                              "bawah-kiri",
-                              "kiri-bawah",
-                              "bawah-kanan"
-                            ][i % 4];
-
-                            return FlowConnector(
-                              start: offsets[i],
-                              end: offsets[i + 1],
-                              isCompleted: isCompleted,
-                              direction: direction,
-                            );
-                          }),
-
-                          // NODES
-                          ...List.generate(nodes.length, (i) {
-                            return Positioned(
-                              left: offsets[i].dx - MapNode.outerWidth / 2,
-                              top: offsets[i].dy,
-                              child: GestureDetector(
-                                onTap: () {
-                                  if (nodes[i].state == NodeState.locked) return;
-
-                                  final level = i + 1;
-
-                                  if (level == 1) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const DragDropPage()),
-                                    );
-                                  } else if (level == 2) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const DragDropPage()),
-                                    );
-                                  } else if (level == 3) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const SpellBeePage()),
-                                    );
-                                  }
-                                },
-                                child: MapNodeWidget(state: nodes[i].state),
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-
-                    // NEXT LEVEL CARD
-                    const NextLevelCard(
-                      levelNumber: 2,
-                      monsterAsset: "assets/images/monster2.png",
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // NAVBAR
-          Positioned(
-            bottom: 30,
-            child: CustomFloatingNavBar(
-              currentIndex: 0,
-              onTap: (i) => NavigationUtils.handleNavigation(context, i, 0),
-              onScanTap: () {},
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  /// HEADER UI (TIDAK DIUBAH)
-  Widget _header() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFC8D9E6),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: List.generate(
-                5,
-                (i) => Padding(
-                  padding: EdgeInsets.only(right: i < 4 ? 6 : 0),
-                  child: SvgPicture.asset(
-                    "assets/images/heart.svg",
-                    width: 22,
-                    height: 22,
-                  ),
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                SvgPicture.asset(
-                  "assets/images/coin.svg",
-                  width: 24,
-                  height: 24,
-                ),
-                const SizedBox(width: 6),
-                const Text(
-                  "13",
-                  style: TextStyle(
-                    color: Color(0xFF0E0F1A),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class NextLevelCard extends StatelessWidget {
   final int levelNumber;
   final String monsterAsset;
@@ -500,27 +225,10 @@ class NextLevelCard extends StatelessWidget {
                       height: 1.4,
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFC8D9E6),
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                    child: const Icon(Icons.arrow_forward_rounded,
-                        color: Color(0xFF476280)),
-                  ),
                 ],
               ),
             ),
-            const SizedBox(width: 12),
-            Image.asset(
-              monsterAsset,
-              width: 80,
-              height: 80,
-              fit: BoxFit.contain,
-            ),
+            Image.asset(monsterAsset, width: 80, height: 80),
           ],
         ),
       ),
@@ -528,21 +236,9 @@ class NextLevelCard extends StatelessWidget {
   }
 }
 
-/// ===========================================================
-/// BOTTOM NAVBAR
-/// ===========================================================
-/// Ini nav bar bawah yang ada home / book / medal / user.
-/// Hanya layout static, belum ada onTap atau route logic.
-/// Kalau mau aktif tab lain, tinggal ganti warna icon di sini.
-
-
-/// ===========================================================
-/// HOME SCREEN — PAGE UTAMA STORY MODE
-/// ===========================================================
-/// Bagian penting yang bisa lu utak-atik:
-///   - _buildNodes() : pola posisi node & statusnya
-///   - spacing       : jarak vertikal antar node
-///   - xFactor       : posisi kiri/kanan node
+/// ===========================================================================
+/// HOME SCREEN — FULL FIX
+/// ===========================================================================
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -551,235 +247,311 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
-  List<MapNode> _buildNodes() {
-    const spacing = 120.0;
-    return [
-      MapNode(xFactor: 0.50, yOffset: 0, state: NodeState.completed),
-      MapNode(xFactor: 0.85, yOffset: spacing, state: NodeState.completed),
-      MapNode(xFactor: 0.50, yOffset: spacing * 2, state: NodeState.current),
-      MapNode(xFactor: 0.15, yOffset: spacing * 3, state: NodeState.locked),
-      MapNode(xFactor: 0.50, yOffset: spacing * 4, state: NodeState.locked),
-      MapNode(xFactor: 0.85, yOffset: spacing * 5, state: NodeState.locked),
-      MapNode(xFactor: 0.50, yOffset: spacing * 6, state: NodeState.locked),
-      MapNode(xFactor: 0.15, yOffset: spacing * 7, state: NodeState.locked),
-      MapNode(xFactor: 0.50, yOffset: spacing * 8, state: NodeState.locked),
-    ];
-  }
+  int currentLevel = 1;
+  bool loading = true;     // <— penting! biar UI ga render sebelum data siap
 
   @override
+  void initState() {
+    super.initState();
+    initFlow();
+  }
+
+  Future<void> initFlow() async {
+    print("🟦 [HomeScreen] initFlow() mulai…");
+
+    if (UserSession.instance.idAkun == null) {
+      print("⚠️ idAkun null → mencoba loadUserId…");
+      await UserLoaderService.instance.loadUserId();
+    }
+
+    print("🟢 idAkun sekarang = ${UserSession.instance.idAkun}");
+
+    await loadProgress();
+
+    loading = false;
+    setState(() {});
+  }
+
+  Future<void> loadProgress() async {
+    final id = UserSession.instance.idAkun;
+    if (id == null) {
+      print("❌ [HomeScreen] loadProgress gagal → idAkun NULL");
+      return;
+    }
+
+    print("🟦 Ambil current level dari database…");
+
+    currentLevel = await LevelProgressService.instance.getCurrentLevel(id);
+
+    print("🔥 [HomeScreen] CURRENT LEVEL = $currentLevel");
+  }
+
+  /// =======================================================================
+  /// BUILD NODES dynamically based on currentLevel
+  /// =======================================================================
+  List<MapNode> _buildNodes() {
+    const spacing = 120.0;
+
+    return List.generate(9, (i) {
+      final level = i + 1;
+
+      NodeState state;
+      if (level < currentLevel) {
+        state = NodeState.completed;
+      } else if (level == currentLevel) {
+        state = NodeState.current;
+      } else {
+        state = NodeState.locked;
+      }
+
+      double xFactor;
+      if (i % 2 == 0) xFactor = 0.50;
+      else if (i % 4 == 1) xFactor = 0.85;
+      else xFactor = 0.15;
+
+      return MapNode(
+        xFactor: xFactor,
+        yOffset: spacing * i,
+        state: state,
+      );
+    });
+  }
+
+  /// =======================================================================
+  /// OPEN GAME BASED ON LEVEL INDEX
+  /// =======================================================================
+  void openLevel(int levelIndex) {
+    print("🟦 [HomeScreen] openLevel($levelIndex)");
+
+    switch (levelIndex) {
+      case 1:
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const DragDropPage()));
+        return;
+
+      case 2:
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const DragDropPage()));
+        return;
+
+      case 3:
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const SpellBeePage()));
+        return;
+
+      default:
+        print("⚠️ Level $levelIndex belum ada gamenya");
+    }
+  }
+
+  /// =======================================================================
+  /// BUILD UI
+  /// =======================================================================
+  @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    if (loading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF476280),
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
+    final width = MediaQuery.of(context).size.width;
     final nodes = _buildNodes();
 
-    final currentIndex = nodes.indexWhere((n) => n.state == NodeState.current);
-    final effectiveCurrentIndex = currentIndex == -1 ? 0 : currentIndex;
+    final offsets =
+        nodes.map((n) => Offset(n.xFactor * width * 0.9, n.yOffset)).toList();
 
-    final offsets = nodes.map((n) {
-      return Offset(
-        n.xFactor * screenWidth,
-        n.yOffset,
-      );
-    }).toList();
-
-    final mapHeight = nodes.last.yOffset + 180;
+    final mapHeight = nodes.last.yOffset + 200;
 
     return Scaffold(
       backgroundColor: const Color(0xFF476280),
       body: Stack(
-        alignment: Alignment.bottomCenter, // Pastikan Navbar di bawah
         children: [
-          // 1. Background
-          Positioned.fill(
-            child: Container(
-              color: const Color(0xFF476280),
-            ),
-          ),
+          Positioned.fill(child: Container(color: const Color(0xFF476280))),
 
-          // 2. Konten Utama (Scrollable)
-          Positioned.fill(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 120), // Padding bawah agar tidak tertutup navbar
-              physics: const BouncingScrollPhysics(),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    // --- Header (Heart & Coin) ---
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC8D9E6),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: List.generate(5, (i) {
-                                return Padding(
-                                  padding: EdgeInsets.only(right: i < 4 ? 6 : 0),
-                                  child: SvgPicture.asset(
-                                    "assets/images/heart.svg",
-                                    width: 22, height: 22,
-                                  ),
-                                );
-                              }),
-                            ),
-                            Row(
-                              children: [
-                                SvgPicture.asset(
-                                  "assets/images/coin.svg",
-                                  width: 24, height: 24,
-                                ),
-                                const SizedBox(width: 6),
-                                const Text(
-                                  "13",
-                                  style: TextStyle(
-                                    color: Color(0xFF0E0F1A),
-                                    fontSize: 18, fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+          SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 120),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                _header(),
+                const SizedBox(height: 20),
 
-                    const SizedBox(height: 16),
+                SizedBox(
+                  width: width * 0.9,
+                  height: mapHeight,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: CustomPaint(painter: DotPatternPainter())),
 
-                    // --- Card Level 1 ---
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC8D9E6),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              "assets/images/monster1.png",
-                              width: 64, height: 64, fit: BoxFit.contain,
-                            ),
-                            const SizedBox(width: 14),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Level 1",
-                                    style: TextStyle(
-                                      fontSize: 24, fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0E0F1A),
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    "Get to know letters",
-                                    style: TextStyle(
-                                      fontSize: 13, color: Color(0xFF5C7590),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                      // CONNECTORS
+                      ...List.generate(nodes.length - 1, (i) {
+                        final direction = [
+                          "kanan-bawah",
+                          "bawah-kiri",
+                          "kiri-bawah",
+                          "bawah-kanan"
+                        ][i % 4];
 
-                    const SizedBox(height: 20),
+                        return FlowConnector(
+                          start: offsets[i],
+                          end: offsets[i + 1],
+                          isCompleted: (i + 1) < currentLevel,
+                          direction: direction,
+                        );
+                      }),
 
-                    // --- Area Map (Canvas & Nodes) ---
-                    Center(
-                      child: SizedBox(
-                        width: screenWidth * 0.9,
-                        height: mapHeight,
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: CustomPaint(painter: DotPatternPainter()),
-                            ),
-                            // Flow Connector
-                            ...List.generate(nodes.length - 1, (i) {
-                              final isCompleted = i < effectiveCurrentIndex;
-                              String direction;
-                              switch (i % 4) {
-                                case 0: direction = 'kanan-bawah'; break;
-                                case 1: direction = 'bawah-kiri'; break;
-                                case 2: direction = 'kiri-bawah'; break;
-                                default: direction = 'bawah-kanan';
+                      // NODES
+                      ...List.generate(nodes.length, (i) {
+                        final level = i + 1;
+
+                        return Positioned(
+                          left: offsets[i].dx - MapNode.outerWidth / 2,
+                          top: offsets[i].dy,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (nodes[i].state == NodeState.locked) {
+                                print("⛔ LEVEL $level dikunci");
+                                return;
                               }
-                              final startOffset = Offset(
-                                nodes[i].xFactor * screenWidth * 0.9,
-                                offsets[i].dy,
-                              );
-                              final endOffset = Offset(
-                                nodes[i + 1].xFactor * screenWidth * 0.9,
-                                offsets[i + 1].dy,
-                              );
-                              return FlowConnector(
-                                start: startOffset,
-                                end: endOffset,
-                                isCompleted: isCompleted,
-                                direction: direction,
-                              );
-                            }),
-                            // Nodes
-                            ...List.generate(nodes.length, (i) {
-                              final nodeX = nodes[i].xFactor * screenWidth * 0.9;
-                              return Positioned(
-                                left: nodeX - MapNode.outerWidth / 2,
-                                top: offsets[i].dy,
-                                child: GestureDetector(
-                                onTap: () {
-                                  if (i == 1) { // change index to whichever node should open the writing screen
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => const WritingPracticeScreen()),
-                                    );
-                                  } else if (i == 0) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => const StartPage()),
-                                    );
-                                  }
-                                },
-                                child: MapNodeWidget(state: nodes[i].state),
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // --- Next Level Card ---
-                    const NextLevelCard(
-                      levelNumber: 2,
-                      monsterAsset: "assets/images/monster2.png",
-                    ),
-                  ],
+                              openLevel(level);
+                            },
+                            child: MapNodeWidget(state: nodes[i].state),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
                 ),
-              ),
+
+                NextLevelCard(
+                  levelNumber: currentLevel + 1,
+                  monsterAsset: "assets/images/monster2.png",
+                ),
+              ],
             ),
           ),
 
-          // 3. Navbar Melayang (Paling Atas)
           Positioned(
             bottom: 30,
             left: 0,
             right: 0,
             child: CustomFloatingNavBar(
-              currentIndex: 0, // Set 0 karena ini Home
-              onTap: (index) {
-                NavigationUtils.handleNavigation(context, index, 0);
-              }, // Sambungkan Fungsi Navigasi
-              onScanTap: () => print("Scan Clicked"),
+              currentIndex: 0,
+              onTap: (i) => NavigationUtils.handleNavigation(context, i, 0),
+              onScanTap: () {},
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// =======================================================================
+  /// HEADER
+  /// =======================================================================
+  Widget _header() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF6B85A1),
+        borderRadius: BorderRadius.circular(30),
+      ),
+
+      child: Column(
+        children: [
+          // HEALTH BAR RECTANGLE
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFDCE9F3),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // hearts
+                Row(
+                  children: List.generate(5, (i) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Icon(
+                        Icons.favorite,
+                        color: i < 5 ? const Color(0xFFE25A5A) : const Color(0xFFE5B2B2),
+                        size: 26,
+                      ),
+                    );
+                  }),
+                ),
+
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF1A6),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Icon(Icons.attach_money, size: 20, color: Colors.black),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      "13",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // LEVEL CARD RECTANGLE
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD3E1EF),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              children: [
+                Image.asset("assets/images/monster1.png", width: 80, height: 80),
+
+                const SizedBox(width: 14),
+
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Level 1",
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        "Get to know letters",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black54,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 // SERVICES
 import 'package:aksara/services/user_loader_service.dart';
@@ -8,18 +9,14 @@ import 'package:aksara/services/game_progress_service.dart';
 import 'package:aksara/services/level_progress_service.dart';
 
 /// =============================================================
-/// MODEL NODE HURUF
+/// MODEL
 /// =============================================================
 class LetterNode {
   final String letter;
   final int id;
-
   LetterNode({required this.letter, required this.id});
 }
 
-/// =============================================================
-/// MODEL CONNECTION
-/// =============================================================
 class Connection {
   final int leftIndex;
   final int rightIndex;
@@ -33,7 +30,7 @@ class Connection {
 }
 
 /// =============================================================
-/// PAINTER GARIS
+/// LINE PAINTER
 /// =============================================================
 class LinePainter extends CustomPainter {
   final List<Connection> lines;
@@ -52,30 +49,31 @@ class LinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final gray = Paint()
-      ..color = Colors.grey.shade400
-      ..strokeWidth = 4;
-
-    final green = Paint()
+    final paintCorrect = Paint()
       ..color = const Color(0xFF3DBE78)
       ..strokeWidth = 5;
 
-    final red = Paint()
+    final paintWrong = Paint()
       ..color = const Color(0xFFCC4C4C)
       ..strokeWidth = 5;
 
-    // Fixed lines
+    final paintDrag = Paint()
+      ..color = Colors.grey.shade400
+      ..strokeWidth = 4;
+
+    // FIXED LINES
     for (var c in lines) {
       final start = leftDots[c.leftIndex];
       final end = rightDots[c.rightIndex];
       if (start == Offset.zero || end == Offset.zero) continue;
-      canvas.drawLine(start, end, c.isCorrect ? green : red);
+
+      canvas.drawLine(start, end, c.isCorrect ? paintCorrect : paintWrong);
     }
 
-    // Drag line
+    // DRAG PREVIEW
     if (draggingLeft != null && dragPos != null) {
       final start = leftDots[draggingLeft!];
-      canvas.drawLine(start, dragPos!, gray);
+      canvas.drawLine(start, dragPos!, paintDrag);
     }
   }
 
@@ -94,9 +92,10 @@ class DragDropPage extends StatefulWidget {
 }
 
 class _DragDropPageState extends State<DragDropPage> {
+  final AudioPlayer _player = AudioPlayer();
   final rng = Random();
 
-  int hearts = 100;
+  int hearts = 5;
   int gold = 13;
 
   List<LetterNode> leftNodes = [];
@@ -117,9 +116,6 @@ class _DragDropPageState extends State<DragDropPage> {
 
   static const double hitRadius = 30;
 
-  // =============================================================
-  // INIT
-  // =============================================================
   @override
   void initState() {
     super.initState();
@@ -129,31 +125,35 @@ class _DragDropPageState extends State<DragDropPage> {
 
   Future<void> _loadUser() async {
     await UserLoaderService.instance.loadUserId();
+    print("🟦 [UserLoader] ID Loaded: ${UserSession.instance.idAkun}");
   }
 
   /// =============================================================
   /// GENERATE PUZZLE
   /// =============================================================
   void generatePuzzle() {
-    final alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
-    final letters =
-        List<String>.generate(5, (_) => alphabet[rng.nextInt(26)]);
+    print("=========================================");
+    print("🔵 GENERATING NEW DRAGDROP PUZZLE...");
+    print("=========================================");
 
-    leftNodes = List.generate(
-      5,
-      (i) => LetterNode(letter: letters[i], id: i),
-    );
+    final alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
+    // Random unique 5 letters
+    final letters = (alphabet..shuffle()).take(5).toList();
+
+    leftNodes = List.generate(5, (i) => LetterNode(letter: letters[i], id: i));
 
     final shuffled = [...letters]..shuffle();
-    rightNodes = List.generate(
-      5,
-      (i) => LetterNode(letter: shuffled[i], id: i),
-    );
+    rightNodes = List.generate(5, (i) => LetterNode(letter: shuffled[i], id: i));
 
     correctPairs.clear();
     for (int i = 0; i < 5; i++) {
       correctPairs[i] = shuffled.indexOf(leftNodes[i].letter);
     }
+
+    print("🔤 LEFT  NODES: $letters");
+    print("🔤 RIGHT NODES: $shuffled");
+    print("🟢 CORRECT MAP: $correctPairs");
 
     lines.clear();
     leftDots = List.filled(5, Offset.zero);
@@ -173,36 +173,33 @@ class _DragDropPageState extends State<DragDropPage> {
   }
 
   /// =============================================================
-  /// VALIDATE
+  /// VALIDATE → UPDATE SCORE & LEVEL
   /// =============================================================
   Future<void> validate() async {
+    print("=========================================");
+    print("🧪 VALIDATING RESULTS...");
+    print("=========================================");
+
     if (isAllCorrect()) {
+      print("🟢 ALL ANSWERS CORRECT → FINISH LEVEL!");
+
       setState(() => showSuccess = true);
 
-      final idAkun = UserSession.instance.idAkun;
-      if (idAkun != null) {
-
-        // 1. Tambah score aggregated
+      final id = UserSession.instance.idAkun;
+      if (id != null) {
         await GameProgressService.instance.updateAggregatedProgress(
-          idAkun: idAkun,
+          idAkun: id,
           gameKey: "dragdrop",
           isCorrect: true,
         );
 
-        // 2. Ambil level sekarang
-        final currentLevel =
-            await LevelProgressService.instance.getCurrentLevel(idAkun);
+        final before = await LevelProgressService.instance.getCurrentLevel(id);
+        final next = await LevelProgressService.instance.incrementLevel(id);
 
-        print("🔵 [DragDrop] User current level = $currentLevel");
-
-        // 3. Naikkan level
-        final nextLevel =
-            await LevelProgressService.instance.incrementLevel(idAkun);
-
-        print("🟢 [DragDrop] Level naik → $currentLevel → $nextLevel");
+        print("🏆 LEVEL UP: $before → $next");
       }
-
     } else {
+      print("🔴 WRONG — SHOW FAIL POPUP");
       setState(() {
         showFail = true;
         failFromHeart = false;
@@ -210,24 +207,21 @@ class _DragDropPageState extends State<DragDropPage> {
     }
   }
 
-
   /// =============================================================
-  /// POINTER DOWN
+  /// DRAG LOGIC
   /// =============================================================
   void _onPointerDown(PointerDownEvent e) {
     for (int i = 0; i < leftDots.length; i++) {
       if ((leftDots[i] - e.position).distance <= hitRadius) {
         draggingLeft = i;
         dragPos = e.position;
+        print("🟦 DRAG START on LEFT index $i");
         setState(() {});
         break;
       }
     }
   }
 
-  /// =============================================================
-  /// POINTER MOVE
-  /// =============================================================
   void _onPointerMove(PointerMoveEvent e) {
     if (draggingLeft != null) {
       dragPos = e.position;
@@ -235,11 +229,10 @@ class _DragDropPageState extends State<DragDropPage> {
     }
   }
 
-  /// =============================================================
-  /// POINTER UP
-  /// =============================================================
   void _onPointerUp(PointerUpEvent e) async {
     if (draggingLeft == null) return;
+
+    print("🟨 DRAG END");
 
     final leftIndex = draggingLeft!;
     draggingLeft = null;
@@ -249,7 +242,8 @@ class _DragDropPageState extends State<DragDropPage> {
     double best = hitRadius;
 
     for (int i = 0; i < rightDots.length; i++) {
-      double dist = (rightDots[i] - e.position).distance;
+      final dist = (rightDots[i] - e.position).distance;
+
       if (dist < best) {
         best = dist;
         target = i;
@@ -258,6 +252,9 @@ class _DragDropPageState extends State<DragDropPage> {
 
     if (target != null) {
       final correct = correctPairs[leftIndex] == target;
+
+      print("🔗 CONNECT LEFT $leftIndex → RIGHT $target");
+      print("   ✔ CORRECT? $correct");
 
       setState(() {
         lines.removeWhere(
@@ -272,28 +269,238 @@ class _DragDropPageState extends State<DragDropPage> {
 
         if (!correct) {
           hearts--;
+          print("❤️ HEART LOST → $hearts");
+
           if (hearts <= 0) {
+            print("💀 HEART 0 → AUTO FAIL");
             showFail = true;
             failFromHeart = true;
           }
         }
       });
-
-      final idAkun = UserSession.instance.idAkun;
-      if (idAkun != null) {
-        await GameProgressService.instance.updateAggregatedProgress(
-          idAkun: idAkun,
-          gameKey: "dragdrop",
-          isCorrect: correct,
-        );
-      }
     }
 
     setState(() {});
   }
 
   /// =============================================================
-  /// BUILD UI (NO UI CHANGES)
+  /// DOT WITH COLOR LOGIC
+  /// =============================================================
+  Widget _dot(bool isLeft, int index, void Function(Offset) save) {
+    bool connected = false;
+    bool correct = false;
+
+    if (isLeft) {
+      final match = lines.where((e) => e.leftIndex == index);
+      if (match.isNotEmpty) {
+        connected = true;
+        correct = match.first.isCorrect;
+      }
+    } else {
+      final match = lines.where((e) => e.rightIndex == index);
+      if (match.isNotEmpty) {
+        connected = true;
+        correct = match.first.isCorrect;
+      }
+    }
+
+    Color color = Colors.grey.shade400;
+    if (connected) color = correct ? const Color(0xFF3DBE78) : const Color(0xFFCC4C4C);
+
+    return Builder(
+      builder: (context) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final box = context.findRenderObject() as RenderBox?;
+          if (box != null) save(box.localToGlobal(box.size.center(Offset.zero)));
+        });
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 22,
+          height: 22,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+          ),
+        );
+      },
+    );
+  }
+
+  /// LEFT CELL
+  Widget _leftCell(int i) {
+    bool wrong = lines.any((c) => c.leftIndex == i && !c.isCorrect);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: wrong ? const Color(0xFFCC4C4C) : const Color(0xFF567C8D),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            leftNodes[i].letter.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 38,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        _dot(true, i, (o) => leftDots[i] = o),
+      ],
+    );
+  }
+
+  /// RIGHT CELL WITH SOUND
+  Widget _rightCell(int i) {
+    bool wrong = lines.any((c) => c.rightIndex == i && !c.isCorrect);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _dot(false, i, (o) => rightDots[i] = o),
+        const SizedBox(width: 14),
+        GestureDetector(
+          onTap: () async {
+            final letter = rightNodes[i].letter.toLowerCase();
+            print("🔊 PLAY AUDIO: $letter");
+
+            await _player.stop();
+            await _player.play(
+              AssetSource("sounds/alphabet/$letter.mp3"),
+            );
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: wrong ? const Color(0xFFCC4C4C) : const Color(0xFF567C8D),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(Icons.volume_up, color: Colors.white, size: 32),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// HEADER UI
+  Widget _header() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFC8D9E6),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Row(
+        children: [
+          ...List.generate(
+            5,
+            (i) => Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(
+                i < hearts ? Icons.favorite : Icons.favorite_border_rounded,
+                color: Colors.red,
+                size: 26,
+              ),
+            ),
+          ),
+          const Spacer(),
+          Row(
+            children: [
+              const Icon(Icons.monetization_on, color: Colors.black87),
+              const SizedBox(width: 6),
+              Text("$gold"),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// SUCCESS POPUP
+  Widget _successPopup() {
+    return Container(
+      color: Colors.black54,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(30),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 90),
+              const SizedBox(height: 10),
+              const Text("YEAY CORRECT!", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                child: const Text("Next"),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// FAIL POPUP
+  Widget _failPopup() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          showFail = false;
+
+          if (failFromHeart) {
+            hearts = 5;
+            failFromHeart = false;
+            generatePuzzle();
+          }
+        });
+      },
+      child: Container(
+        color: Colors.black54,
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.close, size: 90, color: Colors.red),
+                SizedBox(height: 12),
+                Text(
+                  "Benarkan Jawaban Kamu!",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// =============================================================
+  /// MAIN UI
   /// =============================================================
   @override
   Widget build(BuildContext context) {
@@ -329,9 +536,6 @@ class _DragDropPageState extends State<DragDropPage> {
     );
   }
 
-  /// =============================================================
-  /// UI COMPONENTS (UNCHANGED)
-  /// =============================================================
   Widget _buildMain() {
     return SafeArea(
       child: Column(
@@ -346,13 +550,13 @@ class _DragDropPageState extends State<DragDropPage> {
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(5, _leftRow),
+                    children: List.generate(5, _leftCell),
                   ),
                 ),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(5, _rightRow),
+                    children: List.generate(5, _rightCell),
                   ),
                 ),
               ],
@@ -373,195 +577,6 @@ class _DragDropPageState extends State<DragDropPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _leftRow(int i) {
-    final wrong =
-        lines.any((c) => c.leftIndex == i && !c.isCorrect);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: wrong ? const Color(0xFFCC4C4C) : const Color(0xFF567C8D),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            leftNodes[i].letter.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 38,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        const SizedBox(width: 14),
-        _dot((o) => leftDots[i] = o),
-      ],
-    );
-  }
-
-  Widget _rightRow(int i) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _dot((o) => rightDots[i] = o),
-        const SizedBox(width: 14),
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: const Color(0xFF567C8D),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: const Icon(Icons.volume_up,
-              color: Colors.white, size: 32),
-        ),
-      ],
-    );
-  }
-
-  Widget _dot(void Function(Offset) save) {
-    return Builder(builder: (context) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final box = context.findRenderObject() as RenderBox?;
-        if (box != null) {
-          save(box.localToGlobal(box.size.center(Offset.zero)));
-        }
-      });
-
-      return Container(
-        width: 22,
-        height: 22,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.grey.shade400,
-        ),
-      );
-    });
-  }
-
-  Widget _header() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFC8D9E6),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Row(
-        children: [
-          ...List.generate(
-            5,
-            (i) => Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Icon(
-                Icons.favorite,
-                color:
-                    i < hearts ? const Color(0xFFCC4C4C) : const Color(0xFFD99B9B),
-                size: 26,
-              ),
-            ),
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              const Icon(Icons.monetization_on, color: Colors.black87),
-              const SizedBox(width: 6),
-              Text("$gold"),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _successPopup() {
-    return Container(
-      color: Colors.black.withOpacity(0.35),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.all(30),
-          width: 300,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.check_circle,
-                  size: 90, color: Color(0xFF2F4156)),
-              const SizedBox(height: 10),
-              const Text(
-                "YEAY CORRECT!",
-                style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2F4156)),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);       // tutup popup
-                  Navigator.pop(context); 
-                },
-                child: const Text("Next"),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _failPopup() {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          showFail = false;
-          if (failFromHeart) {
-            hearts = 5;
-            failFromHeart = false;
-            generatePuzzle();
-          }
-        });
-      },
-      child: Container(
-        color: Colors.black.withOpacity(0.35),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.all(30),
-            width: 300,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.close,
-                    size: 90, color: Color(0xFFCC4C4C)),
-                SizedBox(height: 12),
-                Text(
-                  "Benarkan Jawaban Kamu!",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFCC4C4C),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

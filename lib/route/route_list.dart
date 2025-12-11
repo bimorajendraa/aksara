@@ -27,7 +27,7 @@ import '../screens/games/drag-drop/drag_drop_page.dart';
 import '../screens/book/story_mode_screen.dart';
 import '../screens/book/story_detail_screen.dart';
 import '../screens/book/chapter_read_screen.dart';
-import '../screens/spellbee.dart';
+import '../screens/games/spellbee/spellbee.dart';
 
 Map<String, WidgetBuilder> appRoutes = {
   '/': (_) => OnboardingScreen(),
@@ -60,11 +60,9 @@ Map<String, WidgetBuilder> appRoutes = {
   '/startpage3': (_) => StartPage3(),
   '/startpage4': (_) => StartPage4(),
   '/aksara-random-drag': (_) => DragDropPage(),
+  '/spellbee': (_) => SpellBeePage(),
 
   // BOOK
   '/story-mode': (_) => StoryModeScreen(),
   '/story-detail': (_) => StoryDetailScreen(),
-
-  // SPELLBEE
-  '/spellbee': (_) => SpellBeePage(),
 };
