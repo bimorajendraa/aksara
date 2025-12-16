@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../home/home_screen.dart';
 import 'start_page2.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
@@ -29,7 +30,7 @@ class _StartPageState extends State<StartPage> {
   bool showTutorial = true;
   int hearts = 5;
   double progress = 0.15;
-  int pointerIndex = 0; // target pertama = index 0 (A)
+  int pointerIndex = 0; 
   String? selectedLetter;
   int currentPage = 0;
 
@@ -37,11 +38,12 @@ class _StartPageState extends State<StartPage> {
   final Set<String> clickedLetters = {};
   final ScrollController _scrollController = ScrollController();
   final AudioPlayer _player = AudioPlayer();
+  final SupabaseClient _supabase = Supabase.instance.client;
+  final Map<String, String> _letterSoundUrl = {};
+  bool _isSoundLoaded = false;
 
-  // GlobalKeys untuk setiap TEXT (huruf) agar bisa diukur posisinya
   final List<GlobalKey> letterTextKeys = List.generate(26, (_) => GlobalKey());
 
-  // Popup measurement results
   double? popupLeft;
   double? popupTop;
   double popupWidth = 240;
@@ -51,7 +53,8 @@ class _StartPageState extends State<StartPage> {
   void initState() {
     super.initState();
 
-    // tambahkan listener supaya popup ikut bergeser saat user scroll
+    _fetchLetterSounds();
+
     _scrollController.addListener(() {
       if (showTutorial) {
         WidgetsBinding.instance
@@ -59,7 +62,6 @@ class _StartPageState extends State<StartPage> {
       }
     });
 
-    // Schedule measurement setelah widget pertama kali build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _measureAndPositionPopup();
     });
@@ -75,23 +77,45 @@ class _StartPageState extends State<StartPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Setelah dependency berubah (mis. orientation), ukur ulang
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _measureAndPositionPopup();
     });
   }
 
   Future<void> _playLetterSound(String letter) async {
-    final file = letter.toLowerCase(); // a.mp3, b.mp3, ...
+    if (!_isSoundLoaded) return;
+
+    final key = letter.toLowerCase();
+    final url = _letterSoundUrl[key];
+
+    if (url == null) {
+      debugPrint('Sound for letter $letter not found');
+      return;
+    }
+
     await _player.stop();
-    await _player.play(AssetSource('sounds/alphabet/$file.mp3'));
+    await _player.play(UrlSource(url));
   }
 
-  // Panggil ini tiap kali pointerIndex berubah atau saat ingin tampilkan popup
+  Future<void> _fetchLetterSounds() async {
+  final response = await _supabase
+        .from('gamesounds')
+        .select('description, audio_url');
+
+    for (final item in response) {
+      final description = item['description'] as String;
+      final letter = description.split(' ').last.toLowerCase(); 
+      _letterSoundUrl[letter] = item['audio_url'];
+    }
+
+    setState(() {
+      _isSoundLoaded = true;
+    });
+  }
+
   void _measureAndPositionPopup() {
     if (!showTutorial) return;
 
-    // Pastikan index valid
     if (pointerIndex < 0 || pointerIndex >= letterTextKeys.length) return;
 
     final key = letterTextKeys[pointerIndex];
@@ -105,7 +129,6 @@ class _StartPageState extends State<StartPage> {
 
     final render = ctx.findRenderObject() as RenderBox;
 
-    // Ambil posisi huruf (text) secara akurat
     final safePadding = MediaQuery.of(context).padding.top;
     final letterOffset =
         render.localToGlobal(Offset.zero) - Offset(0, safePadding);
@@ -113,22 +136,18 @@ class _StartPageState extends State<StartPage> {
     final size = render.size;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // ukuran popup berdasarkan ukuran huruf (agar mengikuti cell), batasi supaya tidak terlalu besar
-    final double cellBase = size.width * 2.0; // dasar ukuran popup dari lebar huruf
+    final double cellBase = size.width * 2.0; 
     popupWidth = cellBase.clamp(140.0, 320.0);
     popupHeight = popupWidth * 0.55;
 
-    // posisi berdasarkan huruf (bukan container)
     final double centerOfLetter = letterOffset.dx + render.size.width / 2;
     final double topOfLetter = letterOffset.dy;
 
     double left = centerOfLetter - popupWidth / 2;
-    double top = topOfLetter - popupHeight - 10.0; // jarak 10px rapat
+    double top = topOfLetter - popupHeight - 10.0; 
 
-    // koreksi tepi layar
     left = left.clamp(8.0, screenWidth - popupWidth - 8.0);
 
-    // kalau kepentok atas, tampilkan di bawah huruf
     if (top < 8.0) {
       top = topOfLetter + render.size.height + 10.0;
     }
@@ -162,7 +181,7 @@ class _StartPageState extends State<StartPage> {
                   SizedBox(height: screenHeight * 0.02),
                   _buildTitle(screenWidth),
                   SizedBox(height: screenHeight * 0.02),
-                  _buildLettersGrid(screenWidth, screenHeight), // Grid non-scrollable
+                  _buildLettersGrid(screenWidth, screenHeight),
                   SizedBox(height: screenHeight * 0.01),
                   _buildNextButton(screenWidth, screenHeight),
                   SizedBox(height: screenHeight * 0.02),
@@ -171,7 +190,6 @@ class _StartPageState extends State<StartPage> {
             ),
           ),
 
-          // Tutorial overlay (gunakan measured popupLeft & popupTop)
           if (showTutorial)
             AnimatedOpacity(
               opacity: 1,
@@ -250,8 +268,6 @@ class _StartPageState extends State<StartPage> {
   // POPUP HURUF =======================================================
   Widget letterPopup(String letter) {
     final screenWidth = MediaQuery.of(context).size.width;
-
-    // BATAS ukuran popup biar tidak terlalu besar di laptop
     final effectiveWidth = screenWidth.clamp(320, 480).toDouble();
 
     return Container(
@@ -311,7 +327,7 @@ class _StartPageState extends State<StartPage> {
                 ),
                 const SizedBox(height: 10),
 
-                // 🔁 REPLAY BUTTON – area klik diperbesar
+                // REPLAY BUTTON 
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
@@ -489,8 +505,8 @@ class _StartPageState extends State<StartPage> {
     }
 
     return GridView.builder(
-      shrinkWrap: true, // penting agar GridView menyesuaikan tinggi kontennya
-      physics: const NeverScrollableScrollPhysics(), // biar scroll di SingleChildScrollView
+      shrinkWrap: true, 
+      physics: const NeverScrollableScrollPhysics(), 
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4,
@@ -528,7 +544,6 @@ class _StartPageState extends State<StartPage> {
               }
             });
 
-            // 🔊 mainkan suara saat huruf ditekan
             _playLetterSound(letter);
 
             showGeneralDialog(
@@ -550,7 +565,7 @@ class _StartPageState extends State<StartPage> {
               },
             );
           },
-          // apply the key to the TEXT widget that represents the letter (presisi)
+
           child: Container(
             padding: EdgeInsets.only(top: screenHeight * 0.02),
             child: Stack(

@@ -74,13 +74,10 @@ class _StartPage4State extends State<StartPage4> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
     final double effectiveWidth = screenWidth.clamp(320.0, 500.0);
     final double effectiveHeight = screenHeight.clamp(600.0, 900.0);
-
     final double backSize = (screenWidth * 0.06).clamp(30.0, 38.0);
     final double backIconSize = (backSize * 0.6).clamp(20.0, 24.0);
-
     final double horizontalMargin = screenWidth * 0.08;
 
     return Scaffold(
@@ -91,10 +88,12 @@ class _StartPage4State extends State<StartPage4> {
             children: [
               SizedBox(height: effectiveHeight * 0.02),
 
+              /// HEALTH BAR 
               _buildHealthBar2(screenWidth, screenHeight),
 
               SizedBox(height: effectiveHeight * 0.02),
 
+              /// BACK BUTTON 
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
@@ -120,6 +119,7 @@ class _StartPage4State extends State<StartPage4> {
 
               SizedBox(height: effectiveHeight * 0.10),
 
+              /// TITLE 
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: effectiveWidth * 0.06),
                 child: Text(
@@ -135,6 +135,7 @@ class _StartPage4State extends State<StartPage4> {
 
               SizedBox(height: effectiveHeight * 0.06),
 
+              /// MONSTER 
               SizedBox(
                 height: effectiveHeight * 0.25,
                 child: Align(
@@ -148,9 +149,7 @@ class _StartPage4State extends State<StartPage4> {
 
               SizedBox(height: effectiveHeight * 0.07),
 
-              /// ============================
-              /// NEXT BUTTON — UPDATE + NEXT
-              /// ============================
+              /// NEXT BUTTON 
               GestureDetector(
                 onTap: _completeStartFlow,
                 child: Container(
@@ -177,6 +176,7 @@ class _StartPage4State extends State<StartPage4> {
     );
   }
 
+  /// HEALTH BAR 
   Widget _buildHealthBar2(double w, double h) {
     return Container(
       margin: EdgeInsets.only(

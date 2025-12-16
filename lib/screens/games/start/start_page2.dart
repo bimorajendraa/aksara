@@ -16,16 +16,10 @@ class _StartPageState2 extends State<StartPage2> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
-    // ukuran efektif agar layout tidak melebar berlebihan di laptop
     final effectiveWidth = screenWidth.clamp(320.0, 500.0).toDouble();
     final effectiveHeight = screenHeight.clamp(600.0, 900.0).toDouble();
-
-    // ukuran tombol back yang disesuaikan dan dibatasi
     final double backSize = (screenWidth * 0.06).clamp(30.0, 38.0);
     final double backIconSize = (backSize * 0.6).clamp(20.0, 24.0);
-
-    // margin horizontal sama dengan healthbar (w * 0.08)
     final double horizontalMargin = screenWidth * 0.08;
 
     return Scaffold(
@@ -36,12 +30,12 @@ class _StartPageState2 extends State<StartPage2> {
             children: [
               SizedBox(height: effectiveHeight * 0.02),
 
-              /// HEALTH BAR — mengikuti StartPage
+              /// HEALTH BAR
               _buildHealthBar2(screenWidth, screenHeight),
 
               SizedBox(height: effectiveHeight * 0.02),
 
-              /// BACK BUTTON — sejajar dengan ujung kiri healthbar dan ukurannya di-clamp
+              /// BACK BUTTON 
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
@@ -67,7 +61,6 @@ class _StartPageState2 extends State<StartPage2> {
 
               SizedBox(height: effectiveHeight * 0.07),
 
-              // semua isi berikut dibatasi max width agar rapi di layar besar
               Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 500),
@@ -191,7 +184,7 @@ class _StartPageState2 extends State<StartPage2> {
     );
   }
 
-  /// HEALTH BAR sama persis seperti di StartPage: margin mengikuti screen width
+  /// HEALTH BAR
   Widget _buildHealthBar2(double w, double h) {
     return Container(
       margin: EdgeInsets.only(

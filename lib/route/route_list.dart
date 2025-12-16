@@ -87,7 +87,7 @@ Map<String, WidgetBuilder> appRoutes = {
   '/spellbee': (_) => SpellBeePage(),
   '/writing' : (_) => WritingPracticeScreen(),
   '/monster-match' : (_) => MonsterColorMatchPage(),
-  // '/practice' : (_) => PracticeScreen(),
+  '/practice' : (_) => PracticeScreen(username: ''),
 
   // BOOK
   '/story-mode': (_) => StoryModeScreen(),
@@ -98,6 +98,5 @@ Map<String, WidgetBuilder> appRoutes = {
 
   // Leaderboard
   '/leaderboard': (_) => LeaderboardPage(),
-
-
+  
 };
