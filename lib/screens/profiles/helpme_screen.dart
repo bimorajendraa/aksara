@@ -58,9 +58,9 @@ class HelpMeScreen extends StatelessWidget {
                   const SizedBox(height: 15),
 
                   // pertanyaan
-                  _buildFaqCard("What should I do if i forgot my password?"),
+                  _buildFaqCard("What should I do if I forgot my password?"),
                   const SizedBox(height: 15),
-                  _buildFaqCard("What happened if I want to delete my account"),
+                  _buildFaqCard("What happened if I want to delete my account?"),
                   const SizedBox(height: 15),
                   _buildFaqCard("How to use Aksara?"),
                   const SizedBox(height: 15),

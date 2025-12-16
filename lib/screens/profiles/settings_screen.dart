@@ -1,7 +1,7 @@
 import 'dart:ui'; // Untuk efek Blur
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Untuk SVG
-import 'package:supabase_flutter/supabase_flutter.dart'; // Untuk Supabase
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
@@ -12,8 +12,13 @@ class SettingScreen extends StatefulWidget {
 
 class _SettingScreenState extends State<SettingScreen> {
   // Variable Data User
-  String _username = ""; 
-  String _email = "";
+  String _username = "Loading...";
+  String _email = "Loading...";
+  
+  // Tampilan Profile
+  String _currentAvatarPath = 'assets/icons/Monster Hijau Profile.png'; // Default Avatar
+  Color _profileBackgroundColor = const Color(0xFF2C3E50); // Default Navy
+  
   bool _isLoading = true;
 
   // Toggle States
@@ -26,41 +31,97 @@ class _SettingScreenState extends State<SettingScreen> {
     _getUserData();
   }
 
-  // --- FUNGSI AMBIL DATA DARI SUPABASE ---
+  // --- FUNGSI AMBIL DATA DARI SUPABASE (METODE BERTAHAP / SEQUENTIAL) ---
+  // Metode ini lebih aman untuk menghindari error join table
   Future<void> _getUserData() async {
     try {
       final supabase = Supabase.instance.client;
-      final session = supabase.auth.currentSession;
+      final user = supabase.auth.currentUser;
 
-      if (session != null) {
-        final userEmail = session.user.email;
-        if (userEmail != null) {
-          final data = await supabase
-              .from('akun')
-              .select()
-              .eq('email', userEmail)
-              .single();
+      if (user != null) {
+        final userEmail = user.email;
 
-          if (mounted) {
-            setState(() {
-              _username = data['username'] ?? "User"; 
-              _email = data['email'] ?? userEmail;
-              _isLoading = false;
-            });
-          }
+        // 1. AMBIL DATA AKUN
+        final akunData = await supabase
+            .from('akun')
+            .select()
+            .eq('email', userEmail!)
+            .maybeSingle();
+
+        if (akunData == null) {
+           if (mounted) setState(() { _username = "User Not Found"; _isLoading = false; });
+           return;
+        }
+
+        String fetchedUsername = akunData['username'] ?? "User";
+        final int idAkun = akunData['id_akun'];
+        
+        // Default values
+        String fetchedAvatar = _currentAvatarPath;
+        Color fetchedBg = _profileBackgroundColor;
+
+        // 2. AMBIL USER DETAILS (Untuk ID Icon & ID Background)
+        final userDetails = await supabase
+            .from('userdetails')
+            .select('id_profileicons, id_profilebackground')
+            .eq('id_akun', idAkun)
+            .maybeSingle();
+
+        if (userDetails != null) {
+           // A. Ambil Icon Path
+           if (userDetails['id_profileicons'] != null) {
+             final iconData = await supabase
+                .from('profileicons')
+                .select('icon_path')
+                .eq('id_profileicons', userDetails['id_profileicons'])
+                .maybeSingle();
+             
+             if (iconData != null && iconData['icon_path'] != null) {
+               fetchedAvatar = iconData['icon_path'];
+             }
+           }
+
+           // B. Ambil Background Color
+           if (userDetails['id_profilebackground'] != null) {
+             final bgData = await supabase
+                .from('profilebackground')
+                .select('background_color')
+                .eq('id_profilebackground', userDetails['id_profilebackground'])
+                .maybeSingle();
+             
+             if (bgData != null) {
+               fetchedBg = _parseColorFromDb(bgData['background_color']);
+             }
+           }
+        } 
+        // Fallback: Cek kolom legacy
+        else if (akunData.containsKey('avatar_path') && akunData['avatar_path'] != null) {
+           fetchedAvatar = akunData['avatar_path'];
+        }
+
+        if (mounted) {
+          setState(() {
+            _username = fetchedUsername;
+            _email = userEmail!;
+            _currentAvatarPath = fetchedAvatar;
+            _profileBackgroundColor = fetchedBg; // Update warna background
+            _isLoading = false;
+          });
         }
       } else {
-        setState(() {
-          _username = "Guest";
-          _email = "No Session";
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _username = "Guest";
+            _email = "No Session";
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
-      debugPrint("Error fetching data: $e");
+      debugPrint("Error fetching settings data: $e");
       if (mounted) {
         setState(() {
-          _username = "Error Loading";
+          _username = "Error Load";
           _email = "-";
           _isLoading = false;
         });
@@ -73,7 +134,7 @@ class _SettingScreenState extends State<SettingScreen> {
     try {
       await Supabase.instance.client.auth.signOut();
       if (mounted) {
-        Navigator.of(context).pop(); 
+        Navigator.of(context).pop(); // Tutup Dialog
         Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
       }
     } catch (e) {
@@ -99,15 +160,15 @@ class _SettingScreenState extends State<SettingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // Menggunakan Column langsung tanpa SafeArea di body agar Header bisa mentok ke atas,
-      // tapi kita atur padding di dalam Header-nya.
       body: Column(
         children: [
-          // HEADER DINAMIS
+          // HEADER DINAMIS (Kirim Warna & Avatar)
           _SettingHeader(
             username: _username,
             email: _email,
             isLoading: _isLoading,
+            avatarPath: _currentAvatarPath, 
+            profileBackgroundColor: _profileBackgroundColor, // Warna dari DB
           ),
           
           Expanded(
@@ -115,7 +176,7 @@ class _SettingScreenState extends State<SettingScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
               child: Column(
                 children: [
-                  // 1. Email Notification (SVG)
+                  // 1. Email Notification
                   _buildSwitchTile(
                     iconAsset: 'assets/icons/email-notification.svg',
                     title: "Email Notification",
@@ -125,7 +186,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                   const Divider(),
 
-                  // 2. Activities Notification (SVG)
+                  // 2. Activities Notification
                   _buildSwitchTile(
                     iconAsset: 'assets/icons/activities-notification.svg',
                     title: "Activities Notification",
@@ -134,7 +195,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                   const Divider(),
 
-                  // 3. About Us (SVG)
+                  // 3. Menu Items
                   _buildMenuTile(
                     title: "About Us", 
                     iconAsset: 'assets/icons/about-us.svg', 
@@ -146,16 +207,20 @@ class _SettingScreenState extends State<SettingScreen> {
                     Navigator.pushNamed(context, '/account');
                   }),
                   const Divider(),
+                  
                   _buildMenuTile(title: "Delete Account", onTap: () {}),
                   const Divider(),
+                  
                   _buildMenuTile(title: "Help Me", onTap: () {
                     Navigator.pushNamed(context, '/helpme');
                   }),
                   const Divider(),
+                  
                   _buildMenuTile(title: "Terms & Condition", onTap: () {
                     Navigator.pushNamed(context, '/terms-conditions');
                   }),
                   const Divider(),
+                  
                   const SizedBox(height: 20),
 
                   // TOMBOL LOGOUT
@@ -172,23 +237,23 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
-  // --- WIDGET HELPER: SWITCH TILE (UPDATED SVG & COLORS) ---
+  // --- WIDGET HELPER ---
   Widget _buildSwitchTile({
     required String iconAsset,
     required String title,
     required bool value,
     required Function(bool) onChanged,
-    double iconSize = 24.0, // <--- Parameter Baru (Default 24)
+    double iconSize = 24.0,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
-          SvgPicture.asset(
-            iconAsset,
-            width: iconSize,  // <--- Gunakan parameter di sini
-            height: iconSize, // <--- Gunakan parameter di sini
-            fit: BoxFit.contain, // Agar gambar tidak penyok
+          // Gunakan _buildImage untuk safety jika svg tidak ada
+          SizedBox(
+            width: iconSize,
+            height: iconSize,
+            child: _buildImage(iconAsset, fit: BoxFit.contain),
           ),
           const SizedBox(width: 15),
           Expanded(
@@ -210,12 +275,11 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
-  // --- WIDGET HELPER: MENU TILE (UPDATED SVG SUPPORT) ---
   Widget _buildMenuTile({
     required String title, 
     String? iconAsset, 
     required VoidCallback onTap,
-    double iconSize = 24.0, // <--- Parameter Baru
+    double iconSize = 24.0,
   }) {
     return InkWell(
       onTap: onTap,
@@ -224,11 +288,10 @@ class _SettingScreenState extends State<SettingScreen> {
         child: Row(
           children: [
             if (iconAsset != null) ...[
-              SvgPicture.asset(
-                iconAsset,
-                width: iconSize,   // <--- Pakai parameter
-                height: iconSize,  // <--- Pakai parameter
-                fit: BoxFit.contain,
+              SizedBox(
+                width: iconSize,
+                height: iconSize,
+                child: _buildImage(iconAsset, fit: BoxFit.contain),
               ),
               const SizedBox(width: 15),
             ],
@@ -262,110 +325,68 @@ class _SettingScreenState extends State<SettingScreen> {
 }
 
 // ==========================================================
-// 3. LOGOUT POPUP DIALOG (SAMA SEPERTI SEBELUMNYA)
+// 1. HELPER FUNCTIONS
 // ==========================================================
-class LogoutDialog extends StatelessWidget {
-  final VoidCallback onLogoutPressed;
 
-  const LogoutDialog({super.key, required this.onLogoutPressed});
+// Parse Hex Color (e.g., 0xFF123456)
+Color _parseColorFromDb(String? hexString) {
+  if (hexString == null || hexString.isEmpty) return const Color(0xFF2C3E50);
+  try {
+    String cleanHex = hexString.replaceAll("#", "").replaceAll("0x", "").toUpperCase();
+    if (cleanHex.length == 6) cleanHex = "FF$cleanHex";
+    return Color(int.parse(cleanHex, radix: 16));
+  } catch (e) {
+    return const Color(0xFF2C3E50);
+  }
+}
 
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: const Icon(Icons.close, color: Colors.grey, size: 24),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 130, 
-              width: 130, 
-              child: SvgPicture.asset(
-                'assets/images/profile_avatar6_bluegrey.svg', 
-                fit: BoxFit.contain,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text("Are you sure want to logout?", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50))),
-            const SizedBox(height: 10),
-            const Text("You are logout, You need to input\nyour detail to get back this app", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey, height: 1.5)),
-            const SizedBox(height: 30),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[400],
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 45),
-                      // padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      elevation: 0,
-                    ),
-                    child: const Text("CANCEL", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onLogoutPressed,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF5722),
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 45),
-                      // padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      elevation: 4,
-                      shadowColor: const Color(0xFFFF5722).withOpacity(0.4),
-                    ),
-                    child: const Text("LOGOUT", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-          ],
-        ),
-      ),
-    );
+// Image Loader (SVG/PNG/URL Support)
+Widget _buildImage(String? path, {double? width, double? height, BoxFit fit = BoxFit.contain}) {
+  if (path == null || path.isEmpty) {
+    return Container(width: width, height: height, color: Colors.grey.shade200, child: const Icon(Icons.person, color: Colors.grey));
+  }
+  
+  String cleanPath = path.trim();
+  if (!cleanPath.startsWith('http') && !cleanPath.startsWith('assets/')) {
+    cleanPath = 'assets/$cleanPath';
+  }
+
+  // Cek Tipe File
+  if (cleanPath.toLowerCase().endsWith('.svg')) {
+    if (cleanPath.startsWith('http')) {
+      return SvgPicture.network(cleanPath, width: width, height: height, fit: fit, placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()));
+    }
+    return SvgPicture.asset(cleanPath, width: width, height: height, fit: fit);
+  } else if (cleanPath.startsWith('http')) {
+    return Image.network(cleanPath, width: width, height: height, fit: fit, errorBuilder: (_,__,___) => const Icon(Icons.broken_image));
+  } else {
+    return Image.asset(cleanPath, width: width, height: height, fit: fit, errorBuilder: (_,__,___) => const Icon(Icons.image_not_supported));
   }
 }
 
 // ==========================================================
-// HEADER SETTING (UPDATED: TOP SPACING & LAYOUT)
+// 2. HEADER SETTING
 // ==========================================================
 class _SettingHeader extends StatelessWidget {
   final String username;
   final String email;
   final bool isLoading;
+  final String avatarPath;
+  final Color profileBackgroundColor; // Warna background dinamis
 
   const _SettingHeader({
     required this.username,
     required this.email,
     required this.isLoading,
+    required this.avatarPath,
+    required this.profileBackgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Gunakan MediaQuery untuk padding atas agar dinamis sesuai poni HP (Safe Area)
-    final topPadding = MediaQuery.of(context).padding.top + 20; 
+    final topPadding = MediaQuery.of(context).padding.top + 20;
 
     return Container(
-      // Padding atas dikurangi agar lebih mepet
-      // fromLTRB(left, top, right, bottom)
-      // Top menggunakan `topPadding` agar tidak tertutup jam/status bar tapi tetap rapat.
       padding: EdgeInsets.fromLTRB(25, topPadding, 25, 20),
       decoration: const BoxDecoration(
         color: Color(0xFFD6E6F2),
@@ -379,7 +400,6 @@ class _SettingHeader extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                // Hilangkan padding bawaan icon button agar benar-benar di pojok
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: () {
@@ -389,7 +409,7 @@ class _SettingHeader extends StatelessWidget {
                     color: Color(0xFF2C3E50), size: 22),
               ),
               const SizedBox(width: 10),
-              const Text("Setting",
+              const Text("Settings",
                   style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 22,
@@ -398,28 +418,30 @@ class _SettingHeader extends StatelessWidget {
             ],
           ),
           
-          // Jarak antara Judul dan Profile dikurangi (dari 25 jadi 15)
-          const SizedBox(height: 15), 
+          const SizedBox(height: 15),
           
           Row(
             children: [
-              // --- AVATAR ---
+              // --- AVATAR DINAMIS ---
               Container(
                 width: 70,
                 height: 70,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0xFF2C3E50),
+                  color: profileBackgroundColor, // <--- Warna dari DB
                 ),
                 child: ClipOval(
-                  child: Transform.translate(
-                    offset: const Offset(-4.5, 8), // Posisi avatar
-                    child: Image.asset(
-                      'assets/icons/Monster Hijau Profile.png',
-                      fit: BoxFit.contain, 
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.person, color: Colors.white),
-                    ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                       Positioned(
+                         bottom: -6, 
+                         top: 6,
+                         left: 0,
+                         right: 0,
+                         child: _buildImage(avatarPath, fit: BoxFit.contain), 
+                       ),
+                    ],
                   ),
                 ),
               ),
@@ -463,6 +485,88 @@ class _SettingHeader extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ==========================================================
+// 3. LOGOUT POPUP DIALOG
+// ==========================================================
+class LogoutDialog extends StatelessWidget {
+  final VoidCallback onLogoutPressed;
+
+  const LogoutDialog({super.key, required this.onLogoutPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: const Icon(Icons.close, color: Colors.grey, size: 24),
+              ),
+            ),
+            const SizedBox(height: 10),
+            
+            // --- GAMBAR MONSTER STATIS (PINK) ---
+            SizedBox(
+              height: 130, width: 130, 
+              child: Image.asset(
+                'assets/icons/Monster Pink Profile.png', // Pastikan file ini ada
+                fit: BoxFit.contain,
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            const Text("Are you sure want to logout?", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50))),
+            const SizedBox(height: 10),
+            const Text("You are logout, You need to input\nyour detail to get back this app", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey, height: 1.5)),
+            const SizedBox(height: 30),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[400],
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 45),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      elevation: 0,
+                    ),
+                    child: const Text("CANCEL", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onLogoutPressed,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF5722),
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 45),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      elevation: 4,
+                      shadowColor: const Color(0xFFFF5722).withOpacity(0.4),
+                    ),
+                    child: const Text("LOGOUT", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditAlienScreen extends StatefulWidget {
@@ -20,7 +21,7 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
 
   bool _loading = true;
 
-  // LISTS DIAMBIL DARI DATABASE (TIDAK HARDCODE)
+  // LISTS DIAMBIL DARI DATABASE
   List<String> _characterAssets = [];
   List<Color> _backgroundColors = [];
 
@@ -31,7 +32,7 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
   }
 
   // =====================================================
-  // LOAD SEMUA DATA: icons, backgrounds, lalu userdetails
+  // LOAD DATA
   // =====================================================
   Future<void> initAllData() async {
     await loadIcons();
@@ -39,32 +40,38 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
     await loadUserDetails();
   }
 
-  // =====================================================
-  // LOAD PROFILE ICONS FROM DATABASE
-  // =====================================================
   Future<void> loadIcons() async {
-    final data = await supabase.from("profileicons").select();
-
-    _characterAssets = data.map<String>((row) {
-      return row["icon_path"];
-    }).toList();
+    try {
+      final data = await supabase.from("profileicons").select();
+      if (mounted) {
+        setState(() {
+          _characterAssets = data.map<String>((row) => row["icon_path"] as String).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading icons: $e");
+    }
   }
 
-  // =====================================================
-  // LOAD BACKGROUND COLORS FROM DATABASE
-  // =====================================================
   Future<void> loadBackgrounds() async {
-    final data = await supabase.from("profilebackground").select();
-
-    _backgroundColors = data.map<Color>((row) {
-      final hex = row["background_color"].toString().replaceAll("0x", "");
-      return Color(int.parse("0x$hex"));
-    }).toList();
+    try {
+      final data = await supabase.from("profilebackground").select();
+      if (mounted) {
+        setState(() {
+          _backgroundColors = data.map<Color>((row) {
+            String hex = row["background_color"].toString();
+            // Bersihkan format hex
+            hex = hex.replaceAll("#", "").replaceAll("0x", "");
+            if (hex.length == 6) hex = "FF$hex";
+            return Color(int.parse(hex, radix: 16));
+          }).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading backgrounds: $e");
+    }
   }
 
-  // =====================================================
-  // LOAD USER DETAILS — AUTO INSERT IF MISSING
-  // =====================================================
   Future<void> loadUserDetails() async {
     try {
       final user = supabase.auth.currentUser;
@@ -78,10 +85,7 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
 
       idAkun = akun?['id_akun'];
 
-      if (idAkun == null) {
-        print("❌ id_akun not found");
-        return;
-      }
+      if (idAkun == null) return;
 
       final details = await supabase
           .from('userdetails')
@@ -105,52 +109,41 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
         userDetailsId = inserted["id_userdetails"];
         _selectedCharIndex = 0;
         _selectedBgIndex = 0;
-
-        print("✨ Created default userdetails");
       } else {
         userDetailsId = details["id_userdetails"];
+        
+        // Konversi ID (Database start 1) ke Index (List start 0)
+        int dbIconId = details["id_profileicons"] ?? 1;
+        int dbBgId = details["id_profilebackground"] ?? 1;
 
-        _selectedCharIndex = (details["id_profileicons"] ?? 1) - 1;
-        _selectedBgIndex = (details["id_profilebackground"] ?? 1) - 1;
+        // Safety clamp agar tidak error range
+        _selectedCharIndex = (dbIconId - 1).clamp(0, _characterAssets.isEmpty ? 0 : _characterAssets.length - 1);
+        _selectedBgIndex = (dbBgId - 1).clamp(0, _backgroundColors.isEmpty ? 0 : _backgroundColors.length - 1);
       }
 
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     } catch (e) {
-      print("ERROR loadUserDetails: $e");
-      setState(() => _loading = false);
+      debugPrint("ERROR loadUserDetails: $e");
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   // =====================================================
-  // UPDATE CHARACTER
+  // UPDATE DATA
   // =====================================================
   Future<void> updateCharacter() async {
     if (userDetailsId == null) return;
-
-    await supabase
-        .from("userdetails")
-        .update({"id_profileicons": _selectedCharIndex + 1})
-        .eq("id_userdetails", userDetailsId!);
-
-    print("🔄 Character updated");
+    // Simpan ID = index + 1
+    await supabase.from("userdetails").update({"id_profileicons": _selectedCharIndex + 1}).eq("id_userdetails", userDetailsId!);
   }
 
-  // =====================================================
-  // UPDATE BACKGROUND
-  // =====================================================
   Future<void> updateBackground() async {
     if (userDetailsId == null) return;
-
-    await supabase
-        .from("userdetails")
-        .update({"id_profilebackground": _selectedBgIndex + 1})
-        .eq("id_userdetails", userDetailsId!);
-
-    print("🔄 Background updated");
+    await supabase.from("userdetails").update({"id_profilebackground": _selectedBgIndex + 1}).eq("id_userdetails", userDetailsId!);
   }
 
   // =====================================================
-  // UI BELOW (TIDAK DIUBAH)
+  // UI BUILDER
   // =====================================================
 
   @override
@@ -158,7 +151,7 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
     final double headerHeight = 350;
     final double whiteSheetTopStart = 320;
 
-    if (_loading || _characterAssets.isEmpty || _backgroundColors.isEmpty) {
+    if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
@@ -167,43 +160,61 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
       body: Stack(
         alignment: Alignment.topCenter,
         children: [
-          // BACKGROUND PREVIEW
+          // 1. BACKGROUND PREVIEW
           Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: headerHeight,
+            top: 0, left: 0, right: 0, height: headerHeight,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              color: _backgroundColors[_selectedBgIndex],
+              color: _backgroundColors.isNotEmpty 
+                  ? _backgroundColors[_selectedBgIndex] 
+                  : Colors.grey,
             ),
           ),
 
-          // CHARACTER PREVIEW
+          // 2. CHARACTER PREVIEW (BIG IMAGE)
           Positioned(
-            top: 100,
-            left: 0,
-            right: 0,
+            top: 100, left: 0, right: 0,
             child: Center(
-              child: Image.asset(
-                _characterAssets[_selectedCharIndex],
+              child: SizedBox(
                 height: 280,
-                fit: BoxFit.contain,
+                width: 280,
+                // Gunakan _buildImage untuk support SVG/PNG/Network
+                child: _characterAssets.isNotEmpty
+                    ? _buildImage(
+                        _characterAssets[_selectedCharIndex], 
+                        fit: BoxFit.contain
+                      )
+                    : const SizedBox(),
               ),
             ),
           ),
 
-          // CONTENT AREA
+          // 3. CONTENT AREA (WHITE SHEET)
           Positioned.fill(
             top: whiteSheetTopStart,
             child: Container(
-              color: Colors.white,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30), 
+                  topRight: Radius.circular(30)
+                ),
+              ),
               child: Column(
                 children: [
-                  // TAB BAR
+                  const SizedBox(height: 10),
+                  
+                  // TAB BAR (Custom)
                   Container(
                     height: 70,
-                    color: const Color(0xFFD6E6F2),
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFD6E6F2),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30), 
+                        topRight: Radius.circular(30)
+                      ),
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -221,9 +232,7 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _selectedTabIndex == 0
-                                ? "Choose Character"
-                                : "Choose Background",
+                            _selectedTabIndex == 0 ? "Choose Character" : "Choose Background",
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 18,
@@ -233,33 +242,33 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                          // GRID CHARS
+                          // GRID CHARACTERS
                           if (_selectedTabIndex == 0)
                             GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    crossAxisSpacing: 25,
-                                    mainAxisSpacing: 25,
-                                  ),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 25,
+                                mainAxisSpacing: 25,
+                                childAspectRatio: 1.0, 
+                              ),
                               itemCount: _characterAssets.length,
                               itemBuilder: (context, index) {
                                 return _buildCharacterOption(index);
                               },
                             )
-                          // GRID BACKGROUND
+                          // GRID BACKGROUNDS
                           else
                             GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    crossAxisSpacing: 25,
-                                    mainAxisSpacing: 25,
-                                  ),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 25,
+                                mainAxisSpacing: 25,
+                                childAspectRatio: 1.0,
+                              ),
                               itemCount: _backgroundColors.length,
                               itemBuilder: (context, index) {
                                 return _buildBackgroundColorOption(index);
@@ -274,30 +283,29 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
             ),
           ),
 
-          // TOP BAR
+          // 4. TOP BAR
           Positioned(
-            top: 0,
-            left: 0,
+            top: 0, left: 0, right: 0,
             child: SafeArea(
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
                     ),
-                  ),
-                  const Text(
-                    "Profile",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                    const Text(
+                      "Profile",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -306,10 +314,10 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
     );
   }
 
-  // UI COMPONENTS (TIDAK DIUBAH)
+  // --- WIDGET HELPER ---
+
   Widget _buildTabItem({required int index, required IconData icon}) {
     bool isSelected = _selectedTabIndex == index;
-
     return GestureDetector(
       onTap: () => setState(() => _selectedTabIndex = index),
       child: Column(
@@ -320,6 +328,7 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
             duration: const Duration(milliseconds: 200),
             height: 4,
             width: isSelected ? 40 : 0,
+            margin: const EdgeInsets.only(top: 5),
             decoration: BoxDecoration(
               color: const Color(0xFF2C3E50),
               borderRadius: BorderRadius.circular(2),
@@ -332,28 +341,32 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
 
   Widget _buildCharacterOption(int index) {
     bool isSelected = _selectedCharIndex == index;
-
     return GestureDetector(
       onTap: () {
         setState(() => _selectedCharIndex = index);
         updateCharacter();
       },
       child: Container(
+        padding: const EdgeInsets.all(12), // Padding agar gambar tidak mentok
         decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF2C3E50) : Colors.grey,
+            color: isSelected ? const Color(0xFF2C3E50) : Colors.grey.shade300,
+            width: isSelected ? 3 : 1,
           ),
+          boxShadow: isSelected ? [
+            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0,4))
+          ] : [],
         ),
-        padding: const EdgeInsets.all(10),
-        child: Image.asset(_characterAssets[index]),
+        // Gunakan _buildImage agar support SVG/Network/Asset
+        child: _buildImage(_characterAssets[index], fit: BoxFit.contain),
       ),
     );
   }
 
   Widget _buildBackgroundColorOption(int index) {
     bool isSelected = _selectedBgIndex == index;
-
     return GestureDetector(
       onTap: () {
         setState(() => _selectedBgIndex = index);
@@ -363,18 +376,71 @@ class _EditAlienScreenState extends State<EditAlienScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.transparent,
-            width: 4,
+            color: isSelected ? const Color(0xFF2C3E50) : Colors.transparent,
+            width: 4, // Border tebal untuk selection
           ),
         ),
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(4), // Jarak border dengan isi warna
         child: Container(
           decoration: BoxDecoration(
             color: _backgroundColors[index],
             borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+            ],
           ),
+          child: isSelected 
+              ? const Center(child: Icon(Icons.check, color: Colors.white70, size: 40)) 
+              : null,
         ),
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// HELPER FUNCTION: IMAGE LOADER (SVG/PNG/URL Support)
+// ---------------------------------------------------------------------------
+Widget _buildImage(String? path, {double? width, double? height, BoxFit fit = BoxFit.contain}) {
+  if (path == null || path.isEmpty) {
+    return Container(width: width, height: height, color: Colors.grey.shade200, child: const Icon(Icons.image_not_supported));
+  }
+  
+  String cleanPath = path.trim();
+  bool isUrl = cleanPath.startsWith('http');
+
+  // Tambahkan assets/ jika bukan URL dan belum ada assets/
+  if (!isUrl && !cleanPath.startsWith('assets/')) {
+    cleanPath = 'assets/$cleanPath';
+  }
+
+  // Cek SVG
+  if (cleanPath.toLowerCase().endsWith('.svg')) {
+    if (isUrl) {
+      return SvgPicture.network(
+        cleanPath, width: width, height: height, fit: fit,
+        placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+    }
+    return SvgPicture.asset(
+      cleanPath, width: width, height: height, fit: fit,
+      placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+  } 
+  // Cek PNG/JPG
+  else if (isUrl) {
+    return Image.network(
+      cleanPath, width: width, height: height, fit: fit,
+      errorBuilder: (_,__,___) => const Icon(Icons.broken_image),
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+  } else {
+    return Image.asset(
+      cleanPath, width: width, height: height, fit: fit,
+      errorBuilder: (_,__,___) => const Icon(Icons.image_not_supported),
     );
   }
 }
