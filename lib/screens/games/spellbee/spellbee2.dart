@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// ====================== SUPABASE SERVICES ======================
+import 'package:aksara/services/user_loader_service.dart';
+import 'package:aksara/services/user_session.dart';
+import 'package:aksara/services/game_progress_service.dart';
+import 'package:aksara/services/level_progress_service.dart';
+// ================================================================
 
 class SpellBeePage2 extends StatefulWidget {
   const SpellBeePage2({super.key});
@@ -48,9 +54,7 @@ class _SpellBeePageState extends State<SpellBeePage2> {
     "FT", "DB", "KO",
   ];
 
-  final Set<String> allowedSyllables = {"ZE", "BA", "SU", "JI", "KO"};
   final List<String> validSyllables = ["ZE", "BA", "SU", "JI", "KO"];
-
   List<String> selectedSyllables = [];
 
   Future<void> _playSyllableSound(String text) async {
@@ -92,8 +96,16 @@ class _SpellBeePageState extends State<SpellBeePage2> {
   @override
   void initState() {
     super.initState();
+    _loadUser();
     _fetchSyllableSounds();
   }
+
+  // ====================== LOAD USER ID ============================
+  Future<void> _loadUser() async {
+    await UserLoaderService.instance.loadUserId();
+    print("🟦 SPELLBEE 2: User ID = ${UserSession.instance.idAkun}");
+  }
+  // ================================================================
 
   bool isValidSyllable(String text) {
     return validSyllables.contains(text);
@@ -103,25 +115,46 @@ class _SpellBeePageState extends State<SpellBeePage2> {
     final tapped = gridLetters[index];
 
     if (!isValidSyllable(tapped)) {
-
       showFloatingError();
       return;
     }
 
-    _playSyllableSound(tapped); 
+    _playSyllableSound(tapped);
 
     setState(() {
       gridColors[index] = Colors.blue;
-
       if (!selectedSyllables.contains(tapped)) {
         selectedSyllables.add(tapped);
       }
     });
 
     if (selectedSyllables.length == validSyllables.length) {
-      showCompletionPopup();
+      _onGameCompleted();   // <= MANGGIL SUPABASE UPDATE
     }
   }
+
+  // ============ UPDATE SUPABASE PROGRESS + LEVEL ===================
+  Future<void> _onGameCompleted() async {
+    final id = UserSession.instance.idAkun;
+
+    if (id != null) {
+      print("🟢 SPELLBEE2 COMPLETE → Updating Supabase...");
+
+      await GameProgressService.instance.updateAggregatedProgress(
+        idAkun: id,
+        gameKey: "spellbee2",
+        isCorrect: true,
+      );
+
+      final before = await LevelProgressService.instance.getCurrentLevel(id);
+      final next = await LevelProgressService.instance.incrementLevel(id);
+
+      print("🏆 LEVEL UP: $before → $next");
+    }
+
+    showCompletionPopup();
+  }
+  // ================================================================
 
   void showCompletionPopup() async {
     showDialog(
@@ -152,7 +185,8 @@ class _SpellBeePageState extends State<SpellBeePage2> {
     await Future.delayed(const Duration(seconds: 2));
 
     if (mounted) {
-      Navigator.pushReplacementNamed(context, "/practice");
+      Navigator.pop(context);  // tutup popup
+      Navigator.pop(context);  // balik ke home
     }
   }
 
@@ -172,10 +206,8 @@ class _SpellBeePageState extends State<SpellBeePage2> {
       body: SafeArea(
         child: ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-          
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-
             child: Stack(
               children: [
                 Column(

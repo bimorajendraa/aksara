@@ -7,7 +7,6 @@ Aplikasi ini dikembangkan menggunakan **Flutter** sebagai frontend dan **Supabas
 
 > Aksara membantu pengguna belajar membaca melalui permainan edukatif, visual interaktif, dan progres belajar yang terukur.
 
----
 
 ## Daftar Isi
 
@@ -23,7 +22,6 @@ Aplikasi ini dikembangkan menggunakan **Flutter** sebagai frontend dan **Supabas
 - [Tim Pengembang](#tim-pengembang)
 - [Lisensi](#lisensi)
 
----
 
 ## Latar Belakang
 
@@ -38,7 +36,6 @@ Aksara hadir sebagai solusi pembelajaran membaca yang:
 
 Versi awal Aksara ditujukan untuk perangkat **Android dan iOS**, dengan cakupan fitur yang masih terkendali agar pengembangan dapat dilakukan secara bertahap dan terarah.
 
----
 
 ## Fitur Utama
 
@@ -59,7 +56,6 @@ Tiga kemampuan literasi inti yang dilatih melalui mini game:
 
 Setiap mini game memberikan **poin, XP, level**, dan **badge** untuk menjaga motivasi belajar.
 
----
 
 ### 📚 Story Mode (Membaca Buku)
 
@@ -72,7 +68,6 @@ Fitur membaca buku menyediakan perpustakaan digital berisi bacaan tingkat dasar:
 
 Tujuannya adalah menumbuhkan minat baca sekaligus meningkatkan pemahaman teks.
 
----
 
 ### 🏠 Homepage (Dashboard Utama)
 
@@ -83,7 +78,6 @@ Homepage menjadi pusat navigasi pengguna, menampilkan:
 - Akses cepat ke Mini Game, Buku, Leaderboard, dan Profil.
 - Statistik singkat seperti jumlah XP, streak, dan level.
 
----
 
 ### 🔐 Authentication
 
@@ -96,7 +90,6 @@ Aksara menggunakan autentikasi berbasis **Supabase Auth** untuk:
 
 Dengan autentikasi, progres belajar pengguna tersimpan aman di backend dan dapat diakses dari lebih dari satu perangkat.
 
----
 
 ### 🏆 Leaderboard
 
@@ -106,7 +99,6 @@ Leaderboard dirancang untuk membangun kompetisi sehat:
 - Dapat dibagi menjadi leaderboard harian, mingguan, dan bulanan.
 - Mendukung sistem **tier** (misalnya Bronze, Silver, Gold).
 
----
 
 ### 👤 Profil Pengguna
 
@@ -117,7 +109,6 @@ Halaman profil menampilkan:
 - Statistik belajar dan streak.
 - Pengaturan dasar dan preferensi pengguna.
 
----
 
 ### 📈 Progress & Analitik
 
@@ -127,7 +118,6 @@ Fitur progres memungkinkan pengguna melihat:
 - Riwayat chapter dan level yang sudah diselesaikan.
 - Area yang masih lemah dan membutuhkan lebih banyak latihan.
 
----
 
 ## Arsitektur Aplikasi
 
@@ -147,7 +137,6 @@ Secara garis besar, arsitektur Aksara terbagi menjadi dua lapisan utama:
 - **Row Level Security (RLS)** untuk memastikan data setiap pengguna terisolasi dan aman.
 - API otomatis yang memudahkan operasi CRUD langsung dari aplikasi Flutter.
 
----
 
 ## Teknologi Utama
 
@@ -161,7 +150,6 @@ Secara garis besar, arsitektur Aksara terbagi menjadi dua lapisan utama:
 | Version Control| Git + GitHub                 |
 | Target Platform| Android dan iOS              |
 
----
 
 ## Instalasi & Menjalankan Proyek
 
@@ -214,7 +202,6 @@ Menjalankan pada device tertentu:
 flutter run -d <device_id>
 ```
 
----
 
 ## Struktur Proyek
 
@@ -294,7 +281,6 @@ aksara/
 
 Struktur di atas dapat disesuaikan dengan implementasi aktual, namun memberikan gambaran umum bagi kontributor baru.
 
----
 
 ## Desain Basis Data
 
@@ -315,7 +301,6 @@ Tabel inti yang digunakan di Supabase antara lain:
 
 Seluruh operasi data dilakukan melalui Supabase SDK dengan perlindungan RLS agar setiap pengguna hanya dapat mengakses datanya sendiri.
 
----
 
 ## Roadmap
 
@@ -325,7 +310,6 @@ Seluruh operasi data dilakukan melalui Supabase SDK dengan perlindungan RLS agar
 - Dashboard khusus untuk orang tua/guru.  
 - Fitur aksesibilitas tambahan (text-to-speech, pengaturan ukuran font, dan lain-lain).  
 
----
 
 ## Kontribusi
 
@@ -354,13 +338,11 @@ Alur kontribusi yang disarankan:
 
 5. Buat Pull Request ke branch utama di repository ini.
 
----
 
 ## UI Design Credit
 Original UI design dikembangkan oleh Tim AulNatBim (Institut Teknologi Sepuluh Nopember).
 
 Some UI components used in the development have been modified or adjusted by the development team to fit the implementation requirements.
----
 
 ## Tim Pengembang
 
@@ -369,13 +351,12 @@ Program Studi Sistem Informasi
 Institut Teknologi Sepuluh Nopember (ITS), Surabaya
 
 - Gerald Marcell Van Rayne 			        (073)
-- Burhan Shidqi Arrasyid			          (074) 
-- Arya Wiraguna Dwiputra 			          (083)
-- Maulana Muhammad Ad-Dzikri		        (136)
-- Sandythia Lova Ramadhani Krisnaprana	(181)
-- Bimo Rajendra Widyadhana			        (210) 
+- Burhan Shidqi Arrasyid			           (074) 
+- Arya Wiraguna Dwiputra 			           (083)
+- Maulana Muhammad Ad-Dzikri		           (136)
+- Sandythia Lova Ramadhani Krisnaprana	     (181)
+- Bimo Rajendra Widyadhana			           (210) 
 
----
 
 ## License
 Proyek ini dikembangkan sebagai bagian dari tugas akademik untuk mata kuliah Emerging Technology.

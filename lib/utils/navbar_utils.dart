@@ -14,7 +14,6 @@ class NavigationUtils {
         break;
 
       case 1:
-        // Pastikan nama route di main.dart adalah '/book' atau '/story-mode' (sesuaikan)
         Navigator.pushReplacementNamed(context, '/practice');
         break;
 
@@ -27,7 +26,7 @@ class NavigationUtils {
         break;
 
       case 4:
-        Navigator.pushNamed(context, '/live-ocr');
+        Navigator.pushNamed(context, '/camera');
         break;
     }
   }
