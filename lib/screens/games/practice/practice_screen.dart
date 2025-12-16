@@ -2,7 +2,7 @@ import 'package:aksara/screens/games/hearthesound/hearthesound.dart';
 import 'package:flutter/material.dart';
 import '../spellbee/spellbee.dart';
 import '../spellbee/spellbee2.dart';
-import '../games/monster_color_match/monster_color_match_page.dart';
+import '../monsterColorDragDrop/monster_color_drag_drop_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../widgets/custom_floating_navbar.dart';
 import '../../../../utils/navbar_utils.dart';

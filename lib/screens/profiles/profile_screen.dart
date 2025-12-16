@@ -42,14 +42,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (user != null) {
         final userEmail = user.email;
 
-        // 1. AMBIL DATA USER
         final akunData = await _supabase
             .from('akun')
             .select()
             .eq('email', userEmail!)
             .maybeSingle();
 
-        // Format Tanggal
         String yearStr = "2024";
         try {
           final createdAt = DateTime.parse(user.createdAt);
@@ -66,23 +64,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
               if (akunData['avatar_path'] != null) {
                 _currentAvatarPath = akunData['avatar_path'] as String;
               }
-
-              final idAkun = akunData['id_akun'];
-              if (idAkun != null) {
-                _fetchMergedAchievements(idAkun);
-                _fetchUserBooks(idAkun);
-              }
-            } else {
-              _isLoading = false;
             }
           });
         }
-      } else {
-        if (mounted) setState(() => _isLoading = false);
+
+        if (akunData != null) {
+          final idAkun = akunData['id_akun'];
+          if (idAkun != null) {
+            await _fetchMergedAchievements(idAkun);
+            await _fetchUserBooks(idAkun);
+          }
+        }
       }
     } catch (e) {
       debugPrint("Error fetching profile: $e");
-      if (mounted) setState(() => _isLoading = false);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
