@@ -29,7 +29,7 @@ import 'screens/book/story_detail_screen.dart';
 import 'screens/practice_screen.dart';
 import 'screens/writing_practice_screen.dart';
 import 'screens/leaderboard.dart';
-import 'screens/hearthesound.dart';
+import 'screens/games/hearthesound/hearthesound.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

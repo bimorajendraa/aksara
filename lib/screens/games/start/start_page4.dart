@@ -16,16 +16,10 @@ class _StartPage4State extends State<StartPage4> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
-    // sama seperti StartPage2
     final double effectiveWidth = screenWidth.clamp(320.0, 500.0);
     final double effectiveHeight = screenHeight.clamp(600.0, 900.0);
-
-    // ukuran back button adaptif dan di-clamp
     final double backSize = (screenWidth * 0.06).clamp(30.0, 38.0);
     final double backIconSize = (backSize * 0.6).clamp(20.0, 24.0);
-
-    // margin horizontal mengikuti healthbar
     final double horizontalMargin = screenWidth * 0.08;
 
     return Scaffold(
@@ -36,12 +30,12 @@ class _StartPage4State extends State<StartPage4> {
             children: [
               SizedBox(height: effectiveHeight * 0.02),
 
-              /// HEALTH BAR — mengikuti StartPage2
+              /// HEALTH BAR 
               _buildHealthBar2(screenWidth, screenHeight),
 
               SizedBox(height: effectiveHeight * 0.02),
 
-              /// BACK BUTTON — posisi & ukuran 100% mengikuti StartPage2
+              /// BACK BUTTON 
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
@@ -67,7 +61,7 @@ class _StartPage4State extends State<StartPage4> {
 
               SizedBox(height: effectiveHeight * 0.10),
 
-              /// TITLE — dibuat adaptif
+              /// TITLE 
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: effectiveWidth * 0.06),
                 child: Text(
@@ -83,7 +77,7 @@ class _StartPage4State extends State<StartPage4> {
 
               SizedBox(height: effectiveHeight * 0.06),
 
-              /// MONSTER — tidak lagi pakai padding angka fix
+              /// MONSTER 
               SizedBox(
                 height: effectiveHeight * 0.25,
                 child: Align(
@@ -97,7 +91,7 @@ class _StartPage4State extends State<StartPage4> {
 
               SizedBox(height: effectiveHeight * 0.07),
 
-              /// NEXT BUTTON — adaptif seperti StartPage2
+              /// NEXT BUTTON 
               GestureDetector(
                 onTap: () {
                   Navigator.pushReplacement(
@@ -131,7 +125,7 @@ class _StartPage4State extends State<StartPage4> {
     );
   }
 
-  /// HEALTH BAR adaptif mengikuti StartPage2
+  /// HEALTH BAR 
   Widget _buildHealthBar2(double w, double h) {
     return Container(
       margin: EdgeInsets.only(

@@ -1,4 +1,4 @@
-import 'package:aksara/screens/hearthesound.dart';
+import 'package:aksara/screens/games/hearthesound/hearthesound.dart';
 import 'package:flutter/material.dart';
 import 'games/spellbee/spellbee.dart';
 import 'games/spellbee/spellbee2.dart';

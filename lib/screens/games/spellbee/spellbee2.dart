@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class SpellBeePage2 extends StatefulWidget {
@@ -34,6 +35,10 @@ class _SpellBeePageState extends State<SpellBeePage2> {
   String? errorMessage;
   String? highlightedLetter;
   final AudioPlayer _player = AudioPlayer();  
+  final SupabaseClient _supabase = Supabase.instance.client;
+  final Map<String, String> _syllableSoundUrl = {};
+  bool _isSoundLoaded = false;
+
 
   List<Color> gridColors = List.filled(9, Colors.black);
 
@@ -48,12 +53,46 @@ class _SpellBeePageState extends State<SpellBeePage2> {
 
   List<String> selectedSyllables = [];
 
-  Future<void> _playSyllableSound(String text) async {    
-    final letter = text.toLowerCase();
+  Future<void> _playSyllableSound(String text) async {
+    if (!_isSoundLoaded) return;
+
+    final key = text.toLowerCase();
+    final url = _syllableSoundUrl[key];
+
+    if (url == null) {
+      debugPrint('Sound for syllable $text not found');
+      return;
+    }
+
     await _player.stop();
-    await _player.play(
-      AssetSource("sounds/syllables/$letter.mp3"),
-    );
+    await _player.play(UrlSource(url));
+  }
+
+  Future<void> _fetchSyllableSounds() async {
+    try {
+      final response = await _supabase
+          .from('gamesounds')
+          .select('description, audio_url');
+
+      for (final item in response) {
+        final description = item['description'] as String;
+
+        final syllable = description.split(' ').last.toLowerCase();
+        _syllableSoundUrl[syllable] = item['audio_url'];
+      }
+
+      setState(() {
+        _isSoundLoaded = true;
+      });
+    } catch (e) {
+      debugPrint('Error fetching syllable sounds: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSyllableSounds();
   }
 
   bool isValidSyllable(String text) {
