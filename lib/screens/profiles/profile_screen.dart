@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
-// Import Navbar & Utils
+// Import Navbar & Utils (Pastikan path ini benar di project Anda)
 import '../../widgets/custom_floating_navbar.dart';
 import '../../utils/navbar_utils.dart';
 
@@ -35,7 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchProfileData(); // Panggil fungsi saat init
+    _fetchProfileData();
   }
 
   // Fungsi untuk refresh data (dipanggil setelah balik dari edit profile)
@@ -51,7 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (user != null) {
         final userEmail = user.email;
 
-        // 1. AMBIL DATA AKUN UTAMA
+        // 1. AMBIL DATA USER
         final akunData = await _supabase
             .from('akun')
             .select()
@@ -69,20 +69,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final int idAkun = akunData['id_akun'];
           final String fetchedUsername = akunData['username'] ?? "User";
 
-          // 2. AMBIL DATA TAMPILAN PROFILE (UserDetails -> Icon & Background)
-          // Kita join ke tabel profileicons dan profilebackground
+          // 2. AMBIL DATA TAMPILAN (Avatar & Background)
           final userDetailsData = await _supabase
               .from('userdetails')
               .select('*, profileicons(icon_path), profilebackground(background_color)')
               .eq('id_akun', idAkun)
               .maybeSingle();
 
-          // Parsing Data Tampilan
+          // Variable Temporary
           String fetchedAvatar = _currentAvatarPath;
           Color fetchedBgColor = _headerBackgroundColor;
 
           if (userDetailsData != null) {
-            // Ambil Icon Path
+            // Ambil Icon
             if (userDetailsData['profileicons'] != null) {
               fetchedAvatar = userDetailsData['profileicons']['icon_path'];
             }
@@ -90,28 +89,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (userDetailsData['profilebackground'] != null) {
               fetchedBgColor = _parseColorFromDb(userDetailsData['profilebackground']['background_color']);
             }
+          } else if (akunData['avatar_path'] != null) {
+             // Fallback jika userdetails belum ada
+             fetchedAvatar = akunData['avatar_path'];
           }
 
-          // 3. FETCH DATA LAINNYA (Achievement & Books)
-          // Panggil fungsi fetch terpisah (tidak perlu await di sini agar UI update bertahap jika mau)
-          // Tapi kita await agar loading spinner hilang bersamaan
+          // 3. FETCH LIST DATA (Parallel)
           await Future.wait([
             _fetchMergedAchievements(idAkun),
             _fetchUserBooks(idAkun),
           ]);
 
+          // 4. UPDATE UI SEKALIGUS
           if (mounted) {
             setState(() {
               _email = userEmail;
               _joinedSince = yearStr;
               _username = fetchedUsername;
               _currentAvatarPath = fetchedAvatar;
-              _headerBackgroundColor = fetchedBgColor;
+              _headerBackgroundColor = fetchedBgColor; // Fix: Assign warna background
               _isLoading = false;
             });
           }
         } else {
-          // Akun tidak ditemukan
           if (mounted) setState(() => _isLoading = false);
         }
       } else {
@@ -119,12 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       debugPrint("Error fetching profile: $e");
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _username = "Error Load";
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -151,7 +146,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         final iconData = master['achievementicons'] ?? {};
         bool isCompleted = userEntry != null ? (userEntry['is_completed'] ?? false) : false;
-        String dynamicSubtitle = isCompleted ? "Completed!" : "Keep going!";
+        
+        String dynamicSubtitle = "Reach ${master['max_progress']} to unlock";
+        if (isCompleted) {
+          dynamicSubtitle = "Completed!";
+        } else if (userEntry != null) {
+          dynamicSubtitle = "Keep going!";
+        }
 
         mergedList.add({
           'name': master['name'] ?? 'Untitled',
@@ -236,25 +237,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // HEADER AVATAR (Sekarang menerima backgroundColor juga)
+                          // HEADER PROFILE
                           _ProfileHeaderCard(
                             avatarPath: _currentAvatarPath,
                             backgroundColor: _headerBackgroundColor,
-                            onEditReturn: _refreshData, // Callback saat kembali dari edit
+                            onEditReturn: _refreshData,
                           ),
-                          
+
                           const SizedBox(height: 25),
-                          
+
                           _UserInfoSection(
                             username: _username,
                             email: _email,
                             joinedYear: _joinedSince,
                           ),
-                          
+
                           const SizedBox(height: 15),
                           Divider(thickness: 1, color: Colors.grey.shade200),
                           const SizedBox(height: 15),
-                          
+
+                          // ACHIEVEMENT HEADER
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -270,9 +272,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 5),
                           _AchievementList(achievements: _achievementList),
-                          
+
                           const SizedBox(height: 30),
-                          
+
+                          // RECENTLY READ HEADER
                           const Text(
                             "Recently Read",
                             style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF2C3E50)),
@@ -284,6 +287,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
+
                 Positioned(
                   bottom: 30, left: 0, right: 0,
                   child: CustomFloatingNavBar(
@@ -305,20 +309,34 @@ Widget _buildImage(String? path, {double? width, double? height, BoxFit fit = Bo
   if (path == null || path.isEmpty) {
     return Container(width: width, height: height, color: Colors.grey.shade200, child: const Icon(Icons.image, color: Colors.grey));
   }
+  
   String cleanPath = path.trim();
-  if (!cleanPath.startsWith('http') && !cleanPath.startsWith('assets/')) {
+  bool isUrl = cleanPath.startsWith('http');
+  if (!isUrl && !cleanPath.startsWith('assets/')) {
     cleanPath = 'assets/$cleanPath';
   }
 
   if (cleanPath.toLowerCase().endsWith('.svg')) {
-    if (cleanPath.startsWith('http')) {
-       return SvgPicture.network(cleanPath, width: width, height: height, fit: fit);
+    if (isUrl) {
+      return SvgPicture.network(
+        cleanPath, width: width, height: height, fit: fit,
+        placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+      );
     }
-    return SvgPicture.asset(cleanPath, width: width, height: height, fit: fit);
-  } else if (cleanPath.startsWith('http')) {
-    return Image.network(cleanPath, width: width, height: height, fit: fit, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image));
+    return SvgPicture.asset(
+      cleanPath, width: width, height: height, fit: fit,
+      placeholderBuilder: (_) => const SizedBox(),
+    );
+  } else if (isUrl) {
+    return Image.network(
+      cleanPath, width: width, height: height, fit: fit,
+      errorBuilder: (_,__,___) => const Icon(Icons.broken_image),
+    );
   } else {
-    return Image.asset(cleanPath, width: width, height: height, fit: fit, errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported));
+    return Image.asset(
+      cleanPath, width: width, height: height, fit: fit,
+      errorBuilder: (_,__,___) => const Icon(Icons.image_not_supported),
+    );
   }
 }
 
@@ -331,13 +349,13 @@ double _safeDouble(dynamic value, double defaultValue) {
 }
 
 Color _parseColorFromDb(String? hexString) {
-  if (hexString == null || hexString.isEmpty) return const Color(0xFFD6E6F2);
+  if (hexString == null || hexString.isEmpty) return const Color(0xFF2C3E50);
   try {
     String cleanHex = hexString.replaceAll("#", "").replaceAll("0x", "").toUpperCase();
     if (cleanHex.length == 6) cleanHex = "FF$cleanHex";
     return Color(int.parse(cleanHex, radix: 16));
   } catch (e) {
-    return const Color(0xFFD6E6F2);
+    return const Color(0xFF2C3E50);
   }
 }
 
@@ -358,22 +376,23 @@ class _ProfileHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Cek apakah background terang atau gelap
+    // 1. Cek apakah background Profile terang atau gelap
     final bool isLightBg = ThemeData.estimateBrightnessForColor(backgroundColor) == Brightness.light;
 
     // 2. Tentukan Warna Box (Tombol)
+    // Jika BG Terang: Box Putih. Jika BG Gelap: Box versi lebih terang dari BG.
     final Color buttonColor = isLightBg
-        ? Colors.white.withOpacity(0.9) // Jika BG terang, box putih
-        : ColorUtils.lighten(backgroundColor, 0.15); // Jika BG gelap, box agak terang
+        ? Colors.white.withOpacity(0.9) 
+        : ColorUtils.lighten(backgroundColor, 0.15); 
 
-    // 3. Tentukan Warna Shadow (Bayangan 3D)
+    // 3. Tentukan Warna Shadow (Agar terlihat timbul)
     final Color shadowColor = isLightBg
         ? ColorUtils.darken(backgroundColor, 0.1)
         : ColorUtils.darken(backgroundColor, 0.2);
 
-    // 4. Tentukan Warna Icon Pensil (DINAMIS)
+    // 4. Tentukan Warna Icon Pensil (Kontras)
     final Color iconColor = isLightBg
-        ? ColorUtils.darken(backgroundColor, 0.5) // BG Kuning -> Icon Coklat Tua (Gelap dari BG)
+        ? ColorUtils.darken(backgroundColor, 0.5) // BG Kuning -> Icon Coklat Tua
         : Colors.white; // BG Gelap -> Icon Putih
 
     return Container(
@@ -381,7 +400,7 @@ class _ProfileHeaderCard extends StatelessWidget {
       width: double.infinity,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        color: backgroundColor, // Warna Background dari DB
+        color: backgroundColor, // Warna Background dari Database
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -396,14 +415,14 @@ class _ProfileHeaderCard extends StatelessWidget {
         children: [
           // POSISI ALIEN
           Positioned(
-            top: 65,
+            top: 50,
             bottom: -30,
             left: 0,
             right: 0,
             child: _buildImage(avatarPath, fit: BoxFit.contain),
           ),
           
-          // TOMBOL EDIT
+          // TOMBOL EDIT DINAMIS
           Positioned(
             top: 15,
             right: 15,
@@ -419,7 +438,7 @@ class _ProfileHeaderCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: buttonColor, // Box Dinamis
+                    color: buttonColor, // <--- Warna Box Dinamis
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: Colors.white.withOpacity(0.4), 
@@ -427,9 +446,9 @@ class _ProfileHeaderCard extends StatelessWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: shadowColor, // Shadow Dinamis
+                        color: shadowColor, // <--- Warna Shadow Dinamis
                         blurRadius: 0, 
-                        offset: const Offset(-4, 4),
+                        offset: const Offset(-4, 4), // Efek Timbul (Layering)
                       ),
                     ],
                   ),
@@ -445,14 +464,15 @@ class _ProfileHeaderCard extends StatelessWidget {
   }
 }
 
-// --- HELPER UTILS (Masukkan class ini di file yang sama atau di navbar_utils.dart) ---
 class ColorUtils {
+  // Menerangkan warna
   static Color lighten(Color color, [double amount = 0.2]) {
     final hsl = HSLColor.fromColor(color);
     final hslLight = hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
     return hslLight.toColor();
   }
 
+  // Menggelapkan warna
   static Color darken(Color color, [double amount = 0.1]) {
     final hsl = HSLColor.fromColor(color);
     final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
@@ -483,7 +503,7 @@ class _UserInfoSection extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 4.0),
           child: GestureDetector(
             onTap: () => Navigator.pushNamed(context, '/settings'),
-            child: Image.asset('assets/icons/gerigi.png', width: 32, height: 32, color: Color(0xFF2F4156)),
+            child: Image.asset('assets/icons/gerigi.png', width: 32, height: 32, color: Color(0xFF2C3E50)),
           ),
         ),
       ],
@@ -518,13 +538,24 @@ class _AchievementList extends StatelessWidget {
   Widget _buildAchievementItem({required Map<String, dynamic> data}) {
     String title = data['name'] ?? 'Untitled';
     String subtitle = data['subtitle'] ?? 'Keep going!';
-    String assetPath = data['icon_path'] ?? 'assets/icons/monster_ingin_tahu.svg';
-    Color itemColor = _parseColorFromDb(data['background']);
+    String assetPath = 'assets/icons/monster_ingin_tahu.svg';
+    String rawPath = data['icon_path'] ?? '';
+    
+    // Logic path pintar
+    if (rawPath.isNotEmpty) {
+      if (rawPath.startsWith('http')) {
+        assetPath = rawPath;
+      } else if (!rawPath.startsWith('assets/')) {
+        assetPath = 'assets/$rawPath';
+      } else {
+        assetPath = rawPath;
+      }
+    }
 
+    Color itemColor = _parseColorFromDb(data['background']);
     double scale = _safeDouble(data['svg_scale'], 1.0);
     double offsetX = _safeDouble(data['svg_offset_x'], 0.0);
     double offsetY = _safeDouble(data['svg_offset_y'], 0.0);
-
     int current = data['current_progress'] ?? 0;
     int max = data['max_progress'] ?? 10;
     double progressValue = (max == 0) ? 0 : (current / max);
@@ -582,7 +613,7 @@ class _RecentlyReadList extends StatelessWidget {
   const _RecentlyReadList({required this.books});
   @override
   Widget build(BuildContext context) {
-    if (books.isEmpty) return const Text("No books read yet.");
+    if (books.isEmpty) return const Text("No books read yet.", style: TextStyle(fontFamily: 'Poppins', color: Colors.grey));
     return SizedBox(
       height: 300,
       child: ListView.separated(

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ====================== SUPABASE SERVICES ======================
 import 'package:aksara/services/user_loader_service.dart';
@@ -22,13 +23,17 @@ class _SpellBeePageState extends State<SpellBeePage> {
   String? highlightedLetter;
   final AudioPlayer _player = AudioPlayer();
   final GlobalKey _inputKey = GlobalKey();      
-  double errorTop = 300;                  
+  double errorTop = 300;   
+  final SupabaseClient _supabase = Supabase.instance.client;
+  final Map<String, String> _letterSoundUrl = {};
+  bool _isSoundLoaded = false;                 
   List<String?> userAnswer = ["", "", ""];
 
   @override
   void initState() {
     super.initState();
-    _loadUser();     // <-- WAJIB AGAR SUPABASE PUNYA ID AKUN
+    _loadUser(); 
+    _fetchLetterSounds();  
   }
 
   Future<void> _loadUser() async {
@@ -37,10 +42,38 @@ class _SpellBeePageState extends State<SpellBeePage> {
   }
 
   Future<void> _playLetterSound(String letter) async {
+    if (!_isSoundLoaded) return;
+
+    final key = letter.toLowerCase();
+    final url = _letterSoundUrl[key];
+
+    if (url == null) {
+      debugPrint('Sound for letter $letter not found');
+      return;
+    }
+
     await _player.stop();
-    await _player.play(
-      AssetSource("sounds/alphabet/${letter.toLowerCase()}.mp3"),
-    );
+    await _player.play(UrlSource(url));
+  }
+
+  Future<void> _fetchLetterSounds() async {
+    try {
+      final response = await _supabase
+          .from('gamesounds')
+          .select('description, audio_url');
+
+      for (final item in response) {
+        final description = item['description'] as String;
+        final letter = description.split(' ').last.toLowerCase();
+        _letterSoundUrl[letter] = item['audio_url'];
+      }
+
+      setState(() {
+        _isSoundLoaded = true;
+      });
+    } catch (e) {
+      debugPrint('Error fetching sounds (SpellBee): $e');
+    }
   }
 
   void _calculateErrorPosition() {

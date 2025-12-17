@@ -522,7 +522,7 @@ class LogoutDialog extends StatelessWidget {
             SizedBox(
               height: 130, width: 130, 
               child: Image.asset(
-                'assets/icons/Monster Pink Profile.png', // Pastikan file ini ada
+                'assets/icons/logout-monster.png', // Pastikan file ini ada
                 fit: BoxFit.contain,
               ),
             ),

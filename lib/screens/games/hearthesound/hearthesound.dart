@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HearTheSoundPage extends StatefulWidget {
   const HearTheSoundPage({super.key});
@@ -9,21 +10,23 @@ class HearTheSoundPage extends StatefulWidget {
 }
 
 class _HearTheSoundPageState extends State<HearTheSoundPage> {
-  // Index soal yang sedang aktif (0 = soal pertama)
   int _currentIndex = 0;
   final AudioPlayer _player = AudioPlayer();
+  final SupabaseClient _supabase = Supabase.instance.client;
+  final Map<String, String> _soundUrlMap = {};
+  bool _isSoundLoaded = false;
 
-  // Data Soal (Bisa ditambah jika punya monster 3 dst)
+  // Data Soal
   final List<Map<String, dynamic>> _questions = [
     {
       'title': 'What does he say ?',
-      'monsterImage': 'assets/images/monsterhear1.png', // Monster 1
+      'monsterImage': 'assets/images/monsterhear1.png', 
       'correctAnswer': 'Hello',
       'options': ['Hello', 'Hai', 'Bonjour', 'Holla'],
     },
     {
       'title': 'What sound ?',
-      'monsterImage': 'assets/images/monsterhear2.png', // Monster 2
+      'monsterImage': 'assets/images/monsterhear2.png', 
       'correctAnswer': 'Dog',
       'options': ['Dog', 'Cat', 'Monkey', 'Horse'],
     },
@@ -34,10 +37,8 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
     String correctAnswer = _questions[_currentIndex]['correctAnswer'];
 
     if (selectedAnswer == correctAnswer) {
-      // Jika Benar, Tampilkan Dialog
       _showSuccessDialog();
     } else {
-      // Opsional: Logika jika salah (misal getar atau bunyi error)
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Try again!", textAlign: TextAlign.center),
@@ -52,20 +53,19 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
   void _showSuccessDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // User tidak bisa tap di luar untuk tutup
+      barrierDismissible: false, 
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.transparent, // Transparan agar custom shape terlihat
+          backgroundColor: Colors.transparent, 
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Icon Centang Besar (Bisa pakai Icon atau Image)
               Container(
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
                 ),
-                padding: const EdgeInsets.all(4), // Border putih
+                padding: const EdgeInsets.all(4), 
                 child: const CircleAvatar(
                   radius: 50,
                   backgroundColor: Color(0xFF1E3A5F), // Warna biru gelap
@@ -73,7 +73,6 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
                 ),
               ),
               const SizedBox(height: 10),
-              // Text Yeay Correct dengan efek stroke/shadow
               const Text(
                 "YEAY CORRECT!",
                 style: TextStyle(
@@ -92,11 +91,10 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
       },
     );
 
-    // Delay 1.5 detik, lalu tutup dialog dan ganti soal
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
-        Navigator.of(context).pop(); // Tutup Dialog
-        _nextQuestion(); // Pindah Soal
+        Navigator.of(context).pop();
+        _nextQuestion(); 
       }
     });
   }
@@ -104,21 +102,53 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
   // Fungsi Pindah ke Soal Berikutnya
   void _nextQuestion() {
     if (_currentIndex < _questions.length - 1) {
-      // Masih ada soal berikutnya → lanjut
       setState(() {
         _currentIndex++;
       });
     } else {
-      // Soal terakhir sudah dijawab benar → kembali ke halaman sebelumnya (/practice)
       Navigator.pop(context);
-      // Kalau kamu MAU pakai named route, bisa pakai ini sebagai alternatif:
-      // Navigator.pushNamedAndRemoveUntil(context, '/practice', (route) => false);
     }
   }
 
-  void _playSound(String fileName) async {
+  Future<void> _playSoundByKey(String key) async {
+    if (!_isSoundLoaded) return;
+
+    final url = _soundUrlMap[key.toLowerCase()];
+
+    if (url == null) {
+      debugPrint('Sound not found for key: $key');
+      return;
+    }
+
     await _player.stop();
-    await _player.play(AssetSource('sounds/hearthesound/$fileName'));
+    await _player.play(UrlSource(url));
+  }
+
+  Future<void> _fetchHearSounds() async {
+    try {
+      final response = await _supabase
+          .from('gamesounds')
+          .select('description, audio_url');
+
+      for (final item in response) {
+        final description = item['description'] as String;
+
+        final key = description.split(' ').last.toLowerCase();
+        _soundUrlMap[key] = item['audio_url'];
+      }
+
+      setState(() {
+        _isSoundLoaded = true;
+      });
+    } catch (e) {
+      debugPrint('Error fetching hear-the-sound audio: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHearSounds();
   }
 
   @override
@@ -147,8 +177,6 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
                   // --- PROGRESS BAR (STRIP) ---
                   Row(
                     children: List.generate(_questions.length + 3, (index) {
-                      // +3 hanya dummy agar terlihat ada banyak strip (total 5)
-                      // Logic: Jika index <= _currentIndex, warnanya terang (aktif)
                       bool isActive = index <= _currentIndex;
                       return Expanded(
                         child: Container(
@@ -174,7 +202,7 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
                       fontFamily: 'Poppins',
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50), // Warna teks gelap
+                      color: Color(0xFF2C3E50), 
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -185,14 +213,13 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
                   Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Gambar Monster
                       Image.asset(
                         currentQuestion['monsterImage'],
                         height: 220,
                         fit: BoxFit.contain,
                       ),
 
-                      // Tombol Sound (Floating di sebelah kanan monster)
+                      // Tombol Sound
                       Positioned(
                         right: 20,
                         bottom: 40,
@@ -203,9 +230,9 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
                             GestureDetector(
                               onTap: () {
                                 if (_currentIndex == 0) {
-                                  _playSound('hello.mp3');
+                                  _playSoundByKey('hello');
                                 } else if (_currentIndex == 1) {
-                                  _playSound('dog.mp3');
+                                  _playSoundByKey('dog');
                                 }
                               },
                               child: Image.asset(
@@ -213,7 +240,7 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
                                 width: 60,
                               ),
                             ),
-                            // Icon Jari (Petunjuk klik)
+                            // Icon Jari 
                             Positioned(
                               bottom: -20,
                               right: -10,
@@ -231,7 +258,6 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
                   const Spacer(flex: 2),
 
                   // --- PILIHAN JAWABAN (GRID / LIST) ---
-                  // Menggunakan Column agar rapi ke bawah
                   ...List.generate(currentQuestion['options'].length, (index) {
                     String option = currentQuestion['options'][index];
                     return Padding(
@@ -243,7 +269,7 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
                           onPressed: () => _checkAnswer(option),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white.withOpacity(0.9),
-                            foregroundColor: const Color(0xFF5C7C8A), // Warna teks
+                            foregroundColor: const Color(0xFF5C7C8A), 
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
@@ -261,7 +287,6 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
                       ),
                     );
                   }),
-
                   const SizedBox(height: 30),
                 ],
               ),
