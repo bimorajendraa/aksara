@@ -1,8 +1,8 @@
-import 'package:aksara/screens/hearthesound.dart';
+import 'package:aksara/screens/games/hearthesound/hearthesound.dart';
 import 'package:flutter/material.dart';
 import '../spellbee/spellbee.dart';
 import '../spellbee/spellbee2.dart';
-import '../games/monster_color_match/monster_color_match_page.dart';
+import '../monsterColorDragDrop/monster_color_drag_drop_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../widgets/custom_floating_navbar.dart';
 import '../../../../utils/navbar_utils.dart';
@@ -43,7 +43,6 @@ class PracticeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               // ================= USERNAME FROM SUPABASE =================
               FutureBuilder(
                 future: fetchUsername(),
@@ -74,12 +73,17 @@ class PracticeScreen extends StatelessWidget {
               const SizedBox(height: 25),
 
               // ================= STORY MODE =================
-              const Text(
-                "Story Mode",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xff2B4C68),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/story-mode');
+                },
+                child: const Text(
+                  "Story Mode",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xff2B4C68),
+                  ),
                 ),
               ),
 
@@ -169,7 +173,9 @@ class PracticeScreen extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const MonsterColorMatchPage()),
+                    MaterialPageRoute(
+                      builder: (_) => const MonsterColorMatchPage(),
+                    ),
                   );
                 },
               ),
@@ -237,7 +243,6 @@ class StoryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             Container(
               height: 150,
               decoration: BoxDecoration(
@@ -265,10 +270,7 @@ class StoryCard extends StatelessWidget {
 
             Text(
               pages,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.white70,
-              ),
+              style: const TextStyle(fontSize: 12, color: Colors.white70),
             ),
 
             const SizedBox(height: 12),
@@ -276,7 +278,10 @@ class StoryCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white24,
                     borderRadius: BorderRadius.circular(10),
@@ -291,7 +296,11 @@ class StoryCard extends StatelessWidget {
 
                 Row(
                   children: [
-                    const Icon(Icons.star, size: 16, color: Colors.yellowAccent),
+                    const Icon(
+                      Icons.star,
+                      size: 16,
+                      color: Colors.yellowAccent,
+                    ),
                     Text(
                       rating,
                       style: const TextStyle(
@@ -303,7 +312,7 @@ class StoryCard extends StatelessWidget {
                   ],
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -348,10 +357,7 @@ class PracticeCard extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            Image.asset(
-              image,
-              height: 100,
-            )
+            Image.asset(image, height: 100),
           ],
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'start_page4.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StartPage3 extends StatefulWidget {
   const StartPage3({super.key});
@@ -35,11 +36,12 @@ class _StartPageState extends State<StartPage3> {
   final letters = List<String>.generate(26, (i) => String.fromCharCode(65 + i));
   final Set<String> clickedLetters = {};
   final AudioPlayer _player = AudioPlayer();
+  final SupabaseClient _supabase = Supabase.instance.client;
+  final Map<String, String> _letterSoundUrl = {};
+  bool _isSoundLoaded = false;
 
-  // controller seperti di StartPage1
   final ScrollController _scrollController = ScrollController();
 
-  // GlobalKey untuk tiap huruf AIUEO (untuk posisi popup)
   final Map<String, GlobalKey> letterTextKeys = {
     "A": GlobalKey(),
     "I": GlobalKey(),
@@ -48,21 +50,53 @@ class _StartPageState extends State<StartPage3> {
     "O": GlobalKey(),
   };
 
-  // data posisi popup seperti StartPage1
   double? popupLeft;
   double? popupTop;
   double popupWidth = 240;
   double popupHeight = 120;
 
   Future<void> _playLetterSound(String letter) async {
-    final file = letter.toLowerCase();
+    if (!_isSoundLoaded) return;
+
+    final key = letter.toLowerCase();
+    final url = _letterSoundUrl[key];
+
+    if (url == null) {
+      debugPrint('Sound for letter $letter not found');
+      return;
+    }
+
     await _player.stop();
-    await _player.play(AssetSource('sounds/alphabet/$file.mp3'));
+    await _player.play(UrlSource(url));
   }
+
+
+  Future<void> _fetchLetterSounds() async {
+    try {
+      final response = await _supabase
+          .from('gamesounds')
+          .select('description, audio_url');
+
+      for (final item in response) {
+        final description = item['description'] as String;
+        final letter = description.split(' ').last.toLowerCase(); 
+        _letterSoundUrl[letter] = item['audio_url'];
+      }
+
+      setState(() {
+        _isSoundLoaded = true;
+      });
+    } catch (e) {
+      debugPrint('Error fetching sounds (StartPage3): $e');
+    }
+  }
+
 
   @override
   void initState() {
     super.initState();
+
+    _fetchLetterSounds();
 
     _scrollController.addListener(() {
       if (showTutorial) {
@@ -70,7 +104,6 @@ class _StartPageState extends State<StartPage3> {
       }
     });
 
-    // ukur posisi popup pertama kali setelah layout jadi
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _measureAndPositionPopup();
     });
@@ -79,7 +112,6 @@ class _StartPageState extends State<StartPage3> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // misal orientasi berubah, ukur ulang
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _measureAndPositionPopup();
     });
@@ -91,13 +123,11 @@ class _StartPageState extends State<StartPage3> {
     super.dispose();
   }
 
-  // mirip StartPage1, tapi untuk 5 huruf AIUEO
   void _measureAndPositionPopup() {
     if (!showTutorial) return;
 
     if (pointerIndex < 0 || pointerIndex > 4) return;
 
-    // urutan pointerIndex: 0:A,1:I,2:U,3:E,4:O
     final listLetters = ["A", "I", "U", "E", "O"];
     final String currentLetter = listLetters[pointerIndex];
 
@@ -106,7 +136,6 @@ class _StartPageState extends State<StartPage3> {
 
     final ctx = key.currentContext;
     if (ctx == null) {
-      // kalau belum kebaca, coba lagi frame berikutnya
       WidgetsBinding.instance.addPostFrameCallback((_) => _measureAndPositionPopup());
       return;
     }
@@ -114,12 +143,10 @@ class _StartPageState extends State<StartPage3> {
     final render = ctx.findRenderObject() as RenderBox;
     final safePadding = MediaQuery.of(context).padding.top;
 
-    // posisi text huruf relatif ke layar
     final letterOffset = render.localToGlobal(Offset.zero) - Offset(0, safePadding);
     final size = render.size;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // ukuran popup berdasarkan lebar huruf (seperti StartPage1, tapi 5 huruf besar)
     final double cellBase = size.width * 2.0;
     popupWidth = cellBase.clamp(140.0, 320.0);
     popupHeight = popupWidth * 0.55;
@@ -130,10 +157,8 @@ class _StartPageState extends State<StartPage3> {
     double left = centerOfLetter - popupWidth / 2;
     double top = topOfLetter - popupHeight - 10.0;
 
-    // batas kiri/kanan
     left = left.clamp(8.0, screenWidth - popupWidth - 8.0);
 
-    // kalau kepentok atas, geser ke bawah huruf
     if (top < 8.0) {
       top = topOfLetter + size.height + 10.0;
     }
@@ -153,7 +178,7 @@ class _StartPageState extends State<StartPage3> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // === STRUCTURE SCROLL mirip StartPage1 ===
+          // === STRUCTURE SCROLL ===
           SingleChildScrollView(
             controller: _scrollController,
             padding: EdgeInsets.only(bottom: screenHeight * 0.02),
@@ -180,7 +205,7 @@ class _StartPageState extends State<StartPage3> {
             ),
           ),
 
-          // === TUTORIAL OVERLAY: bentuk & style persis StartPage1 ===
+          // === TUTORIAL OVERLAY ===
           if (showTutorial)
             AnimatedOpacity(
               opacity: 1,
@@ -195,7 +220,7 @@ class _StartPageState extends State<StartPage3> {
     );
   }
 
-  // ====================== TUTORIAL POPUP (COPY STYLE STARTPAGE1) =====
+  // ===== TUTORIAL POPUP  =====
 
   Widget _buildTutorialPopup(double screenWidth, double screenHeight) {
     if (popupLeft == null || popupTop == null) return const SizedBox();
@@ -235,7 +260,7 @@ class _StartPageState extends State<StartPage3> {
                   ),
                 ),
 
-                // SEGITIGA PENUNJUK (bawah tengah) persis StartPage1
+                // SEGITIGA PENUNJUK 
                 Positioned(
                   bottom: -12,
                   left: popupWidth * 0.45,
@@ -594,7 +619,7 @@ class _StartPageState extends State<StartPage3> {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               letter,
-              key: letterTextKeys[letter], // <- dipakai untuk hitung posisi popup
+              key: letterTextKeys[letter], 
               style: TextStyle(
                 fontSize: 100,
                 fontWeight: FontWeight.w700,

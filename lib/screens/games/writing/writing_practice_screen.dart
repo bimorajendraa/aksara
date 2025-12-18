@@ -289,6 +289,9 @@ class _UnitPageState extends State<UnitPage> {
   static const int rowsPerSection = 3;
   int currentSection = 0;
   final ValueNotifier<bool> pencilMode = ValueNotifier(true);
+  
+  // 1. STATE TO TRACK SCROLL LOCK
+  bool _canScroll = true;
 
   late final List<List<String>> rows;
   late final List<LetterRowWidget> rowWidgets;
@@ -309,6 +312,12 @@ class _UnitPageState extends State<UnitPage> {
         uppercase: pair[0],
         lowercase: pair[1],
         pencilModeNotifier: pencilMode,
+        // 2. PASS LOCK CALLBACK
+        onScrollLock: (locked) {
+          if (_canScroll == locked) { // If locked is true, canScroll should be false
+             setState(() => _canScroll = !locked);
+          }
+        },
       );
     }).toList();
   }
@@ -346,6 +355,10 @@ class _UnitPageState extends State<UnitPage> {
 
                 Expanded(
                   child: ListView(
+                    // 3. CHANGE PHYSICS DYNAMICALLY
+                    physics: _canScroll 
+                        ? const BouncingScrollPhysics() 
+                        : const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 140),
                     children: [
                       for (int i = 0; i < rowWidgets.length; i++)
@@ -489,12 +502,16 @@ class LetterRowWidget extends StatelessWidget {
   final String uppercase;
   final String lowercase;
   final ValueNotifier<bool> pencilModeNotifier;
+  
+  // 4. ADD CALLBACK
+  final ValueChanged<bool> onScrollLock; 
 
   const LetterRowWidget({
     super.key,
     required this.uppercase,
     required this.lowercase,
     required this.pencilModeNotifier,
+    required this.onScrollLock,
   });
 
   @override
@@ -533,6 +550,7 @@ class LetterRowWidget extends StatelessWidget {
           key: ValueKey("canvas_$letter"),
           letter: letter,
           pencilModeNotifier: pencilModeNotifier,
+          onScrollLock: onScrollLock,
         ),
       ),
     );
@@ -546,11 +564,15 @@ class LetterRowWidget extends StatelessWidget {
 class LetterCanvas extends StatefulWidget {
   final String letter;
   final ValueNotifier<bool> pencilModeNotifier;
+  
+  // 5. RECEIVE CALLBACK
+  final ValueChanged<bool> onScrollLock; 
 
   const LetterCanvas({
     super.key,
     required this.letter,
     required this.pencilModeNotifier,
+    required this.onScrollLock,
   });
 
   @override
@@ -660,30 +682,36 @@ class _LetterCanvasState extends State<LetterCanvas>
 
     final isPencil = widget.pencilModeNotifier.value;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onPanStart: (d) {
-        if (isPencil) {
-          _start(d.localPosition);
-        } else {
-          _erase(d.localPosition);
-        }
-      },
-      onPanUpdate: (d) {
-        if (isPencil) {
-          _update(d.localPosition);
-        } else {
-          _erase(d.localPosition);
-        }
-      },
-      onDoubleTap: _clear,
-      child: CustomPaint(
-        painter: _LetterPainter(
-          letter: widget.letter,
-          strokes: strokes,
-          filled: filled,
+    // 6. WRAP WITH LISTENER TO DETECT TOUCH START/END
+    return Listener(
+      onPointerDown: (_) => widget.onScrollLock(true),
+      onPointerUp: (_) => widget.onScrollLock(false),
+      onPointerCancel: (_) => widget.onScrollLock(false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onPanStart: (d) {
+          if (isPencil) {
+            _start(d.localPosition);
+          } else {
+            _erase(d.localPosition);
+          }
+        },
+        onPanUpdate: (d) {
+          if (isPencil) {
+            _update(d.localPosition);
+          } else {
+            _erase(d.localPosition);
+          }
+        },
+        onDoubleTap: _clear,
+        child: CustomPaint(
+          painter: _LetterPainter(
+            letter: widget.letter,
+            strokes: strokes,
+            filled: filled,
+          ),
+          size: Size.infinite,
         ),
-        size: Size.infinite,
       ),
     );
   }
