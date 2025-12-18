@@ -1,8 +1,10 @@
-import 'package:aksara/screens/games/hearthesound/hearthesound.dart';
 import 'package:flutter/material.dart';
-import '../spellbee/spellbee.dart';
-import '../spellbee/spellbee2.dart';
-import '../monsterColorDragDrop/monster_color_drag_drop_page.dart';
+import '../practice/practiceGame/practice_drag_drop_page.dart';
+import '../practice/practiceGame/practice_hearthesound.dart';
+import '../practice/practiceGame/practice_monster_color_drag_drop_page.dart';
+import '../practice/practiceGame/practice_spellbee.dart';
+import '../practice/practiceGame/practice_spellbee2.dart';
+import '../practice/practiceGame/practice_writing_practice_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../widgets/custom_floating_navbar.dart';
 import '../../../../utils/navbar_utils.dart';
@@ -161,21 +163,6 @@ class PracticeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const SpellBeePage2()),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // ---------------- Monster Color Match — NEW GAME ----------------
-              PracticeCard(
-                title: "Monster Color Match",
-                image: "assets/images/monster_color_match_guy.png",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const MonsterColorMatchPage(),
-                    ),
                   );
                 },
               ),
