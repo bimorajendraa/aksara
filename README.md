@@ -177,7 +177,7 @@ flutter pub get
 
 Buat file konfigurasi environment di:
 
-`lib/src/core/env.dart`
+`aksara/lib/env.dart`
 
 Isi dengan:
 
@@ -313,9 +313,7 @@ Seluruh operasi data dilakukan melalui Supabase SDK dengan perlindungan RLS agar
 
 - Penambahan variasi mini game baru.  
 - Sistem tingkat kesulitan adaptif berdasarkan performa pengguna.  
-- Mode offline dengan sinkronisasi data ketika kembali online.  
-- Dashboard khusus untuk orang tua/guru.  
-- Fitur aksesibilitas tambahan (text-to-speech, pengaturan ukuran font, dan lain-lain).  
+- Fitur aksesibilitas tambahan (text-to-speech, image ocr, pengaturan ukuran font, dan lain-lain).  
 
 
 ## Kontribusi
