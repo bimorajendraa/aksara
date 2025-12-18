@@ -32,6 +32,9 @@ class UnitListPage extends StatefulWidget {
 class _UnitListPageState extends State<UnitListPage> {
   final PageController _pageController = PageController();
   int _pageIndex = 0;
+  
+  // 1. STATE TO TRACK HORIZONTAL SWIPE LOCK
+  bool _canSwipe = true;
 
   @override
   void initState() {
@@ -95,6 +98,10 @@ class _UnitListPageState extends State<UnitListPage> {
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
+                // 2. DISABLE PHYSICS IF SWIPE IS LOCKED
+                physics: _canSwipe 
+                    ? const BouncingScrollPhysics() // Or PageScrollPhysics()
+                    : const NeverScrollableScrollPhysics(),
                 itemCount: units.length,
                 onPageChanged: (i) => setState(() => _pageIndex = i),
                 itemBuilder: (_, index) {
@@ -105,6 +112,12 @@ class _UnitListPageState extends State<UnitListPage> {
                     key: ValueKey("unit_$index"),
                     letters: letters,
                     isLastUnit: isLastUnit,
+                    // 3. HANDLE LOCK REQUEST FROM CHILD
+                    onScrollLock: (locked) {
+                       if (_canSwipe == locked) {
+                         setState(() => _canSwipe = !locked);
+                       }
+                    },
                     onFinish: () => _handleFinish(context),
                     onPrevUnit: () {
                       if (index > 0) {
@@ -133,7 +146,7 @@ class _UnitListPageState extends State<UnitListPage> {
   }
 
   // =============================================================
-  // FINISH CHECK — Supabase Integration HERE
+  // FINISH CHECK
   // =============================================================
   void _handleFinish(BuildContext context) async {
     bool allDone = LetterCanvasTracker.allCompleted;
@@ -149,7 +162,6 @@ class _UnitListPageState extends State<UnitListPage> {
       return;
     }
 
-    // --------------------- SUPABASE INTEGRATION ------------------------
     final idAkun = UserSession.instance.idAkun;
 
     if (idAkun != null) {
@@ -169,7 +181,6 @@ class _UnitListPageState extends State<UnitListPage> {
       print("❌ User ID NULL, skipping updates...");
     }
 
-    // --------------------- SUCCESS POPUP ------------------------
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -192,7 +203,7 @@ class _UnitListPageState extends State<UnitListPage> {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// COMPLETION TRACKER — CHECKS if all letters filled
+/// COMPLETION TRACKER
 ///////////////////////////////////////////////////////////////////////////////
 
 class LetterCanvasTracker {
@@ -262,7 +273,7 @@ class PageIndicatorDots extends StatelessWidget {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// UNIT PAGE + FINISH BUTTON SUPPORT
+/// UNIT PAGE
 ///////////////////////////////////////////////////////////////////////////////
 
 class UnitPage extends StatefulWidget {
@@ -271,6 +282,8 @@ class UnitPage extends StatefulWidget {
   final VoidCallback onPrevUnit;
   final VoidCallback onNextUnit;
   final VoidCallback onFinish;
+  // 4. ADD PARAMETER FOR PARENT LOCK
+  final ValueChanged<bool> onScrollLock; 
 
   const UnitPage({
     super.key,
@@ -279,6 +292,7 @@ class UnitPage extends StatefulWidget {
     required this.onNextUnit,
     required this.isLastUnit,
     required this.onFinish,
+    required this.onScrollLock,
   });
 
   @override
@@ -290,7 +304,6 @@ class _UnitPageState extends State<UnitPage> {
   int currentSection = 0;
   final ValueNotifier<bool> pencilMode = ValueNotifier(true);
   
-  // 1. STATE TO TRACK SCROLL LOCK
   bool _canScroll = true;
 
   late final List<List<String>> rows;
@@ -312,11 +325,14 @@ class _UnitPageState extends State<UnitPage> {
         uppercase: pair[0],
         lowercase: pair[1],
         pencilModeNotifier: pencilMode,
-        // 2. PASS LOCK CALLBACK
+        // 5. PROPAGATE LOCK UPWARD
         onScrollLock: (locked) {
-          if (_canScroll == locked) { // If locked is true, canScroll should be false
+          // Lock local ListView
+          if (_canScroll == locked) { 
              setState(() => _canScroll = !locked);
           }
+          // Lock parent PageView
+          widget.onScrollLock(locked);
         },
       );
     }).toList();
@@ -355,7 +371,6 @@ class _UnitPageState extends State<UnitPage> {
 
                 Expanded(
                   child: ListView(
-                    // 3. CHANGE PHYSICS DYNAMICALLY
                     physics: _canScroll 
                         ? const BouncingScrollPhysics() 
                         : const NeverScrollableScrollPhysics(),
@@ -502,8 +517,6 @@ class LetterRowWidget extends StatelessWidget {
   final String uppercase;
   final String lowercase;
   final ValueNotifier<bool> pencilModeNotifier;
-  
-  // 4. ADD CALLBACK
   final ValueChanged<bool> onScrollLock; 
 
   const LetterRowWidget({
@@ -558,14 +571,12 @@ class LetterRowWidget extends StatelessWidget {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// LETTER CANVAS — REPORTS COMPLETION WHEN "filled == true"
+/// LETTER CANVAS
 ///////////////////////////////////////////////////////////////////////////////
 
 class LetterCanvas extends StatefulWidget {
   final String letter;
   final ValueNotifier<bool> pencilModeNotifier;
-  
-  // 5. RECEIVE CALLBACK
   final ValueChanged<bool> onScrollLock; 
 
   const LetterCanvas({
@@ -682,7 +693,6 @@ class _LetterCanvasState extends State<LetterCanvas>
 
     final isPencil = widget.pencilModeNotifier.value;
 
-    // 6. WRAP WITH LISTENER TO DETECT TOUCH START/END
     return Listener(
       onPointerDown: (_) => widget.onScrollLock(true),
       onPointerUp: (_) => widget.onScrollLock(false),
