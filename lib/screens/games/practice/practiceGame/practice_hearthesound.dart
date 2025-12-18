@@ -5,8 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 // SERVICES (INI YANG TADI KELEWAT — LU BENER)
 import 'package:aksara/services/user_loader_service.dart';
 import 'package:aksara/services/user_session.dart';
-import 'package:aksara/services/game_progress_service.dart';
-import 'package:aksara/services/level_progress_service.dart';
 
 class HearTheSoundPage extends StatefulWidget {
   const HearTheSoundPage({super.key});
@@ -124,38 +122,17 @@ class _HearTheSoundPageState extends State<HearTheSoundPage> {
     if (_currentIndex < _questions.length - 1) {
       setState(() => _currentIndex++);
     } else {
-      _validate(); // ⬅️ INI PENTING
+      // SEMUA SOAL SELESAI
+      setState(() => showSuccess = true);
+
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) {
+          Navigator.pop(context); // balik ke page sebelumnya
+        }
+      });
     }
   }
 
-  /// =============================================================
-  /// VALIDATE (SAMA KAYAK GAME LAIN)
-  /// =============================================================
-  Future<void> _validate() async {
-    setState(() => showSuccess = true);
-
-    final id = UserSession.instance.idAkun;
-    if (id != null) {
-      await GameProgressService.instance.updateAggregatedProgress(
-        idAkun: id,
-        gameKey: "hear_the_sound",
-        isCorrect: true,
-      );
-
-      final before =
-          await LevelProgressService.instance.getCurrentLevel(id);
-      final next =
-          await LevelProgressService.instance.incrementLevel(id);
-
-      debugPrint("🟢 LEVEL UP HearTheSound: $before → $next");
-    }
-
-    // ⬇️ INI YANG HILANG
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (!mounted) return;
-      Navigator.pop(context); // balik ke PracticeScreen
-    });
-  }
 
 
   /// =============================================================

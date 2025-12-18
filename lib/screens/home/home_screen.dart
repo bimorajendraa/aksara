@@ -11,6 +11,7 @@ import 'package:aksara/screens/games/spellbee/spellbee2.dart';
 import 'package:aksara/screens/games/start/start_page.dart';
 import 'package:aksara/screens/games/writing/writing_practice_screen.dart';
 import 'package:aksara/screens/games/monsterColorDragDrop/monster_color_drag_drop_page.dart';
+import 'package:aksara/screens/games/hearthesound/hearthesound.dart';
 
 // SERVICES
 import 'package:aksara/services/user_loader_service.dart';
@@ -481,7 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       case 6:
         Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const DragDropPage()));
+            MaterialPageRoute(builder: (_) => const HearTheSoundPage()));
         return;
 
       case 7:
