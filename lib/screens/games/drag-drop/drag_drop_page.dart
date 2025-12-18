@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:aksara/screens/home/home_screen.dart';
+
 
 // SERVICES
 import 'package:aksara/services/user_loader_service.dart';
@@ -161,7 +163,6 @@ class _DragDropPageState extends State<DragDropPage> {
   bool isAllCorrect() {
     return lines.length == 5 && lines.every((e) => e.isCorrect);
   }
-
   Future<void> validate() async {
     if (isAllCorrect()) {
       setState(() => showSuccess = true);
@@ -170,19 +171,15 @@ class _DragDropPageState extends State<DragDropPage> {
       if (id != null) {
         await GameProgressService.instance.updateAggregatedProgress(
           idAkun: id,
-          gameKey: "dragdrop",
+          gameKey: "drag-drop",
           isCorrect: true,
         );
-
         await LevelProgressService.instance.incrementLevel(id);
       }
-    } else {
-      setState(() {
-        showFail = true;
-        failFromHeart = false;
-      });
+
     }
   }
+
 
   /// =============================================================
   /// DRAG LOGIC
@@ -452,8 +449,10 @@ class _DragDropPageState extends State<DragDropPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                    (route) => false,
+                  );
                 },
                 child: const Text("Next"),
               )
