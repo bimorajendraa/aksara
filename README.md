@@ -119,6 +119,13 @@ Fitur progres memungkinkan pengguna melihat:
 - Area yang masih lemah dan membutuhkan lebih banyak latihan.
 
 
+### 📸 Scan Image
+
+Fitur Scan Image memungkinkan pengguna:
+
+- Memfoto dan mendigitalisasikan tulisan.
+- Memisahkan tiap suku kata yang ada pada sebuah kata atau kalimat.
+
 ## Arsitektur Aplikasi
 
 Secara garis besar, arsitektur Aksara terbagi menjadi dua lapisan utama:
