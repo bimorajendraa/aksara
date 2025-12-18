@@ -74,7 +74,7 @@ class PracticeScreen extends StatelessWidget {
 
               const SizedBox(height: 25),
 
-              // ================= STORY MODE =================
+              // ================= STORY MODE TITLE =================
               GestureDetector(
                 onTap: () {
                   Navigator.pushNamed(context, '/story-mode');
@@ -91,25 +91,38 @@ class PracticeScreen extends StatelessWidget {
 
               const SizedBox(height: 14),
 
+              // ================= STORY CARDS LIST =================
               SizedBox(
                 height: 280,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  children: const [
+                  children: [
+                    // KARTU 1
                     StoryCard(
                       title: "The Man The Tree",
                       pages: "5 Pages",
                       difficulty: "Easy",
                       rating: "4.9",
                       image: "assets/images/the_man_the_tree_cover_preview.png",
+                      // [UPDATE] Redirect ke Story Mode
+                      onTap: () {
+                        Navigator.pushNamed(context, '/story-mode');
+                      },
                     ),
-                    SizedBox(width: 16),
+                    
+                    const SizedBox(width: 16),
+                    
+                    // KARTU 2
                     StoryCard(
                       title: "Grim Fairy Tales",
                       pages: "8 Pages",
                       difficulty: "Medium",
                       rating: "4.7",
                       image: "assets/images/grim_fairy_tales_cover_preview.png",
+                      // [UPDATE] Redirect ke Story Mode
+                      onTap: () {
+                        Navigator.pushNamed(context, '/story-mode');
+                      },
                     ),
                   ],
                 ),
@@ -142,7 +155,7 @@ class PracticeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // ---------------- Spell Bee ----------------
+              // ---------------- Spell the Bee ----------------
               PracticeCard(
                 title: "Spell the Bee",
                 image: "assets/images/spell_the_bee_guy.png",
@@ -155,7 +168,7 @@ class PracticeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // ---------------- Mini Quiz (SpellBee2) ----------------
+              // ---------------- Mini Quiz ----------------
               PracticeCard(
                 title: "Mini Quiz",
                 image: "assets/images/mini_quiz_guy.png",
@@ -172,7 +185,9 @@ class PracticeScreen extends StatelessWidget {
               PracticeCard(
                 title: "Pull the Arrow",
                 image: "assets/images/pull_the_arrow_guy.png",
-                onTap: () {},
+                onTap: () {
+                   // Tambahkan navigasi game arrow di sini jika sudah ada
+                },
               ),
 
               const SizedBox(height: 40),
@@ -199,7 +214,7 @@ class PracticeScreen extends StatelessWidget {
 }
 
 // =================================================================
-// STORY CARD WIDGET
+// STORY CARD WIDGET (UPDATED)
 // =================================================================
 class StoryCard extends StatelessWidget {
   final String title;
@@ -207,6 +222,7 @@ class StoryCard extends StatelessWidget {
   final String difficulty;
   final String rating;
   final String image;
+  final VoidCallback? onTap; // [BARU] Tambahkan parameter onTap
 
   const StoryCard({
     super.key,
@@ -215,92 +231,96 @@ class StoryCard extends StatelessWidget {
     required this.difficulty,
     required this.rating,
     required this.image,
+    this.onTap, // [BARU] Inisialisasi
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 220,
-      decoration: BoxDecoration(
-        color: const Color(0xff2B4C68),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 150,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: Colors.white,
-                image: DecorationImage(
-                  image: AssetImage(image),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 14),
-
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 17,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              pages,
-              style: const TextStyle(fontSize: 12, color: Colors.white70),
-            ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    difficulty,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
+    return GestureDetector( // [BARU] Bungkus dengan GestureDetector
+      onTap: onTap,
+      child: Container(
+        width: 220,
+        decoration: BoxDecoration(
+          color: const Color(0xff2B4C68),
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 150,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white,
+                  image: DecorationImage(
+                    image: AssetImage(image),
+                    fit: BoxFit.cover,
                   ),
                 ),
+              ),
 
-                const Spacer(),
+              const SizedBox(height: 14),
 
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.star,
-                      size: 16,
-                      color: Colors.yellowAccent,
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 17,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 4),
+
+              Text(
+                pages,
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-                    Text(
-                      rating,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      difficulty,
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.star,
+                        size: 16,
+                        color: Colors.yellowAccent,
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+                      Text(
+                        rating,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
