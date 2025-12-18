@@ -197,18 +197,20 @@ class _MonsterColorMatchPageState extends State<MonsterColorMatchPage> {
           gameKey: "monster_color_match",
           isCorrect: true,
         );
-
-        final before = await LevelProgressService.instance.getCurrentLevel(id);
-        final next = await LevelProgressService.instance.incrementLevel(id);
-        print("🟢 LEVEL UP: $before → $next");
+        await LevelProgressService.instance.incrementLevel(id);
       }
-    } else {
-      setState(() {
-        showFail = true;
-        failFromHeart = false;
-      });
+
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/home',
+          (route) => false,
+        );
+      }
     }
   }
+
 
   /// ===============================================================
   /// DRAG HANDLING
